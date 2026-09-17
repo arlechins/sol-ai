@@ -15,9 +15,9 @@
     "@taopp/solana": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^22.14.0",
-    "tsx": "^4.21.0",
-    "typescript": "~5.8.2",
-    "vitest": "^3.0.0"
+    "@types/node": "^22.20.3",
+    "tsx": "^4.23.13",
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.7"
   }
 }

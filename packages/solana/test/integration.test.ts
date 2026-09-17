@@ -163,6 +163,18 @@ suite("TaopSolanaClient against a live cluster", () => {
     expect(await agentClient.getCapability(capability)).toBeNull();
   });
 
+  it("requires a wallet for on-chain score reads", async () => {
+    const readOnly = new TaopSolanaClient({ connection });
+    await expect(
+      readOnly.getScoreOnChain(agentA.publicKey),
+    ).rejects.toMatchObject({ code: "WalletRequired" });
+
+    // Read-only clients compute the same decayed score locally.
+    const local = await readOnly.getScore(agentA.publicKey);
+    expect(local.lastActivity).toBeGreaterThan(0);
+    expect(local.completions).toBeGreaterThanOrEqual(1);
+  });
+
   it("surfaces typed program errors for invalid operations", async () => {
     const failureAgent = Keypair.generate();
     const airdrop = await connection.requestAirdrop(

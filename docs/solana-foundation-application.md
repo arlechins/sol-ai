@@ -81,7 +81,7 @@ Everything below is verifiable from the repository and devnet today.
 |---|---|
 | Program on devnet | Program `8soD4Yte…15MnE`, config PDA `B1JgvqXo…cydVu`; full loop executed on-chain: [attest](https://explorer.solana.com/tx/cS1rf1vMDRQppuwSb1civFhmyzqnUwtD49CT5qynNNZs5AZvUSEnknd6WfkdjGXdn8QgffEG7dpcy2gyfHq9VFd?cluster=devnet) → [challenge](https://explorer.solana.com/tx/5HCaz3oNUZQ2ytkhvMZwTmQkTTTbEoAHDgdpjmp5Bmixa1atLNMQgoNLXkgLVTtqP1MY6UtVQuEJzJ4bY1dZmbBS?cluster=devnet) → [resolve](https://explorer.solana.com/tx/p34x3tdMLPDPCz32g1UJXYihTGjBRDefnGgqw3n8Tj7MqwNvdEkJVkxQbBN8MpkNixZ6TfJyQMkuYKzvrV7Hbvd?cluster=devnet) |
 | Program tests | 59 Rust tests including a dedicated attack suite (donations, substituted accounts, unauthorized privileged operations, re-init attempts) |
-| SDK | `@taopp/solana` — `attest()`, `challenge()`, `getScore()`, `discover()`; 13 tests, including a live-validator end-to-end suite and typed program errors |
+| SDK | `@taopp/solana` — `attest()`, `challenge()`, `getScore()`, `discover()`; 14 tests, including a live-validator end-to-end suite and typed program errors |
 | MCP server | `@taopp/mcp-server` 0.2 — 9 reputation tools, dual-chain adapters (Solana + previous Base deployment), stdio smoke tests |
 | Example agent | `examples/solana-agent` — two agents and a certifier run the full loop in SDK and MCP modes, with a `--reclaim` mode for demo bonds |
 | Benchmark | 5 mechanisms × 3 attack classes, deterministic; published baseline and sensitivity tables; `pnpm bench` reproduces |
@@ -111,7 +111,7 @@ stated bar.
 | Field | Content |
 |---|---|
 | Deliverables | `@taopp/solana` published to npm (`attest()`, `challenge()`, `getScore()`, `discover()`); Solana support in `@taopp/mcp-server` (`get_agent_score`, `discover_capabilities`, `attest_completion`, `challenge_completion`); a runnable example agent; example runs against mainnet |
-| Already in repo | SDK, MCP server 0.2, example agent; 13 SDK tests + 3 MCP tests; packaging validated with `publint` and `arethetypeswrong`; example verified on devnet |
+| Already in repo | SDK, MCP server 0.2, example agent; 14 SDK tests + 3 MCP tests; packaging validated with `publint` and `arethetypeswrong`; example verified on devnet |
 | Funded remaining work | npm releases under the `@taopp` scope, mainnet run of the example (small real-SOL amounts), integration guide for two external agent frameworks, MCP registry submission, adoption fixes from first external users |
 | Verification | Packages resolve on npm; example runs against mainnet; changelog and release notes |
 | Amount | $4,000 |

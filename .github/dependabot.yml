@@ -11,6 +11,17 @@ updates:
           - "solana-*"
           - "anchor-*"
           - "litesvm*"
+    ignore:
+      # Majors are reviewed and applied by hand.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      # Pre-1.0 crates treat minors as breaking; pin deliberately.
+      - dependency-name: "sha2"
+        update-types: ["version-update:semver-minor"]
+      - dependency-name: "anchor-lang"
+        update-types: ["version-update:semver-minor"]
+      - dependency-name: "proptest"
+        update-types: ["version-update:semver-minor"]
 
   - package-ecosystem: "npm"
     directory: "/"
@@ -22,6 +33,11 @@ updates:
         patterns:
           - "@anchor-lang/*"
           - "@solana/*"
+    ignore:
+      # Majors are reviewed and applied by hand (except security updates, which
+      # Dependabot raises regardless of these rules).
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"

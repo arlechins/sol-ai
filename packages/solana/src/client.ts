@@ -217,24 +217,41 @@ export class TaopSolanaClient {
     };
   }
 
-  /** Read the score via the on-chain `get_score` instruction (simulated). */
+  /**
+   * Read the score via the on-chain `get_score` instruction (simulated).
+   * Requires a wallet: the simulation needs a fee payer that exists on-chain
+   * and can cover fees. Read-only clients should use `getScore`, which computes
+   * the same decayed value from account data.
+   */
   async getScoreOnChain(agent: PublicKey): Promise<ScoreView> {
+    const feePayer = this.walletPublicKey;
+    if (!feePayer) {
+      throw new TaopSolanaError(
+        "WalletRequired",
+        "getScoreOnChain requires a wallet as the simulation fee payer; use getScore for read-only clients",
+      );
+    }
     const ix = await this.program.methods
       .getScore()
       .accountsStrict({ config: this.pdas.config, agent: this.pdas.agent(agent) })
       .instruction();
     const tx = new Transaction().add(ix);
-    tx.feePayer = this.walletPublicKey ?? this.pdas.config;
+    tx.feePayer = feePayer;
     tx.recentBlockhash = (await this.connection.getLatestBlockhash()).blockhash;
     const simulation = await this.connection.simulateTransaction(tx);
     if (simulation.value.err) {
-      throw new Error(
-        `get_score simulation failed: ${JSON.stringify(simulation.value.err)}`,
+      throw mapError(
+        new Error(
+          `get_score simulation failed: ${JSON.stringify(simulation.value.err)}`,
+        ),
       );
     }
     const encoded = simulation.value.returnData?.data?.[0];
     if (!encoded) {
-      throw new Error("get_score returned no data (has the agent attested yet?)");
+      throw new TaopSolanaError(
+        "AccountNotFound",
+        "get_score returned no data (has the agent attested yet?)",
+      );
     }
     return decodeScoreView(Buffer.from(encoded, "base64"));
   }

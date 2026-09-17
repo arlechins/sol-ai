@@ -17,6 +17,7 @@ export type TaopErrorCode =
   | "VaultBalanceMismatch"
   | "ArithmeticOverflow"
   | "AccountNotFound"
+  | "WalletRequired"
   | "Unknown";
 
 const KNOWN_CODES = new Set<string>([

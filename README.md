@@ -17,8 +17,8 @@ independently verified from a clean checkout.
 
 | Milestone | Deliverable | Status | Evidence |
 |---|---|---|---|
-| M1 | `taop_reputation` Anchor program: `attest_completion`, `challenge_completion` (native SOL bond), `resolve_challenge`, `get_score` with inactivity decay, bonded `register_capability`, `certify`, `slash` + Rust test suite | **Deployed on devnet** (program + config); mainnet gated on funding | 59 Rust tests (`cargo test --workspace`), IDL at `target/idl/taop_reputation.json`, [program source](programs/taop_reputation/src/lib.rs) |
-| M2 | `@taopp/solana` TypeScript SDK (`attest()`, `challenge()`, `getScore()`, `discover()`) and Solana support in `@taopp/mcp-server`, plus a runnable example agent | Shipped | SDK + 13 tests (local-validator integration suite), MCP tools with dual-chain adapters, example in [`examples/solana-agent`](examples/solana-agent) |
+| M1 | `taop_reputation` Anchor program: `attest_completion`, `challenge_completion` (native SOL bond), `resolve_challenge`, `get_score` with inactivity decay, bonded `register_capability`, `certify`, `slash` + Rust test suite | **Deployed on devnet** (program + config); mainnet gated on funding | 71 Rust tests (`cargo test --workspace`), IDL at `target/idl/taop_reputation.json`, [program source](programs/taop_reputation/src/lib.rs) |
+| M2 | `@taopp/solana` TypeScript SDK (`attest()`, `challenge()`, `getScore()`, `discover()`) and Solana support in `@taopp/mcp-server`, plus a runnable example agent | Shipped | SDK + 14 tests (local-validator integration suite), MCP tools with dual-chain adapters, example in [`examples/solana-agent`](examples/solana-agent) |
 | M3 | Open gaming-resistance benchmark with three attack classes, CC-BY dataset, architecture docs, account-layout reference, tutorial | Shipped | [`benchmark/`](benchmark), [`benchmark/dataset/`](benchmark/dataset), [`docs/methodology.md`](docs/methodology.md), [`docs/tutorial.md`](docs/tutorial.md) |
 
 Program ID (fixed across clusters): `8soD4YteLDgkibSNBzmQJTztiNcXPcLoi3Y2FrY15MnE`
@@ -48,11 +48,11 @@ keys/                       Program-ID keypair (committed; not an authority)
 ```bash
 # Toolchain: Rust stable, Solana CLI 4.2.x, Anchor 1.1.2, Node 20+, pnpm 9
 anchor build && ./scripts/sync-idl.sh     # compile + sync IDL for tests/SDK
-cargo test --workspace                    # 59 Rust tests (in-process LiteSVM)
+cargo test --workspace                    # 71 Rust tests (in-process LiteSVM)
 
 ./scripts/localnet.sh                     # validator + program deploy
 pnpm install
-pnpm --filter @taopp/solana test          # 13 SDK tests incl. local-validator E2E
+pnpm --filter @taopp/solana test          # 14 SDK tests incl. local-validator E2E
 pnpm --filter @taopp/mcp-server test      # MCP stdio smoke tests
 pnpm --filter @taopp/benchmark test       # benchmark determinism + dataset checks
 CERTIFIER_KEYPAIR=~/.config/solana/id.json \

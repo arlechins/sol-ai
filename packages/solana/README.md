@@ -103,7 +103,7 @@ Read-only properties: `connection`, `programId`, `program`, `provider`,
 | Method | Arguments | Returns |
 | --- | --- | --- |
 | `getScore` | `agent: PublicKey` | `Promise<ScoreView>`. Computed locally from chain state with decay applied (`{ completions, disputes, score, lastActivity, decayed }`). Returns an all-zero view when the agent does not exist. |
-| `getScoreOnChain` | `agent: PublicKey` | `Promise<ScoreView>`. Simulates the `get_score` instruction and decodes its return data. Throws if the agent has not attested. |
+| `getScoreOnChain` | `agent: PublicKey` | `Promise<ScoreView>`. Simulates the `get_score` instruction and decodes its return data. Requires a wallet as the simulation fee payer (`WalletRequired` otherwise); throws if the agent has not attested. |
 | `discover` | `{ capabilityType, minScore?: number, includeUncertified?: boolean }` | `Promise<DiscoveryItem[]>`. Certified, non-slashed, active capabilities ranked by creator score. Reads the per-type index and falls back to a program-account scan when the index is absent. |
 | `getConfig` | — | `Promise<TaopConfigRecord>` (`admin`, `certifier`, `treasury`, `challengeBondLamports`, `decayPeriodSecs`, `paused`, `nextCompletionId`, `nextCapabilityId`). |
 | `getAgent` | `authority: PublicKey` | `Promise<AgentRecord \| null>` |

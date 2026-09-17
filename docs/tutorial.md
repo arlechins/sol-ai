@@ -272,7 +272,9 @@ console.log(local.score, onChain.score, onChain.decayed);
 
 Both return `{ completions, disputes, score, lastActivity, decayed }` and must
 agree. `getScoreOnChain` simulates the `get_score` instruction and decodes its
-return data; it throws if the agent account does not exist yet.
+return data; it requires a wallet (the simulation fee payer) and throws
+`WalletRequired` without one, so read-only clients should use `getScore`. It also
+throws if the agent account does not exist yet.
 
 ### 4.5 Challenge and resolve
 

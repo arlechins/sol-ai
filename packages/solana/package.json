@@ -53,14 +53,14 @@
     "lint:package": "publint && attw --pack ."
   },
   "dependencies": {
-    "@anchor-lang/core": "^1.0.0",
-    "@solana/web3.js": "^1.98.0",
+    "@anchor-lang/core": "^1.2.0",
+    "@solana/web3.js": "^1.99.0",
     "bs58": "^6.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.14.0",
-    "tsup": "^8.4.0",
-    "typescript": "~5.8.2",
-    "vitest": "^3.0.0"
+    "@types/node": "^22.20.3",
+    "tsup": "^8.5.1",
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.7"
   }
 }
