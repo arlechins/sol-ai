@@ -13,14 +13,16 @@ step() { printf '\n=== %s ===\n' "$1"; }
 step "Rust formatting"
 cargo fmt --all -- --check
 
-step "Rust clippy"
-cargo clippy --workspace --all-targets
-
+# The test suite include_bytes!()s target/deploy/taop_reputation.so and the IDL,
+# so build before linting/testing on a clean checkout.
 step "Anchor build"
 anchor build
 
 step "IDL sync check"
 "$ROOT/scripts/check-idl-sync.sh"
+
+step "Rust clippy"
+cargo clippy --workspace --all-targets
 
 step "Rust tests"
 cargo test --workspace

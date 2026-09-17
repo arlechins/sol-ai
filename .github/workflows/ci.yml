@@ -15,7 +15,7 @@ jobs:
     name: Program (build + Rust tests)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -41,12 +41,9 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           anchor --version
 
-      - name: Rust formatting
-        run: cargo fmt --all -- --check
-
-      - name: Rust clippy
-        run: cargo clippy --workspace --all-targets
-
+      # The test suite include_bytes!()s target/deploy/taop_reputation.so and
+      # declare_program! reads the IDL, so the build must come before any Rust
+      # lint or test step on a clean checkout.
       - name: Build program
         run: anchor build
 
@@ -56,25 +53,34 @@ jobs:
       - name: Verify committed IDL has no drift
         run: ./scripts/check-idl-sync.sh
 
+      - name: Rust formatting
+        run: cargo fmt --all -- --check
+
+      - name: Rust clippy
+        run: cargo clippy --workspace --all-targets
+
       - name: Program tests (LiteSVM)
         run: cargo test --workspace
 
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+
       - name: Dependency audit
-        run: |
-          cargo install cargo-audit --locked
-          cargo audit
+        run: cargo audit
 
   packages:
     name: Packages (SDK, MCP, example, benchmark)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 9.15.4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: "pnpm"
