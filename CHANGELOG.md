@@ -31,6 +31,14 @@ program ID.
   per-instruction attack surface, residual risks, and the test that covers each
   mitigation.
 
+### Deployed
+
+- Devnet upgrade executed in place: signature
+  `5XwCkWxCaoUYWMYjVLHwBVC6HkSBpdqAehxWbvhnwPN1A4fviZ8CAcoFzrpWjh7RarwaJeoQUQpUaV1xFouGEaQq`
+  (program now 381,960 bytes; config preserved). A post-upgrade write loop
+  (attest → challenge → resolve) was executed and `get_score` matches the SDK's
+  local computation.
+
 ### Added
 
 - `docs/threat-model.md`.
