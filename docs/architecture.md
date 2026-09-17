@@ -193,6 +193,12 @@ normal system-account rules:
 - A vault that has been drained to **0 lamports is purged** by the runtime.
   The tests assert that challenge vaults and capability vaults do not exist
   after full resolution/withdrawal.
+- The **treasury** is an ordinary account (not a vault) that receives forfeited
+  challenge bonds and slashed capability bonds. `initialize_config` funds it
+  with `Rent::minimum_balance(0)` so that any later payout, however small, can
+  be credited without hitting the rent check that applies when creating a new
+  account. A 1-lamport slash is covered by
+  `treasury_is_funded_at_init_and_accepts_micro_slashes`.
 - `Challenge.bond_lamports` is the authoritative record of the escrowed bond;
   `resolve_challenge` requires the vault balance to be `>= bond_lamports`
   before sweeping it, and emits both `bond_lamports` and `swept_lamports` in

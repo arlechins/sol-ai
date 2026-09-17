@@ -232,7 +232,7 @@ caller. `system_program` is always the System program
 | --- | --- | --- | --- | --- |
 | 1 | `config` | w | | PDA `["config"]`, `init` |
 | 2 | `admin` | w | s | Payer; becomes `Config.admin` |
-| 3 | `treasury` | | | Destination for forfeited/slashed bonds |
+| 3 | `treasury` | w | | Destination for forfeited/slashed bonds; funded with the rent-exempt minimum at init |
 | 4 | `system_program` | | | |
 
 ### 2. `update_config(challenge_bond_lamports: Option<u64>, decay_period_secs: Option<i64>, paused: Option<bool>)`
@@ -352,3 +352,4 @@ as instruction return data.
 | Partial slash | `bond_remaining - penalty >= Rent::minimum_balance(0)` (or penalty == full bond) | `InvalidPenalty` |
 | Penalty | `0 < penalty <= bond_remaining` | `ZeroBond`, `PenaltyExceedsBond` |
 | Vault balance vs records | challenge: `>= Challenge.bond_lamports` before the resolution sweep; capability: `>= Capability.bond_remaining` | `VaultBalanceMismatch` |
+| Zero treasury or certifier | rejected in `initialize_config` and `set_certifier` | `InvalidAuthority` |

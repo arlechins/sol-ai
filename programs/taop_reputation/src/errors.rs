@@ -36,4 +36,6 @@ pub enum TaopError {
     ArithmeticOverflow,
     #[msg("Capability id does not match the next expected id")]
     InvalidCapabilityId,
+    #[msg("Authority must not be the default (all-zero) pubkey")]
+    InvalidAuthority,
 }

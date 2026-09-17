@@ -4,6 +4,53 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.1] - 2026-09-17
+
+Security hardening release. The program is redeployed to devnet under the same
+program ID.
+
+### Security
+
+- **Zero-authority guards.** `initialize_config` and `set_certifier` reject the
+  default (all-zero) pubkey with a typed `InvalidAuthority` error, preventing an
+  admin from bricking resolution or payouts by accident.
+- **Treasury funded at init.** `initialize_config` transfers the rent-exempt
+  minimum from the admin to the treasury, so the first micro-payout cannot fail
+  while creating the treasury account. Found by the new CU/invariant tests.
+- **Property-based score tests.** Five proptest invariants: score never exceeds
+  net completions, monotonic in completions, non-increasing over time, no decay
+  within one period, and zero after enough inactivity.
+- **Compute-unit budgets.** Every instruction asserts a CU ceiling (~3x the
+  observed usage) to catch accidental complexity regressions.
+- **Randomized accounting invariants.** A deterministic 60-operation sequence
+  (attest, challenge, resolve, register, slash) verifies vault balances,
+  treasury inflows, and per-agent counters against mirrored ground truth.
+- **Boundary tests.** Exact 200/201-byte URI limits, 1-lamport slashes, and a
+  pinned test for stale capability-index pointers after withdrawal.
+- **Threat model.** `docs/threat-model.md` documents assets, trust boundaries,
+  per-instruction attack surface, residual risks, and the test that covers each
+  mitigation.
+
+### Added
+
+- `docs/threat-model.md`.
+- Dependabot configuration for Cargo, npm, and GitHub Actions.
+- Dependency review workflow for pull requests.
+- `pnpm audit --audit-level high` in CI with documented, suppressed advisories
+  (see `SECURITY.md`).
+
+### Changed
+
+- Third-party GitHub Actions pinned to full commit SHAs.
+- Story counts: 71 Rust tests total (60 integration + 11 unit/property).
+
+### Infrastructure
+
+- `main` branch protection: required CI checks, no force pushes, no branch
+  deletion, linear history.
+- Secret scanning with push protection, Dependabot alerts, automated security
+  fixes, and private vulnerability reporting enabled.
+
 ## [0.1.0] - 2026-09-17
 
 Initial Solana rebuild of the TAOP agent credit bureau.

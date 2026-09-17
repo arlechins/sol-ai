@@ -383,7 +383,11 @@ export type TaopReputation = {
           "signer": true
         },
         {
-          "name": "treasury"
+          "name": "treasury",
+          "docs": [
+            "rent-exempt minimum here so that later micro-payouts can create the account."
+          ],
+          "writable": true
         },
         {
           "name": "systemProgram",
@@ -1366,6 +1370,11 @@ export type TaopReputation = {
       "code": 6016,
       "name": "invalidCapabilityId",
       "msg": "Capability id does not match the next expected id"
+    },
+    {
+      "code": 6017,
+      "name": "invalidAuthority",
+      "msg": "Authority must not be the default (all-zero) pubkey"
     }
   ],
   "types": [

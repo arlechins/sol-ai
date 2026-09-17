@@ -216,4 +216,91 @@ mod tests {
         );
         assert_eq!(compute_score(10, 0, 100, 100 + 99 * PERIOD, 0), (10, false));
     }
+
+    mod properties {
+        use super::*;
+        use proptest::prelude::*;
+
+        prop_compose! {
+            fn inputs()(
+                completions in 0u64..1_000_000,
+                disputes in 0u64..1_000_000,
+                last_activity in 0i64..10_000_000_000,
+                elapsed in 0i64..100_000_000_000,
+                period in 1i64..10_000_000,
+            ) -> (u64, u64, i64, i64, i64) {
+                (completions, disputes, last_activity, last_activity.saturating_add(elapsed), period)
+            }
+        }
+
+        proptest! {
+            #[test]
+            fn score_never_exceeds_net(
+                (completions, disputes, last_activity, now, period) in inputs()
+            ) {
+                let (score, _decayed) =
+                    compute_score(completions, disputes, last_activity, now, period);
+                prop_assert!(score <= completions.saturating_sub(disputes));
+                prop_assert!(score <= completions);
+            }
+
+            #[test]
+            fn more_completions_never_lower_the_score(
+                (completions, disputes, last_activity, now, period) in inputs(),
+                extra in 0u64..1_000_000,
+            ) {
+                let (base, _) =
+                    compute_score(completions, disputes, last_activity, now, period);
+                let (more, _) = compute_score(
+                    completions.saturating_add(extra),
+                    disputes,
+                    last_activity,
+                    now,
+                    period,
+                );
+                prop_assert!(more >= base);
+            }
+
+            #[test]
+            fn score_is_non_increasing_over_time(
+                (completions, disputes, last_activity, now, period) in inputs(),
+                later in 0i64..1_000_000_000,
+            ) {
+                let future = now.saturating_add(later);
+                let (before, _) =
+                    compute_score(completions, disputes, last_activity, now, period);
+                let (after, _) =
+                    compute_score(completions, disputes, last_activity, future, period);
+                prop_assert!(after <= before);
+            }
+
+            #[test]
+            fn no_decay_within_one_period(
+                (completions, disputes, last_activity, now, period) in inputs()
+            ) {
+                let within = last_activity.saturating_add(period);
+                let (score, decayed) =
+                    compute_score(completions, disputes, last_activity, within, period);
+                let net = completions.saturating_sub(disputes);
+                if last_activity > 0 && net > 0 {
+                    prop_assert_eq!(score, net);
+                    prop_assert!(!decayed);
+                }
+            }
+
+            #[test]
+            fn score_reaches_zero_after_enough_inactivity(
+                (completions, disputes, last_activity, now, period) in inputs()
+            ) {
+                let far = last_activity.saturating_add(period.saturating_mul(80));
+                let (score, decayed) =
+                    compute_score(completions, disputes, last_activity, far, period);
+                prop_assert_eq!(score, 0);
+                prop_assert_eq!(decayed, completions > disputes && last_activity > 0);
+                void(now);
+            }
+        }
+
+        fn void(_value: i64) {}
+    }
 }

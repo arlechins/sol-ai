@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::system_program::{transfer as system_transfer, Transfer};
 
 use crate::errors::TaopError;
 use crate::events::{CertifierUpdated, ConfigInitialized, ConfigUpdated};
@@ -16,7 +17,9 @@ pub struct InitializeConfig<'info> {
     pub config: Account<'info, Config>,
     #[account(mut)]
     pub admin: Signer<'info>,
-    /// CHECK: lamport destination for forfeited/slashed bonds; only stored and paid to.
+    /// CHECK: lamport destination for forfeited/slashed bonds; funded with the
+    /// rent-exempt minimum here so that later micro-payouts can create the account.
+    #[account(mut)]
     pub treasury: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
@@ -33,10 +36,25 @@ pub fn initialize_config(
         TaopError::BondBelowRentExempt
     );
     require!(decay_period_secs > 0, TaopError::InvalidDecayPeriod);
+    require!(certifier != Pubkey::default(), TaopError::InvalidAuthority);
     require!(
         ctx.accounts.treasury.key() != Pubkey::default(),
-        TaopError::Unauthorized
+        TaopError::InvalidAuthority
     );
+
+    // Fund the treasury with the rent-exempt minimum so that small forfeitures
+    // and micro-slashes can always be paid out (a first payout below the
+    // rent-exempt minimum would otherwise fail to create the account).
+    system_transfer(
+        CpiContext::new(
+            ctx.accounts.system_program.key(),
+            Transfer {
+                from: ctx.accounts.admin.to_account_info(),
+                to: ctx.accounts.treasury.to_account_info(),
+            },
+        ),
+        rent.minimum_balance(0),
+    )?;
 
     let config = &mut ctx.accounts.config;
     config.admin = ctx.accounts.admin.key();
@@ -116,6 +134,7 @@ pub fn set_certifier(ctx: Context<SetCertifier>, certifier: Pubkey) -> Result<()
         ctx.accounts.config.admin,
         TaopError::Unauthorized
     );
+    require!(certifier != Pubkey::default(), TaopError::InvalidAuthority);
     let config = &mut ctx.accounts.config;
     config.certifier = certifier;
 
