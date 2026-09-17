@@ -50,6 +50,34 @@ defects:
 - Denial of service through network-level flooding (Solana handles this).
 - Issues in dependencies that are already tracked upstream.
 
+## Known advisories (accepted)
+
+- **CVE-2026-77465 / CVE-2026-63376 (`toml` < 4.2.0, transitive via
+  `@anchor-lang/core` 1.x).** The vulnerable parser is referenced only by
+  Anchor's `Workspace` helper, which reads the project's own `Anchor.toml`; no
+  code path in this repository or in the published SDK parses untrusted TOML
+  with it. No 3.x patch exists; the fix requires an upstream `toml` major bump.
+  The root `package.json` suppresses these two advisories for
+  `pnpm audit --audit-level high`, and Dependabot alerts remain enabled so the
+  upstream fix is surfaced when it lands. Do not use Anchor's `Workspace`
+  helper to parse untrusted TOML in the meantime.
+- Moderate and low advisories in dev-only tooling (`vitest`, `esbuild`,
+  `uuid`, `stream-json`) are tracked through Dependabot and are not shipped to
+  consumers of `@taopp/solana`. CI fails on high and critical advisories only.
+
+## Hardening measures
+
+- Third-party GitHub Actions are pinned to full commit SHAs; Dependabot tracks
+  updates.
+- `main` requires the CI checks `Program (build + Rust tests)` and
+  `Packages (SDK, MCP, example, benchmark)`, blocks force pushes and branch
+  deletion, and enforces linear history.
+- Secret scanning with push protection, Dependabot alerts, automated security
+  fixes, and private vulnerability reporting are enabled on the repository.
+- The program ships property-based score tests, compute-unit budgets, a
+  randomized accounting-invariant test, and a full threat model in
+  `docs/threat-model.md`.
+
 ## No bug bounty
 
 There is no paid bug bounty at this stage. If the project receives funding for
