@@ -1,0 +1,32 @@
+# Rust / Anchor
+target/
+.anchor/
+test-ledger/
+**/*.rs.bk
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+.pnpm-store/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+*.keypair.json
+
+# Generated deployment metadata (commit deployments.solana.example.json instead)
+deployments.solana.json
+deployments.json
+
+# Local demo keys
+.keys/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Benchmark outputs (keep committed baseline reports)
+benchmark/results/tmp/

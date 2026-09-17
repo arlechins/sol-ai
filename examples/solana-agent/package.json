@@ -1,0 +1,23 @@
+{
+  "name": "@taopp/example-solana-agent",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Runnable example: two agents discover, vet, and challenge each other on the TAOP reputation program (Solana)",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@solana/web3.js": "^1.98.0",
+    "@taopp/solana": "workspace:*",
+    "bs58": "^6.0.0",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.2"
+  }
+}

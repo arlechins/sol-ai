@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  SOLANA_VERSION: "4.2.2"
+  ANCHOR_VERSION: "1.1.2"
+
+jobs:
+  program:
+    name: Program (build + Rust tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-targets: true
+
+      - name: Install Solana CLI (Agave)
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v${SOLANA_VERSION}/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+
+      - name: Install Anchor CLI
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -sSfL -o "$HOME/.local/bin/anchor" \
+            "https://github.com/otter-sec/anchor/releases/download/v${ANCHOR_VERSION}/anchor-${ANCHOR_VERSION}-x86_64-unknown-linux-gnu"
+          chmod +x "$HOME/.local/bin/anchor"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          anchor --version
+
+      - name: Rust formatting
+        run: cargo fmt --all -- --check
+
+      - name: Rust clippy
+        run: cargo clippy --workspace --all-targets
+
+      - name: Build program
+        run: anchor build
+
+      - name: Sync IDL for Rust tests and SDK
+        run: ./scripts/sync-idl.sh
+
+      - name: Verify committed IDL has no drift
+        run: ./scripts/check-idl-sync.sh
+
+      - name: Program tests (LiteSVM)
+        run: cargo test --workspace
+
+      - name: Dependency audit
+        run: |
+          cargo install cargo-audit --locked
+          cargo audit
+
+  packages:
+    name: Packages (SDK, MCP, example, benchmark)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install Solana CLI (Agave)
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v${SOLANA_VERSION}/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+
+      - name: Install Anchor CLI
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -sSfL -o "$HOME/.local/bin/anchor" \
+            "https://github.com/otter-sec/anchor/releases/download/v${ANCHOR_VERSION}/anchor-${ANCHOR_VERSION}-x86_64-unknown-linux-gnu"
+          chmod +x "$HOME/.local/bin/anchor"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build program and sync IDL
+        run: anchor build && ./scripts/sync-idl.sh
+
+      - name: Typecheck and build packages
+        run: |
+          pnpm --filter @taopp/solana build
+          pnpm --filter @taopp/mcp-server build
+          pnpm -r --if-present typecheck
+
+      - name: Start local validator and deploy program
+        run: ./scripts/localnet.sh
+
+      - name: Package tests (unit + local-validator integration)
+        run: pnpm -r --if-present test
+        env:
+          TAOP_RPC_URL: http://127.0.0.1:8899
+
+      - name: Benchmark smoke run
+        run: pnpm --filter @taopp/benchmark start -- --seed 7 --json-only --out /tmp/benchmark-smoke

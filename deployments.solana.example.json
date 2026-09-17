@@ -1,0 +1,11 @@
+{
+  "cluster": "localnet",
+  "programId": "8soD4YteLDgkibSNBzmQJTztiNcXPcLoi3Y2FrY15MnE",
+  "config": "REPLACE_WITH_DERIVED_CONFIG_PDA",
+  "authority": "REPLACE_WITH_AUTHORITY_PUBKEY",
+  "certifier": "REPLACE_WITH_CERTIFIER_PUBKEY",
+  "treasury": "REPLACE_WITH_TREASURY_PUBKEY",
+  "challengeBondLamports": 5000000,
+  "decayPeriodSecs": 2592000,
+  "deployedAt": "REPLACE_WITH_TIMESTAMP"
+}

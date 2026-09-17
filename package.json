@@ -1,0 +1,34 @@
+{
+  "name": "taop-solana",
+  "private": true,
+  "version": "0.1.0",
+  "description": "TAOP reputation for Solana — bonded completions, challenges, score decay, and a bonded capability registry",
+  "license": "MIT",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "program:build": "anchor build && ./scripts/sync-idl.sh",
+    "program:test": "cargo test --workspace",
+    "localnet": "./scripts/localnet.sh",
+    "deploy:devnet": "anchor deploy --provider.cluster devnet && pnpm deploy:init -- --cluster devnet",
+    "deploy:mainnet": "anchor deploy --provider.cluster mainnet-beta && pnpm deploy:init -- --cluster mainnet-beta",
+    "deploy:init": "tsx scripts/init-config.ts",
+    "sdk:build": "pnpm --filter @taopp/solana build",
+    "sdk:test": "pnpm --filter @taopp/solana test",
+    "mcp:build": "pnpm --filter @taopp/mcp-server build",
+    "mcp:test": "pnpm --filter @taopp/mcp-server test",
+    "agent:demo": "pnpm --filter @taopp/example-solana-agent start",
+    "bench": "pnpm --filter @taopp/benchmark start",
+    "test:packages": "pnpm -r --if-present test",
+    "test": "cargo test --workspace && pnpm -r --if-present test"
+  },
+  "devDependencies": {
+    "@solana/web3.js": "^1.98.0",
+    "@taopp/solana": "workspace:*",
+    "bs58": "^6.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.2"
+  }
+}

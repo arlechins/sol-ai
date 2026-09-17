@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TAOP adversarial pattern dataset",
+  "type": "object",
+  "required": ["name", "version", "license", "patterns"],
+  "properties": {
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "license": { "const": "CC-BY-4.0" },
+    "description": { "type": "string" },
+    "attackClasses": {
+      "type": "object",
+      "required": ["sybil_farming", "slow_burn_harvest", "collusive_ring"],
+      "additionalProperties": { "type": "string" }
+    },
+    "patterns": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "attackClass",
+          "description",
+          "onChainSignals",
+          "realWorldEvidence",
+          "sources",
+          "applicableMechanisms",
+          "mitigations",
+          "severity",
+          "confidence"
+        ],
+        "properties": {
+          "id": { "type": "string", "pattern": "^(sybil|slowburn|collusion)-[0-9]{3}$" },
+          "title": { "type": "string", "minLength": 3 },
+          "attackClass": {
+            "enum": ["sybil_farming", "slow_burn_harvest", "collusive_ring"]
+          },
+          "description": { "type": "string", "minLength": 20 },
+          "onChainSignals": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" }
+          },
+          "realWorldEvidence": { "type": "string", "minLength": 10 },
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["title", "venue", "year"],
+              "properties": {
+                "title": { "type": "string" },
+                "authors": { "type": "string" },
+                "venue": { "type": "string" },
+                "year": { "type": "integer", "minimum": 1990, "maximum": 2100 },
+                "url": { "type": "string" }
+              }
+            }
+          },
+          "applicableMechanisms": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": ["self_attestation", "naive_count", "peer_ratings", "stake_gated"]
+            }
+          },
+          "mitigations": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" }
+          },
+          "severity": { "enum": ["low", "medium", "high"] },
+          "confidence": { "enum": ["low", "medium", "high"] }
+        }
+      }
+    }
+  }
+}

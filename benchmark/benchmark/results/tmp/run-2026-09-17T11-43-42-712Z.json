@@ -1,0 +1,79 @@
+{
+  "metadata": {
+    "generatedAt": "2026-09-17T11:43:42.713Z",
+    "seed": 42,
+    "nodeVersion": "v24.14.1",
+    "version": "0.1.0",
+    "scenarios": [
+      "sybil"
+    ]
+  },
+  "configs": {
+    "sybil": {
+      "sybils": 20,
+      "attestsPerSybil": 10,
+      "challengeProbability": 0.1,
+      "upheldProbability": 0.9,
+      "seed": 42
+    },
+    "slowBurn": {
+      "targetScore": 50,
+      "harvestValueLamports": 5000000000,
+      "attestsPerDay": 2,
+      "horizonDays": 180
+    },
+    "collusion": {
+      "ringSize": 10,
+      "ratingsPerPair": 1,
+      "reciprocityThreshold": 0.8
+    }
+  },
+  "params": {
+    "bondLamports": 5000000,
+    "decayPeriodSecs": 2592000,
+    "capabilityBondLamports": 5000000
+  },
+  "reports": [
+    {
+      "mechanism": "taop_bonded_decay",
+      "description": "taop_reputation v0.1: self-attested completions, native-SOL challenge bonds, admin-resolved disputes, score = max(0, completions - disputes) with inactivity decay.",
+      "sybil": {
+        "scenario": "sybil_farming",
+        "mechanism": "taop_bonded_decay",
+        "config": {
+          "sybils": 20,
+          "attestsPerSybil": 10,
+          "challengeProbability": 0.1,
+          "upheldProbability": 0.9,
+          "seed": 42
+        },
+        "metrics": {
+          "sybilAgents": 20,
+          "totalAttestations": 200,
+          "totalScore": 185,
+          "spentLamports": 587055820,
+          "lockedLamports": 0,
+          "capitalPerPointLamports": 0,
+          "costPerPointLamports": 3173274.7027027025,
+          "honestCostPerPointLamports": 2935279.1,
+          "efficiencyRatio": 0.925,
+          "challenges": 16,
+          "disputes": 15,
+          "costToThreshold": {
+            "10": "0.026838590 SOL",
+            "100": "0.268385900 SOL",
+            "1000": "2.683859000 SOL"
+          }
+        },
+        "findings": "Attacker commits 0.003173275 SOL per effective reputation point (0.000000000 SOL of it locked capital) versus 0.002935279 SOL for honest work (efficiency 0.93x). 15/16 challenges were upheld. Self-attested work is indistinguishable from honest work at this challenge rate."
+      },
+      "scores": {
+        "composite": 3.7,
+        "sybilFarming": 3.7
+      },
+      "weakSpots": [
+        "Sybil farming is cheap (self-attestation has no verifier)"
+      ]
+    }
+  ]
+}

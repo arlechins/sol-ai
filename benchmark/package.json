@@ -1,0 +1,23 @@
+{
+  "name": "@taopp/benchmark",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Open gaming-resistance benchmark for agent-reputation mechanisms: Sybil farming, slow-burn harvest, and collusive rings",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/run.ts",
+    "sensitivity": "tsx src/sensitivity.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@taopp/solana": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.2",
+    "vitest": "^3.0.0"
+  }
+}

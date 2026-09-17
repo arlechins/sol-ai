@@ -1,0 +1,2015 @@
+{
+  "address": "8soD4YteLDgkibSNBzmQJTztiNcXPcLoi3Y2FrY15MnE",
+  "metadata": {
+    "name": "taop_reputation",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "TAOP reputation program for Solana: bonded completions, challenges, score decay, and a bonded capability registry"
+  },
+  "docs": [
+    "TAOP reputation program for Solana.",
+    "",
+    "v0.1 mechanism: agents self-attest completions, anyone can challenge a",
+    "completion with a native SOL bond, the admin/certifier resolves disputes.",
+    "Score = completions - disputes with inactivity decay. Capabilities are",
+    "registered with a slashable SOL bond and can be certified or slashed."
+  ],
+  "instructions": [
+    {
+      "name": "attest_completion",
+      "docs": [
+        "Self-attest a completed task. Creates the agent identity on first use."
+      ],
+      "discriminator": [
+        232,
+        151,
+        75,
+        47,
+        250,
+        106,
+        125,
+        26
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "agent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  103,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "completion",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  109,
+                  112,
+                  108,
+                  101,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "completion_seq"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "task_type",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "result_uri",
+          "type": "string"
+        },
+        {
+          "name": "completion_seq",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "certify_capability",
+      "docs": [
+        "Certify a capability (admin or certifier only)."
+      ],
+      "discriminator": [
+        122,
+        231,
+        55,
+        40,
+        8,
+        160,
+        97,
+        171
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "capability",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "challenge_completion",
+      "docs": [
+        "Challenge a completion with the configured native SOL bond."
+      ],
+      "discriminator": [
+        233,
+        5,
+        189,
+        77,
+        233,
+        239,
+        223,
+        213
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "completion",
+          "writable": true
+        },
+        {
+          "name": "challenge",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  104,
+                  97,
+                  108,
+                  108,
+                  101,
+                  110,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "completion"
+              }
+            ]
+          }
+        },
+        {
+          "name": "challenge_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  104,
+                  97,
+                  108,
+                  108,
+                  101,
+                  110,
+                  103,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "completion"
+              }
+            ]
+          }
+        },
+        {
+          "name": "challenger",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "evidence_uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "get_score",
+      "docs": [
+        "Read-only score view with inactivity decay applied."
+      ],
+      "discriminator": [
+        141,
+        61,
+        99,
+        196,
+        254,
+        116,
+        158,
+        115
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "agent"
+        }
+      ],
+      "args": [],
+      "returns": {
+        "defined": {
+          "name": "ScoreView"
+        }
+      }
+    },
+    {
+      "name": "initialize_config",
+      "docs": [
+        "One-time protocol configuration. The signer becomes the admin."
+      ],
+      "discriminator": [
+        208,
+        127,
+        21,
+        1,
+        194,
+        190,
+        196,
+        70
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "treasury"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "certifier",
+          "type": "pubkey"
+        },
+        {
+          "name": "challenge_bond_lamports",
+          "type": "u64"
+        },
+        {
+          "name": "decay_period_secs",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "register_agent",
+      "docs": [
+        "Register an agent identity or update its profile metadata URI."
+      ],
+      "discriminator": [
+        135,
+        157,
+        66,
+        195,
+        2,
+        113,
+        175,
+        30
+      ],
+      "accounts": [
+        {
+          "name": "agent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  103,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "metadata_uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "register_capability",
+      "docs": [
+        "Register a capability with a slashable native SOL bond."
+      ],
+      "discriminator": [
+        66,
+        102,
+        244,
+        97,
+        190,
+        45,
+        57,
+        230
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "index",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  112,
+                  45,
+                  105,
+                  110,
+                  100,
+                  101,
+                  120
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "capability_type"
+              }
+            ]
+          }
+        },
+        {
+          "name": "capability",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  112,
+                  97,
+                  98,
+                  105,
+                  108,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "capability_type"
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              },
+              {
+                "kind": "arg",
+                "path": "capability_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "capability_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  112,
+                  97,
+                  98,
+                  105,
+                  108,
+                  105,
+                  116,
+                  121,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "capability"
+              }
+            ]
+          }
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "capability_type",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "metadata_uri",
+          "type": "string"
+        },
+        {
+          "name": "capability_id",
+          "type": "u64"
+        },
+        {
+          "name": "bond_lamports",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "resolve_challenge",
+      "docs": [
+        "Resolve a pending challenge (admin or certifier only)."
+      ],
+      "discriminator": [
+        81,
+        191,
+        124,
+        119,
+        131,
+        248,
+        157,
+        109
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "completion",
+          "writable": true,
+          "relations": [
+            "challenge"
+          ]
+        },
+        {
+          "name": "agent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  103,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "completion.agent",
+                "account": "Completion"
+              }
+            ]
+          }
+        },
+        {
+          "name": "challenge",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  104,
+                  97,
+                  108,
+                  108,
+                  101,
+                  110,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "completion"
+              }
+            ]
+          }
+        },
+        {
+          "name": "challenge_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  104,
+                  97,
+                  108,
+                  108,
+                  101,
+                  110,
+                  103,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "completion"
+              }
+            ]
+          }
+        },
+        {
+          "name": "challenger",
+          "writable": true
+        },
+        {
+          "name": "treasury",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "upheld",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "set_certifier",
+      "docs": [
+        "Update the certifier authority (admin only)."
+      ],
+      "discriminator": [
+        52,
+        31,
+        104,
+        133,
+        159,
+        14,
+        251,
+        41
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "certifier",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "slash_capability",
+      "docs": [
+        "Slash a capability bond (admin or certifier only)."
+      ],
+      "discriminator": [
+        223,
+        188,
+        24,
+        195,
+        35,
+        53,
+        39,
+        176
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "capability",
+          "writable": true
+        },
+        {
+          "name": "capability_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  112,
+                  97,
+                  98,
+                  105,
+                  108,
+                  105,
+                  116,
+                  121,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "capability"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "penalty_lamports",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "update_config",
+      "docs": [
+        "Update bond/decay/pause parameters (admin only)."
+      ],
+      "discriminator": [
+        29,
+        158,
+        252,
+        191,
+        10,
+        83,
+        219,
+        99
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "challenge_bond_lamports",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "decay_period_secs",
+          "type": {
+            "option": "i64"
+          }
+        },
+        {
+          "name": "paused",
+          "type": {
+            "option": "bool"
+          }
+        }
+      ]
+    },
+    {
+      "name": "withdraw_capability_bond",
+      "docs": [
+        "Reclaim the remaining bond and close the capability record (creator only)."
+      ],
+      "discriminator": [
+        102,
+        253,
+        170,
+        47,
+        198,
+        70,
+        26,
+        147
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "capability",
+          "writable": true
+        },
+        {
+          "name": "capability_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  112,
+                  97,
+                  98,
+                  105,
+                  108,
+                  105,
+                  116,
+                  121,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "capability"
+              }
+            ]
+          }
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "capability"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Agent",
+      "discriminator": [
+        47,
+        166,
+        112,
+        147,
+        155,
+        197,
+        86,
+        7
+      ]
+    },
+    {
+      "name": "Capability",
+      "discriminator": [
+        192,
+        140,
+        41,
+        92,
+        236,
+        64,
+        181,
+        99
+      ]
+    },
+    {
+      "name": "CapabilityIndex",
+      "discriminator": [
+        128,
+        66,
+        99,
+        20,
+        133,
+        90,
+        103,
+        111
+      ]
+    },
+    {
+      "name": "Challenge",
+      "discriminator": [
+        119,
+        250,
+        161,
+        121,
+        119,
+        81,
+        22,
+        208
+      ]
+    },
+    {
+      "name": "Completion",
+      "discriminator": [
+        122,
+        228,
+        30,
+        216,
+        217,
+        48,
+        88,
+        215
+      ]
+    },
+    {
+      "name": "Config",
+      "discriminator": [
+        155,
+        12,
+        170,
+        224,
+        30,
+        250,
+        204,
+        130
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "AgentRegistered",
+      "discriminator": [
+        191,
+        78,
+        217,
+        54,
+        232,
+        100,
+        189,
+        85
+      ]
+    },
+    {
+      "name": "BondWithdrawn",
+      "discriminator": [
+        111,
+        192,
+        154,
+        231,
+        58,
+        115,
+        130,
+        103
+      ]
+    },
+    {
+      "name": "CapabilityCertified",
+      "discriminator": [
+        110,
+        234,
+        240,
+        86,
+        91,
+        248,
+        254,
+        121
+      ]
+    },
+    {
+      "name": "CapabilityRegistered",
+      "discriminator": [
+        130,
+        122,
+        49,
+        189,
+        3,
+        231,
+        38,
+        120
+      ]
+    },
+    {
+      "name": "CapabilitySlashed",
+      "discriminator": [
+        26,
+        234,
+        2,
+        211,
+        66,
+        165,
+        44,
+        20
+      ]
+    },
+    {
+      "name": "CertifierUpdated",
+      "discriminator": [
+        130,
+        192,
+        78,
+        22,
+        37,
+        157,
+        149,
+        194
+      ]
+    },
+    {
+      "name": "ChallengeResolved",
+      "discriminator": [
+        100,
+        153,
+        38,
+        123,
+        172,
+        250,
+        166,
+        105
+      ]
+    },
+    {
+      "name": "ChallengeSubmitted",
+      "discriminator": [
+        131,
+        3,
+        237,
+        209,
+        8,
+        77,
+        161,
+        132
+      ]
+    },
+    {
+      "name": "CompletionAttested",
+      "discriminator": [
+        114,
+        175,
+        183,
+        100,
+        0,
+        241,
+        15,
+        89
+      ]
+    },
+    {
+      "name": "ConfigInitialized",
+      "discriminator": [
+        181,
+        49,
+        200,
+        156,
+        19,
+        167,
+        178,
+        91
+      ]
+    },
+    {
+      "name": "ConfigUpdated",
+      "discriminator": [
+        40,
+        241,
+        230,
+        122,
+        11,
+        19,
+        198,
+        194
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Caller is not authorized for this action"
+    },
+    {
+      "code": 6001,
+      "name": "Paused",
+      "msg": "Config is paused"
+    },
+    {
+      "code": 6002,
+      "name": "UriTooLong",
+      "msg": "URI exceeds the maximum length of 200 bytes"
+    },
+    {
+      "code": 6003,
+      "name": "BondBelowRentExempt",
+      "msg": "Challenge bond must be at least the rent-exempt minimum"
+    },
+    {
+      "code": 6004,
+      "name": "AlreadyChallenged",
+      "msg": "Completion has already been challenged"
+    },
+    {
+      "code": 6005,
+      "name": "ChallengeNotPending",
+      "msg": "Challenge is not pending resolution"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidCompletionSeq",
+      "msg": "Completion sequence does not match the agent's completion count"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidDecayPeriod",
+      "msg": "Decay period must be greater than zero"
+    },
+    {
+      "code": 6008,
+      "name": "ZeroBond",
+      "msg": "Capability bond must be greater than zero"
+    },
+    {
+      "code": 6009,
+      "name": "PenaltyExceedsBond",
+      "msg": "Penalty exceeds the remaining bond"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidPenalty",
+      "msg": "Partial slash would leave the bond below the rent-exempt minimum; slash the full bond instead"
+    },
+    {
+      "code": 6011,
+      "name": "CapabilityNotActive",
+      "msg": "Capability is not active"
+    },
+    {
+      "code": 6012,
+      "name": "BondStillSlashed",
+      "msg": "Bond was fully slashed; nothing to withdraw"
+    },
+    {
+      "code": 6013,
+      "name": "IndexFull",
+      "msg": "Capability index for this type is full"
+    },
+    {
+      "code": 6014,
+      "name": "VaultBalanceMismatch",
+      "msg": "Challenge vault balance does not match the recorded bond"
+    },
+    {
+      "code": 6015,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidCapabilityId",
+      "msg": "Capability id does not match the next expected id"
+    }
+  ],
+  "types": [
+    {
+      "name": "Agent",
+      "docs": [
+        "Per-agent reputation state. PDA: seeds = [\"agent\", authority]."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "docs": [
+              "Signing authority that owns this agent identity."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "completions",
+            "docs": [
+              "Number of self-attested completions."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputes",
+            "docs": [
+              "Number of upheld disputes (fraudulent completions)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "last_activity",
+            "docs": [
+              "Unix timestamp of the most recent attestation (used for decay)."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "metadata_uri",
+            "docs": [
+              "Optional profile URI (JSON metadata, e.g. IPFS)."
+            ],
+            "type": "string"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AgentRegistered",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "metadata_uri",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BondWithdrawn",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "capability",
+            "type": "pubkey"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount_lamports",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Capability",
+      "docs": [
+        "A registered capability with a slashable bond. PDA: seeds = [\"capability\", type, creator, seq_le]."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "docs": [
+              "Global capability id (monotonic, starts at 1)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "creator",
+            "docs": [
+              "Agent that registered (and bonded) the capability."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "capability_type",
+            "docs": [
+              "32-byte capability type tag (e.g. sha256 of \"LoRA\")."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "metadata_uri",
+            "docs": [
+              "URI of the capability metadata / card."
+            ],
+            "type": "string"
+          },
+          {
+            "name": "bond_remaining",
+            "docs": [
+              "Remaining slashable bond (lamports)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "certified",
+            "docs": [
+              "True once certified by the certifier."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "slashed",
+            "docs": [
+              "True once slashed at least once."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "active",
+            "docs": [
+              "False after the bond has been withdrawn; discovery ignores inactive capabilities."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CapabilityCertified",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "capability",
+            "type": "pubkey"
+          },
+          {
+            "name": "certifier",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CapabilityIndex",
+      "docs": [
+        "Append-only index of capabilities per type. PDA: seeds = [\"cap-index\", capability_type]."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "capability_type",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "capabilities",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CapabilityRegistered",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "capability",
+            "type": "pubkey"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "capability_id",
+            "type": "u64"
+          },
+          {
+            "name": "capability_type",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "bond_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "metadata_uri",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CapabilitySlashed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "capability",
+            "type": "pubkey"
+          },
+          {
+            "name": "penalty_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "bond_remaining",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CertifierUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "certifier",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Challenge",
+      "docs": [
+        "A fraud challenge against one completion. PDA: seeds = [\"challenge\", completion]."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "completion",
+            "docs": [
+              "Completion being challenged."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "challenger",
+            "docs": [
+              "Challenger that posted the bond."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "evidence_uri",
+            "docs": [
+              "URI of the fraud evidence."
+            ],
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp of the challenge."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "resolved",
+            "docs": [
+              "True once resolved."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "upheld",
+            "docs": [
+              "True if the challenge was upheld."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "bond_lamports",
+            "docs": [
+              "Bond escrowed in the challenge vault (lamports)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChallengeResolved",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "completion",
+            "type": "pubkey"
+          },
+          {
+            "name": "upheld",
+            "type": "bool"
+          },
+          {
+            "name": "bond_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "swept_lamports",
+            "docs": [
+              "Total lamports moved out of the vault (bond plus unsolicited deposits)."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChallengeSubmitted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "completion",
+            "type": "pubkey"
+          },
+          {
+            "name": "challenger",
+            "type": "pubkey"
+          },
+          {
+            "name": "evidence_uri",
+            "type": "string"
+          },
+          {
+            "name": "bond_lamports",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Completion",
+      "docs": [
+        "A self-attested completion. PDA: seeds = [\"completion\", agent, seq_le]."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "docs": [
+              "Global completion id (monotonic, starts at 1)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "agent",
+            "docs": [
+              "Agent that self-attested."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "task_type",
+            "docs": [
+              "32-byte task type tag (e.g. sha256 of a canonical string)."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "result_uri",
+            "docs": [
+              "URI of the result/evidence bundle."
+            ],
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "docs": [
+              "Unix timestamp of the attestation."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "challenged",
+            "docs": [
+              "True once a challenge has been submitted against this completion."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "disputed",
+            "docs": [
+              "True if a challenge was upheld (completion proven fraudulent)."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CompletionAttested",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent",
+            "type": "pubkey"
+          },
+          {
+            "name": "completion",
+            "type": "pubkey"
+          },
+          {
+            "name": "completion_id",
+            "type": "u64"
+          },
+          {
+            "name": "task_type",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "result_uri",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Config",
+      "docs": [
+        "Protocol-level configuration. Single PDA: seeds = [\"config\"]."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "docs": [
+              "Authority allowed to update config, set the certifier, and resolve challenges."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "certifier",
+            "docs": [
+              "Authority allowed to certify and slash capabilities and resolve challenges."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "docs": [
+              "Lamport destination for forfeited challenge bonds and slashed capability bonds."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "challenge_bond_lamports",
+            "docs": [
+              "Exact bond required to challenge a completion (lamports)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "decay_period_secs",
+            "docs": [
+              "Inactivity decay period in seconds (default 30 days). Score halves every full period."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "paused",
+            "docs": [
+              "When true, attestations, challenges, and capability registrations are rejected."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "next_completion_id",
+            "docs": [
+              "Monotonic global completion id (first id is 1)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "next_capability_id",
+            "docs": [
+              "Monotonic global capability id (first id is 1)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConfigInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "certifier",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "type": "pubkey"
+          },
+          {
+            "name": "challenge_bond_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "decay_period_secs",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConfigUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "challenge_bond_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "decay_period_secs",
+            "type": "i64"
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScoreView",
+      "docs": [
+        "Return payload of `get_score` (Anchor serializes instruction return values as return data)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "completions",
+            "type": "u64"
+          },
+          {
+            "name": "disputes",
+            "type": "u64"
+          },
+          {
+            "name": "score",
+            "type": "u64"
+          },
+          {
+            "name": "last_activity",
+            "type": "i64"
+          },
+          {
+            "name": "decayed",
+            "type": "bool"
+          }
+        ]
+      }
+    }
+  ]
+}
