@@ -1,0 +1,8 @@
+# Linux host builds of the Rust integration tests link two *program* crates:
+# taop_reputation (our program) and spl-token (pulled in by anchor-litesvm's
+# token helpers). Both export an `entrypoint` symbol, which lld rejects as a
+# duplicate on Linux (ld64 on macOS tolerates it). The symbol is never called
+# from the test harness, so allow the linker to pick one definition for host
+# test builds only. SBF builds (target_os = "solana") are unaffected.
+[target.'cfg(all(target_os = "linux", not(target_os = "solana")))']
+rustflags = ["-C", "link-arg=-Wl,--allow-multiple-definition"]
