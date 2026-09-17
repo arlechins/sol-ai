@@ -1,10 +1,6 @@
 import fs from "node:fs";
-import {
-  AnchorProvider,
-  BN,
-  Program,
-  Wallet,
-} from "@anchor-lang/core";
+import * as anchor from "@anchor-lang/core";
+import type { Wallet } from "@anchor-lang/core";
 import {
   Connection,
   Keypair,
@@ -58,8 +54,8 @@ export class TaopSolanaClient {
   readonly connection: Connection;
   readonly programId: PublicKey;
   readonly pdas: Pdas;
-  readonly provider: AnchorProvider;
-  readonly program: Program<TaopReputation>;
+  readonly provider: anchor.AnchorProvider;
+  readonly program: anchor.Program<TaopReputation>;
   private readonly wallet?: Wallet;
 
   constructor(config: TaopSolanaClientConfig) {
@@ -67,12 +63,12 @@ export class TaopSolanaClient {
     this.programId = config.programId ?? TAOP_PROGRAM_ID;
     this.pdas = createPdas(this.programId);
     this.wallet = config.wallet ? normalizeWallet(config.wallet) : undefined;
-    this.provider = new AnchorProvider(
+    this.provider = new anchor.AnchorProvider(
       this.connection,
       this.wallet ?? READONLY_WALLET,
       { commitment: "confirmed" },
     );
-    this.program = new Program(idlJson as unknown as TaopReputation, this.provider);
+    this.program = new anchor.Program(idlJson as unknown as TaopReputation, this.provider);
   }
 
   get walletPublicKey(): PublicKey | undefined {
@@ -130,9 +126,9 @@ export class TaopSolanaClient {
       if (!info) continue;
       const raw = this.program.coder.accounts.decode("agent", info.data) as {
         authority: PublicKey;
-        completions: BN;
-        disputes: BN;
-        lastActivity: BN;
+        completions: anchor.BN;
+        disputes: anchor.BN;
+        lastActivity: anchor.BN;
         metadataUri: string;
       };
       out.set(keys[i].toBase58(), {
@@ -346,8 +342,8 @@ export class TaopSolanaClient {
     const signature = await this.program.methods
       .initializeConfig(
         input.certifier,
-        new BN(input.challengeBondLamports.toString()),
-        new BN(input.decayPeriodSecs.toString()),
+        new anchor.BN(input.challengeBondLamports.toString()),
+        new anchor.BN(input.decayPeriodSecs.toString()),
       )
       .accountsStrict({
         config: this.pdas.config,
@@ -372,10 +368,10 @@ export class TaopSolanaClient {
     const signature = await this.program.methods
       .updateConfig(
         input.challengeBondLamports !== undefined
-          ? new BN(input.challengeBondLamports.toString())
+          ? new anchor.BN(input.challengeBondLamports.toString())
           : null,
         input.decayPeriodSecs !== undefined
-          ? new BN(input.decayPeriodSecs.toString())
+          ? new anchor.BN(input.decayPeriodSecs.toString())
           : null,
         input.paused ?? null,
       )
@@ -427,7 +423,7 @@ export class TaopSolanaClient {
     const completion = this.pdas.completion(authority, seq);
 
     const signature = await this.program.methods
-      .attestCompletion(toBytes(input.taskType), input.resultUri, new BN(seq))
+      .attestCompletion(toBytes(input.taskType), input.resultUri, new anchor.BN(seq))
       .accountsStrict({
         config: this.pdas.config,
         agent: this.pdas.agent(authority),
@@ -515,8 +511,8 @@ export class TaopSolanaClient {
       .registerCapability(
         typeBytes,
         input.metadataUri,
-        new BN(id),
-        new BN(input.bondLamports.toString()),
+        new anchor.BN(id),
+        new anchor.BN(input.bondLamports.toString()),
       )
       .accountsStrict({
         config: this.pdas.config,
@@ -554,7 +550,7 @@ export class TaopSolanaClient {
     const authority = this.requireWallet();
     const config = await this.getConfig();
     return this.program.methods
-      .slashCapability(new BN(penaltyLamports.toString()))
+      .slashCapability(new anchor.BN(penaltyLamports.toString()))
       .accountsStrict({
         config: this.pdas.config,
         capability,
@@ -596,7 +592,26 @@ const READONLY_WALLET: Wallet = {
 } as Wallet;
 
 export function normalizeWallet(wallet: Wallet | Keypair): Wallet {
-  return wallet instanceof Keypair ? new Wallet(wallet) : wallet;
+  if (wallet instanceof Keypair) return walletFromKeypair(wallet);
+  return wallet;
+}
+
+/** Minimal Wallet implementation over a Keypair (no runtime import from Anchor). */
+function walletFromKeypair(keypair: Keypair): Wallet {
+  return {
+    publicKey: keypair.publicKey,
+    payer: keypair,
+    signTransaction: async <T>(transaction: T): Promise<T> => {
+      (transaction as unknown as { partialSign(kp: Keypair): void }).partialSign(keypair);
+      return transaction;
+    },
+    signAllTransactions: async <T>(transactions: T[]): Promise<T[]> => {
+      for (const transaction of transactions) {
+        (transaction as unknown as { partialSign(kp: Keypair): void }).partialSign(keypair);
+      }
+      return transactions;
+    },
+  } as unknown as Wallet;
 }
 
 function toBytes(value: string | number[] | Uint8Array): number[] {
@@ -604,7 +619,7 @@ function toBytes(value: string | number[] | Uint8Array): number[] {
   return Array.from(value);
 }
 
-function bnToNumber(value: BN | number | bigint): number {
+function bnToNumber(value: anchor.BN | number | bigint): number {
   if (typeof value === "number") return value;
   if (typeof value === "bigint") return Number(value);
   return Number(value.toString());
@@ -612,11 +627,11 @@ function bnToNumber(value: BN | number | bigint): number {
 
 function decodeCapability(raw: Record<string, unknown>): CapabilityRecord {
   return {
-    id: bnToNumber(raw.id as BN),
+    id: bnToNumber(raw.id as anchor.BN),
     creator: raw.creator as PublicKey,
     capabilityType: Array.from(raw.capabilityType as number[]),
     metadataUri: raw.metadataUri as string,
-    bondRemaining: bnToNumber(raw.bondRemaining as BN),
+    bondRemaining: bnToNumber(raw.bondRemaining as anchor.BN),
     certified: Boolean(raw.certified),
     slashed: Boolean(raw.slashed),
     active: Boolean(raw.active),
@@ -624,7 +639,7 @@ function decodeCapability(raw: Record<string, unknown>): CapabilityRecord {
 }
 
 function decodeCapabilityByCoder(
-  program: Program<TaopReputation>,
+  program: anchor.Program<TaopReputation>,
   data: Buffer,
 ): CapabilityRecord | null {
   try {
