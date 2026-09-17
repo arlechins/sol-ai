@@ -36,12 +36,19 @@ const available = await chainAvailable();
 const suite = available ? describe.sequential : describe.skip;
 
 function loadWallet(): Keypair {
+  if (!fs.existsSync(WALLET_PATH)) {
+    throw new Error(
+      `Wallet not found at ${WALLET_PATH}. Run ./scripts/localnet.sh first or set ANCHOR_WALLET.`,
+    );
+  }
   const secret = JSON.parse(fs.readFileSync(WALLET_PATH, "utf8")) as number[];
   return Keypair.fromSecretKey(Uint8Array.from(secret));
 }
 
 suite("TaopSolanaClient against a live cluster", () => {
-  const admin = loadWallet();
+  // `describe.skip` still runs this callback at collection time, so only touch
+  // the wallet file when a cluster is actually reachable.
+  const admin = available ? loadWallet() : Keypair.generate();
   const agentA = Keypair.generate();
   const agentB = Keypair.generate();
   let client: TaopSolanaClient;

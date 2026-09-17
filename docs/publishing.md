@@ -5,6 +5,18 @@ release workflow (`.github/workflows/release.yml`) builds, tests, lints the
 packages, and publishes them **with provenance** when a GitHub release is
 published.
 
+## Enabling the workflow
+
+Publishing is gated so that releases do not trigger failing runs before npm is
+configured. Set the repository variable `NPM_PUBLISH=true` when you are ready:
+
+```bash
+gh variable set NPM_PUBLISH --body "true" --repo arlechins/sol-ai
+```
+
+(Or run the workflow manually with `gh workflow run release.yml -f tag=<tag>`.)
+Until then, the job is skipped and releases only build/test through CI.
+
 ## One-time setup on npmjs.com
 
 Pick one of the two authentication modes:
@@ -44,7 +56,9 @@ gh release create vX.Y.Z --title "vX.Y.Z" --notes "..."
 ```
 
 The workflow runs `publint` and `arethetypeswrong` before publishing, so a
-broken export map cannot reach npm.
+broken export map cannot reach npm. It does not start a validator, so the SDK
+integration tests skip; run `./scripts/localnet.sh` and `pnpm -r --if-present
+test` locally before tagging if you changed program-facing code.
 
 ## Verify a release
 

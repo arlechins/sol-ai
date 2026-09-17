@@ -23,6 +23,15 @@ Client-contract and review hardening.
 
 - SDK README section documenting retry safety and idempotency guarantees.
 
+### Fixed
+
+- SDK integration tests no longer read the wallet file when no cluster is
+  reachable (`describe.skip` still executes collection callbacks), which broke
+  the release workflow on runners without a validator.
+- The publish job is gated on the `NPM_PUBLISH` repository variable or a manual
+  dispatch so GitHub releases do not produce failing runs before npm is
+  configured.
+
 ### Changed
 
 - Test counts: 94 Rust tests (72 integration + 18 unit/property + 4 layout).
