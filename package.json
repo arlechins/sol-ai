@@ -23,7 +23,7 @@
     "bench": "pnpm --filter @taopp/benchmark start",
     "test:packages": "pnpm -r --if-present test",
     "test": "cargo test --workspace && pnpm -r --if-present test",
-    "healthcheck": "tsx scripts/healthcheck.ts",
+    "healthcheck": "pnpm --filter @taopp/solana build && tsx scripts/healthcheck.ts",
     "lint:packages": "pnpm --filter @taopp/solana lint:package && pnpm --filter @taopp/mcp-server lint:package"
   },
   "devDependencies": {
