@@ -81,6 +81,10 @@ defects:
   period is capped, and admin handover is two-step (`transfer_admin` /
   `accept_admin`).
 - OpenSSF Scorecard and CodeQL run on a schedule and on every push.
+- **Reproducible builds:** `./scripts/verify-build.sh` rebuilds the program in
+  the pinned Anchor Docker image and compares the executable hash with the
+  deployed program; a weekly workflow runs the same check in CI. The devnet
+  deployment is currently hash-identical to the reproducible build.
 
 ## No bug bounty
 

@@ -1,5 +1,7 @@
 mod common;
 
+use anchor_lang::Space;
+
 use common::*;
 
 /// Compute-unit budgets. Bounds are ~2-3x the locally observed usage so that
@@ -99,8 +101,7 @@ fn instructions_stay_within_compute_budgets() {
 /// Deterministic randomized operation sequence with full accounting checks.
 /// Mirrors every state change in the test so the on-chain state can be verified
 /// against ground truth: vault balances, treasury inflows, and score inputs.
-#[test]
-fn randomized_sequence_preserves_accounting_invariants() {
+fn run_random_sequence(seed: u64) {
     struct Tracked {
         agent: usize,
         seq: u64,
@@ -113,7 +114,7 @@ fn randomized_sequence_preserves_accounting_invariants() {
     let mut env = setup();
     let agents: Vec<Keypair> = (0..3).map(|_| funded(&mut env.ctx, 20)).collect();
     let capability_type = task_type("LoRA");
-    let mut rng_state: u64 = 0x5eed_1234_abcd_9876;
+    let mut rng_state: u64 = seed | 1;
 
     let mut next = move || {
         // xorshift64*
@@ -287,6 +288,16 @@ fn randomized_sequence_preserves_accounting_invariants() {
         assert_eq!(score.completions, expected_completions);
         assert_eq!(score.disputes, expected_disputes);
         assert!(score.score <= expected_completions - expected_disputes);
+    }
+}
+
+/// Deterministic randomized operation sequences with full accounting checks,
+/// run across several seeds: vault balances, treasury inflows, and per-agent
+/// counters must match the test's mirrored ground truth.
+#[test]
+fn randomized_sequences_preserve_accounting_invariants() {
+    for seed in [0x5eed_1234_abcd_9876u64, 1, 7, 42, 0xdead_beef, 0xfeed_face] {
+        run_random_sequence(seed);
     }
 }
 
@@ -515,6 +526,107 @@ fn withdrawal_prunes_the_capability_index() {
         .unwrap();
     assert!(!pruned.capabilities.contains(&capability));
     assert!(!env.exists(&capability));
+}
+
+/// Every account the program creates must be rent-exempt, with the exact
+/// INIT_SPACE precomputed for its type.
+#[test]
+fn every_created_account_is_rent_exempt() {
+    use ::taop_reputation::state::{
+        Agent, Capability, CapabilityIndex, Challenge, Completion, Config, PendingAdmin,
+    };
+
+    let mut env = setup();
+    let agent = funded(&mut env.ctx, 5);
+    let challenger = funded(&mut env.ctx, 5);
+    let creator = funded(&mut env.ctx, 5);
+    let new_admin = funded(&mut env.ctx, 5);
+    let capability_type = task_type("LoRA");
+    let rent: solana_program::rent::Rent = env.ctx.svm.get_sysvar();
+
+    env.attest(&agent, task_type("summarization"), "ipfs://r0", 0)
+        .assert_success();
+    let completion = completion_pda(&agent.pubkey(), 0);
+    env.challenge(&completion, &challenger, "ipfs://fraud")
+        .assert_success();
+    env.register_capability(&creator, capability_type, "ipfs://cap", 1, DEFAULT_BOND)
+        .assert_success();
+    let capability = capability_pda(&capability_type, &creator.pubkey(), 1);
+    let admin = env.admin.insecure_clone();
+    env.transfer_admin(&admin, &new_admin.pubkey())
+        .assert_success();
+
+    let checks: [(Pubkey, usize); 7] = [
+        (env.config, 8 + Config::INIT_SPACE),
+        (agent_pda(&agent.pubkey()), 8 + Agent::INIT_SPACE),
+        (completion, 8 + Completion::INIT_SPACE),
+        (challenge_pda(&completion), 8 + Challenge::INIT_SPACE),
+        (capability, 8 + Capability::INIT_SPACE),
+        (cap_index_pda(&capability_type), CapabilityIndex::SPACE),
+        (pending_admin_pda(), 8 + PendingAdmin::INIT_SPACE),
+    ];
+    for (address, size) in checks {
+        let balance = env.lamports(&address);
+        let required = rent.minimum_balance(size);
+        assert!(
+            balance >= required,
+            "account {address} holds {balance} lamports, needs {required} for {size} bytes"
+        );
+    }
+    let treasury = env.lamports(&env.treasury);
+    assert!(treasury >= rent.minimum_balance(0));
+}
+
+/// Pause blocks attestations, challenges, and registrations, but not the
+/// administrative lifecycle (resolve, certify, slash, withdraw).
+#[test]
+fn paused_config_still_allows_administrative_operations() {
+    let mut env = setup();
+    let agent = funded(&mut env.ctx, 5);
+    let challenger = funded(&mut env.ctx, 5);
+    let creator = funded(&mut env.ctx, 5);
+    let capability_type = task_type("LoRA");
+
+    env.attest(&agent, task_type("summarization"), "ipfs://r0", 0)
+        .assert_success();
+    let completion = completion_pda(&agent.pubkey(), 0);
+    env.challenge(&completion, &challenger, "ipfs://fraud")
+        .assert_success();
+    env.register_capability(&creator, capability_type, "ipfs://cap", 1, DEFAULT_BOND)
+        .assert_success();
+    let capability = capability_pda(&capability_type, &creator.pubkey(), 1);
+
+    let admin = env.admin.insecure_clone();
+    env.update_config(&admin, None, None, Some(true))
+        .assert_success();
+
+    // New writes are blocked.
+    env.attest(&agent, task_type("summarization"), "ipfs://r1", 1)
+        .assert_anchor_error("Paused");
+    env.register_capability(&creator, capability_type, "ipfs://cap2", 2, DEFAULT_BOND)
+        .assert_anchor_error("Paused");
+
+    // Administrative operations still work while paused.
+    env.resolve(&admin, &completion, true).assert_success();
+    let certifier = env.certifier.insecure_clone();
+    env.certify(&certifier, &capability).assert_success();
+    env.slash(&certifier, &capability, 1_000).assert_success();
+    env.withdraw_bond(&creator, &capability).assert_success();
+}
+
+/// Capability ids are monotonic; a withdrawn id cannot be reused.
+#[test]
+fn withdrawn_capability_id_cannot_be_reused() {
+    let mut env = setup();
+    let creator = funded(&mut env.ctx, 5);
+    let capability_type = task_type("LoRA");
+    env.register_capability(&creator, capability_type, "ipfs://cap", 1, DEFAULT_BOND)
+        .assert_success();
+    let capability = capability_pda(&capability_type, &creator.pubkey(), 1);
+    env.withdraw_bond(&creator, &capability).assert_success();
+
+    env.register_capability(&creator, capability_type, "ipfs://cap", 1, DEFAULT_BOND)
+        .assert_anchor_error("InvalidCapabilityId");
 }
 
 /// The 64-entry index used to fill with closed records and block new

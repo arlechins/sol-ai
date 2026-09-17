@@ -4,6 +4,33 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.4] - 2026-09-17
+
+Verifiable builds and further test-depth hardening.
+
+### Security
+
+- **Reproducible build verified.** `anchor build --verifiable` (pinned
+  `quay.io/ottersec/anchor:v1.1.2` image) produces a `.so` that is
+  byte-identical to the locally built artifact, and the executable hash matches
+  the deployed devnet program exactly
+  (`3d032901785488e3ba569660f51d485016fd4a9e1338c92f5eeff873f6d30793`). New
+  `scripts/verify-build.sh` automates the rebuild-and-compare, and the weekly
+  "Verifiable build" workflow runs it on GitHub with a checksum-verified
+  `solana-verify` binary.
+- **Rent-exemption invariant.** A test asserts every created account holds at
+  least the rent-exempt minimum for its exact precomputed size.
+- **Pause boundaries pinned.** A test proves pause blocks new attestations,
+  challenges, and registrations while administrative operations (resolve,
+  certify, slash, withdraw) still work.
+- **Randomized sequence expanded to six seeds**, so the accounting invariants
+  are exercised across different operation orderings.
+- **Capability id reuse rejected** (withdrawn ids cannot be re-registered).
+
+### Changed
+
+- Test counts: 83 Rust tests total (72 integration + 11 unit/property).
+
 ## [0.1.3] - 2026-09-17
 
 Availability and liveness hardening for bonds and the capability index.

@@ -65,7 +65,7 @@ anchor build              # produces target/deploy/taop_reputation.so
 cargo test --workspace
 ```
 
-Expected: 80 passing tests.
+Expected: 83 passing tests.
 
 | File | Tests | Covers |
 |---|---:|---|
@@ -74,7 +74,7 @@ Expected: 80 passing tests.
 | `test-suite/tests/capability.rs` | 11 | register, certify, slash, withdraw, index cap |
 | `test-suite/tests/invariants.rs` | 3 | lamport conservation, vault lifecycle |
 | `test-suite/tests/security.rs` | 9 | donations, account substitution, unauthorized ops, re-init |
-| `test-suite/tests/hardening.rs` | 16 | CU budgets, randomized accounting invariants, URI/authority boundaries, treasury funding, upgrade-authority init guard, two-step admin transfer, decay cap, index pruning, challenge timeout |
+| `test-suite/tests/hardening.rs` | 19 | CU budgets, randomized accounting invariants, URI/authority boundaries, treasury funding, upgrade-authority init guard, two-step admin transfer, decay cap, index pruning, challenge timeout |
 | `src/state.rs` (unit) | 11 | decay boundaries, 63-halving cap, and 5 property-based invariants |
 | generated (`declare_program!`) | 1 | program ID stability |
 
@@ -100,6 +100,30 @@ https://explorer.solana.com/address/8soD4YteLDgkibSNBzmQJTztiNcXPcLoi3Y2FrY15MnE
 Mainnet uses the same commands with `--provider.cluster mainnet-beta` and a
 funded operator key (~2.4 SOL of program rent for the 372 KB binary, plus fees).
 The deploy, config bootstrap, and cost checks are scripted in `scripts/`.
+
+### Verify the reproducible build
+
+```bash
+./scripts/verify-build.sh devnet
+```
+
+The script rebuilds the program inside the Docker image pinned by
+`Anchor.toml` (`quay.io/ottersec/anchor:v1.1.2`), then compares the executable
+hash with the deployed program using `solana-verify`. A weekly GitHub Actions
+run (`.github/workflows/verifiable-build.yml`, also dispatchable) does the same
+on `ubuntu-latest`, so the check is reproducible by anyone.
+
+Current status: **verified**. The devnet program is byte-identical to the
+reproducible build of the source tree at the v0.1.3 tag:
+
+| Artifact | Hash |
+|---|---|
+| Local reproducible build | `3d032901785488e3ba569660f51d485016fd4a9e1338c92f5eeff873f6d30793` |
+| Devnet program (on-chain) | `3d032901785488e3ba569660f51d485016fd4a9e1338c92f5eeff873f6d30793` |
+
+The `.so` produced by the local platform-tools build is also byte-identical
+(`sha256 17683837524f1087df526ac1ae12fe5d69824441573102a32d2ee08d525925de`),
+so all three artifacts agree.
 
 ### Devnet deployment evidence (live)
 

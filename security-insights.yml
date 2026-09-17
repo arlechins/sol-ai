@@ -64,3 +64,9 @@ security-testing:
     comment: cargo clippy, CodeQL (JavaScript/TypeScript), pnpm audit, cargo audit.
   - type: supply-chain
     comment: Dependabot, dependency review, OpenSSF Scorecard, actions pinned to SHAs.
+  - type: reproducible-build
+    comment: |
+      scripts/verify-build.sh rebuilds in the pinned Anchor Docker image and
+      compares the executable hash with the deployed program via solana-verify;
+      the weekly "Verifiable build" workflow runs the same check. Devnet is
+      currently hash-identical to the reproducible build.

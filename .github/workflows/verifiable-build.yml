@@ -1,0 +1,68 @@
+name: Verifiable build
+
+on:
+  workflow_dispatch:
+    inputs:
+      cluster:
+        description: Cluster to compare against
+        type: choice
+        options: [devnet, mainnet-beta]
+        default: devnet
+      program_id:
+        description: Program ID to verify
+        type: string
+        default: 8soD4YteLDgkibSNBzmQJTztiNcXPcLoi3Y2FrY15MnE
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verifiable-build
+  cancel-in-progress: false
+
+env:
+  SOLANA_VERSION: "4.2.2"
+  ANCHOR_VERSION: "1.1.2"
+  SOLANA_VERIFY_VERSION: "0.5.1"
+
+jobs:
+  verify:
+    name: Reproducible build check
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+
+      - name: Install Solana CLI (Agave)
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v${SOLANA_VERSION}/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+
+      - name: Install Anchor CLI
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -sSfL -o "$HOME/.local/bin/anchor" \
+            "https://github.com/otter-sec/anchor/releases/download/v${ANCHOR_VERSION}/anchor-${ANCHOR_VERSION}-x86_64-unknown-linux-gnu"
+          chmod +x "$HOME/.local/bin/anchor"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install solana-verify
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          base="https://github.com/Ellipsis-Labs/solana-verifiable-build/releases/download/v${SOLANA_VERIFY_VERSION}"
+          curl -sSfL -o "$HOME/.local/bin/solana-verify" "$base/solana-verify-${SOLANA_VERIFY_VERSION}-linux"
+          curl -sSfL -o /tmp/solana-verify.sha256 "$base/solana-verify-${SOLANA_VERIFY_VERSION}-linux.sha256"
+          expected="$(awk '{print $1}' /tmp/solana-verify.sha256)"
+          actual="$(sha256sum "$HOME/.local/bin/solana-verify" | awk '{print $1}')"
+          [ "$expected" = "$actual" ] || { echo "solana-verify checksum mismatch"; exit 1; }
+          chmod +x "$HOME/.local/bin/solana-verify"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          solana-verify --version
+
+      - name: Verify reproducible build
+        run: ./scripts/verify-build.sh "${{ inputs.cluster || 'devnet' }}" "${{ inputs.program_id || '8soD4YteLDgkibSNBzmQJTztiNcXPcLoi3Y2FrY15MnE' }}"
