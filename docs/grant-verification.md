@@ -113,17 +113,21 @@ hash with the deployed program using `solana-verify`. A weekly GitHub Actions
 run (`.github/workflows/verifiable-build.yml`, also dispatchable) does the same
 on `ubuntu-latest`, so the check is reproducible by anyone.
 
-Current status: **verified**. The devnet program is byte-identical to the
-reproducible build of the source tree at the v0.1.3 tag:
+Current status: **verified**. The devnet program was replaced with the
+reproducible artifact (deploy signature
+`WFqxgkyZnGjY81TBx9Vxcj7mX7zbaSnpGA9cYCiMM1cAZTdTS6hdjkJbvsDcc2sVQQiAQxQvYxxm4AwyVWtDdWw`)
+and its executable hash matches the rebuild exactly:
 
-| Artifact | Hash |
+| Artifact | solana-verify executable hash |
 |---|---|
-| Local reproducible build | `3d032901785488e3ba569660f51d485016fd4a9e1338c92f5eeff873f6d30793` |
-| Devnet program (on-chain) | `3d032901785488e3ba569660f51d485016fd4a9e1338c92f5eeff873f6d30793` |
+| Docker reproducible build (`target/verifiable/`) | `7363373cc44175a1099674c627f74a623f640b95e57c0d06b7e43d624b169e14` |
+| Devnet program (on-chain) | `7363373cc44175a1099674c627f74a623f640b95e57c0d06b7e43d624b169e14` |
 
-The `.so` produced by the local platform-tools build is also byte-identical
-(`sha256 17683837524f1087df526ac1ae12fe5d69824441573102a32d2ee08d525925de`),
-so all three artifacts agree.
+Note: the local platform-tools build (`target/deploy/`) produces a different
+ELF (`sha256 17683837524f1087df526ac1ae12fe5d69824441573102a32d2ee08d525925de`)
+than the pinned Docker toolchain, so only the Docker artifact is treated as the
+canonical reproducible build and is what is deployed. `scripts/verify-build.sh`
+compares the Docker artifact.
 
 ### Devnet deployment evidence (live)
 

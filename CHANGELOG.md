@@ -10,14 +10,16 @@ Verifiable builds and further test-depth hardening.
 
 ### Security
 
-- **Reproducible build verified.** `anchor build --verifiable` (pinned
-  `quay.io/ottersec/anchor:v1.1.2` image) produces a `.so` that is
-  byte-identical to the locally built artifact, and the executable hash matches
-  the deployed devnet program exactly
-  (`3d032901785488e3ba569660f51d485016fd4a9e1338c92f5eeff873f6d30793`). New
-  `scripts/verify-build.sh` automates the rebuild-and-compare, and the weekly
-  "Verifiable build" workflow runs it on GitHub with a checksum-verified
-  `solana-verify` binary.
+- **Reproducible build deployed and verified.** `anchor build --verifiable`
+  (pinned `quay.io/ottersec/anchor:v1.1.2` image) now produces the canonical
+  artifact, and it was deployed to devnet (signature
+  `WFqxgkyZnGjY81TBx9Vxcj7mX7zbaSnpGA9cYCiMM1cAZTdTS6hdjkJbvsDcc2sVQQiAQxQvYxxm4AwyVWtDdWw`).
+  `solana-verify` reports the same executable hash for the rebuild and the
+  on-chain program: `7363373cc44175a1099674c627f74a623f640b95e57c0d06b7e43d624b169e14`.
+  New `scripts/verify-build.sh` automates the rebuild-and-compare, and the
+  weekly "Verifiable build" workflow runs it on GitHub with a
+  checksum-verified `solana-verify` binary. The local platform-tools build
+  differs at the ELF level and is not treated as canonical.
 - **Rent-exemption invariant.** A test asserts every created account holds at
   least the rent-exempt minimum for its exact precomputed size.
 - **Pause boundaries pinned.** A test proves pause blocks new attestations,
@@ -26,6 +28,11 @@ Verifiable builds and further test-depth hardening.
 - **Randomized sequence expanded to six seeds**, so the accounting invariants
   are exercised across different operation orderings.
 - **Capability id reuse rejected** (withdrawn ids cannot be re-registered).
+
+### Deployed
+
+- Devnet replaced with the reproducible artifact (see Security above); program
+  ID and config preserved.
 
 ### Changed
 
