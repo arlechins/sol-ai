@@ -32,6 +32,12 @@ Availability and liveness hardening for bonds and the capability index.
 - `security-insights.yml` (OpenSSF) and a Scorecard badge; pinned Rust
   toolchain via `rust-toolchain.toml`.
 
+### Deployed
+
+- Devnet upgraded in place: signature
+  `923rVdpM3B7MCarDQXCzknnMVQxQE5KHnDXrAmuuJZN8tSYaVhJw1RLe8DWfz1zNoU7qQ1ocZgsEXAH3CNiGqsj`.
+  Index pruning was exercised on devnet (3 -> 2 entries after a withdrawal).
+
 ### Changed
 
 - Test counts: 80 Rust tests total (69 integration + 11 unit/property) and 19
