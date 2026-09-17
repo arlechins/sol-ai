@@ -39,7 +39,7 @@ ID.
 
 ### Changed
 
-- Test counts: 75 Rust tests total (64 integration + 11 unit/property) and 18
+- Test counts: 76 Rust tests total (65 integration + 11 unit/property) and 18
   SDK tests.
 
 ## [0.1.1] - 2026-09-17

@@ -461,9 +461,10 @@ export type TaopReputation = {
         {
           "name": "programData",
           "docs": [
-            "ProgramData PDA of this program. Binding the account with seeds prevents",
-            "an attacker from initializing the config on first deploy: the signer must",
-            "be the program's upgrade authority."
+            "ProgramData PDA of this program. Seeding binds it to this program and",
+            "`assert_upgrade_authority` reads the metadata directly (the typed",
+            "`ProgramData` account would pull a bincode/serde dependency into the",
+            "program for no runtime benefit)."
           ],
           "pda": {
             "seeds": [

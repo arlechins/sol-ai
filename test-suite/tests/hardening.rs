@@ -319,6 +319,26 @@ fn initialize_config_requires_upgrade_authority() {
         .assert_anchor_error("Unauthorized");
 }
 
+/// An immutable program (upgrade authority revoked) cannot prove a deployer, so
+/// initialization is rejected rather than left open to anyone.
+#[test]
+fn initialize_config_rejects_revoked_upgrade_authority() {
+    let (mut ctx, admin) = fresh_ctx_with_admin(10);
+    clear_upgrade_authority(&mut ctx);
+
+    let ix = initialize_config_ix(
+        &ctx,
+        &admin.pubkey(),
+        &Pubkey::new_unique(),
+        &admin.pubkey(),
+        DEFAULT_BOND,
+        DECAY_PERIOD_SECS,
+    );
+    ctx.execute_instruction(ix, &[&admin])
+        .unwrap()
+        .assert_anchor_error("InvalidAuthority");
+}
+
 #[test]
 fn admin_transfer_is_two_step_and_swaps_authority() {
     let mut env = setup();

@@ -78,6 +78,15 @@ pub fn program_data_pda() -> Pubkey {
 /// Rewrite the ProgramData metadata so tests exercise the same constraint as a
 /// real deployment.
 pub fn set_upgrade_authority(ctx: &mut AnchorContext, authority: &Pubkey) {
+    write_upgrade_authority(ctx, Some(*authority));
+}
+
+/// Mark the program immutable (upgrade authority revoked).
+pub fn clear_upgrade_authority(ctx: &mut AnchorContext) {
+    write_upgrade_authority(ctx, None);
+}
+
+fn write_upgrade_authority(ctx: &mut AnchorContext, authority: Option<Pubkey>) {
     use solana_loader_v3_interface::state::UpgradeableLoaderState;
 
     let address = program_data_pda();
@@ -88,7 +97,7 @@ pub fn set_upgrade_authority(ctx: &mut AnchorContext, authority: &Pubkey) {
     let metadata_len = UpgradeableLoaderState::size_of_programdata_metadata();
     let state = UpgradeableLoaderState::ProgramData {
         slot: 0,
-        upgrade_authority_address: Some(*authority),
+        upgrade_authority_address: authority,
     };
     bincode::serialize_into(&mut account.data[..metadata_len], &state)
         .expect("programdata metadata serializes");

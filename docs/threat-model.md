@@ -111,7 +111,7 @@ Trust boundaries:
 ## 7. Verifying the mitigations
 
 ```bash
-cargo test --workspace          # 75 tests incl. test-suite/tests/hardening.rs and security.rs
+cargo test --workspace          # 76 tests incl. test-suite/tests/hardening.rs and security.rs
 ./scripts/check.sh              # full pre-flight, incl. audits and benchmark baseline
 ```
 

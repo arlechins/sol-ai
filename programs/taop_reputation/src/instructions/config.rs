@@ -23,17 +23,18 @@ pub struct InitializeConfig<'info> {
     /// rent-exempt minimum here so that later micro-payouts can create the account.
     #[account(mut)]
     pub treasury: UncheckedAccount<'info>,
-    /// ProgramData PDA of this program. Binding the account with seeds prevents
-    /// an attacker from initializing the config on first deploy: the signer must
-    /// be the program's upgrade authority.
+    /// ProgramData PDA of this program. Seeding binds it to this program and
+    /// `assert_upgrade_authority` reads the metadata directly (the typed
+    /// `ProgramData` account would pull a bincode/serde dependency into the
+    /// program for no runtime benefit).
+    /// CHECK: owner, address, and upgrade authority are validated manually.
     #[account(
         seeds = [crate::ID.as_ref()],
         bump,
         seeds::program = anchor_lang::solana_program::bpf_loader_upgradeable::ID,
-        constraint = program_data.upgrade_authority_address == Some(admin.key())
-            @ TaopError::Unauthorized
+        owner = anchor_lang::solana_program::bpf_loader_upgradeable::ID,
     )]
-    pub program_data: Account<'info, ProgramData>,
+    pub program_data: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -43,6 +44,8 @@ pub fn initialize_config(
     challenge_bond_lamports: u64,
     decay_period_secs: i64,
 ) -> Result<()> {
+    assert_upgrade_authority(&ctx.accounts.program_data, &ctx.accounts.admin.key())?;
+
     let rent = Rent::get()?;
     require!(
         challenge_bond_lamports >= rent.minimum_balance(0),
@@ -160,6 +163,37 @@ pub fn set_certifier(ctx: Context<SetCertifier>, certifier: Pubkey) -> Result<()
     config.certifier = certifier;
 
     emit!(CertifierUpdated { certifier });
+    Ok(())
+}
+
+
+/// UpgradeableLoaderState::ProgramData bincode layout:
+/// `[u32 tag = 3][u64 slot][u8 option][32-byte authority]` followed by the ELF.
+/// Parsed by hand to avoid linking bincode into the program.
+const PROGRAMDATA_TAG: u32 = 3;
+const PROGRAMDATA_METADATA_LEN: usize = 4 + 8 + 1 + 32;
+const AUTHORITY_PRESENT: u8 = 1;
+
+fn assert_upgrade_authority(program_data: &UncheckedAccount, admin: &Pubkey) -> Result<()> {
+    let data = program_data.try_borrow_data()?;
+    require!(
+        data.len() >= PROGRAMDATA_METADATA_LEN,
+        TaopError::InvalidAuthority
+    );
+    let tag = u32::from_le_bytes(data[0..4].try_into().map_err(|_| TaopError::InvalidAuthority)?);
+    require!(tag == PROGRAMDATA_TAG, TaopError::InvalidAuthority);
+    // An immutable program (no upgrade authority) cannot prove a deployer, so
+    // config initialization is rejected rather than left open to anyone.
+    require!(
+        data[12] == AUTHORITY_PRESENT,
+        TaopError::InvalidAuthority
+    );
+    let authority_bytes: [u8; 32] = data[13..45]
+        .try_into()
+        .map_err(|_| TaopError::InvalidAuthority)?;
+    let authority = Pubkey::new_from_array(authority_bytes);
+
+    require_keys_eq!(authority, *admin, TaopError::Unauthorized);
     Ok(())
 }
 
