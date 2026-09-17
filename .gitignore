@@ -15,6 +15,9 @@ dist/
 .env.*
 !.env.example
 *.keypair.json
+# The program-ID keypair is committed on purpose (see keys/README.md); it is
+# not an upgrade authority.
+!keys/taop_reputation-keypair.json
 
 # Generated deployment metadata (commit deployments.solana.example.json instead)
 deployments.solana.json

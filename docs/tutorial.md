@@ -417,6 +417,7 @@ attempts.
 solana config set --url devnet
 solana airdrop 2     # or fund the wallet another way
 
+./scripts/sync-keypair.sh   # copies the committed program-ID keypair into target/deploy/
 anchor build
 ./scripts/sync-idl.sh
 anchor deploy --provider.cluster devnet

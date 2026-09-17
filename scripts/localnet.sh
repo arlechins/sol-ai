@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Start a local validator, deploy the program, and leave the validator running.
-# Usage: ./scripts/localnet.sh [--reset]
+# Usage: ./scripts/localnet.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -9,6 +9,10 @@ export PATH="$HOME/.local/share/solana/install/active_release/bin:$HOME/.local/b
 LEDGER="$ROOT/.anchor/test-ledger"
 WALLET="${ANCHOR_WALLET:-$HOME/.config/solana/id.json}"
 RPC="http://127.0.0.1:8899"
+PROGRAM_ID="8soD4YteLDgkibSNBzmQJTztiNcXPcLoi3Y2FrY15MnE"
+
+"$ROOT/scripts/sync-keypair.sh" >/dev/null
+KEYPAIR="$ROOT/target/deploy/taop_reputation-keypair.json"
 
 if [[ ! -f "$WALLET" ]]; then
   mkdir -p "$(dirname "$WALLET")"
@@ -41,10 +45,21 @@ if [[ ! -f "$ROOT/target/deploy/taop_reputation.so" ]]; then
   echo "error: run 'anchor build' first" >&2
   exit 1
 fi
+
 solana program deploy \
   --url "$RPC" \
   --keypair "$WALLET" \
-  --program-id "$ROOT/target/deploy/taop_reputation-keypair.json" \
+  --program-id "$KEYPAIR" \
   "$ROOT/target/deploy/taop_reputation.so" >/dev/null
-echo "program deployed: $(solana-keygen pubkey "$ROOT/target/deploy/taop_reputation-keypair.json")"
+
+ACTUAL_ID="$(solana-keygen pubkey "$KEYPAIR")"
+if [[ "$ACTUAL_ID" != "$PROGRAM_ID" ]]; then
+  echo "error: deployed under $ACTUAL_ID but the repo expects $PROGRAM_ID" >&2
+  exit 1
+fi
+if ! solana program show "$PROGRAM_ID" --url "$RPC" >/dev/null 2>&1; then
+  echo "error: program account $PROGRAM_ID not found after deploy" >&2
+  exit 1
+fi
+echo "program deployed: $PROGRAM_ID"
 echo "rpc: $RPC"

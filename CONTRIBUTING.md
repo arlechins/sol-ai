@@ -55,7 +55,9 @@ pnpm --filter @taopp/benchmark test                 # benchmark (9 tests)
   updated IDL in `idls/` and
   `packages/solana/src/idl/`. CI fails if they drift.
 - **Never commit keys or `.env`.** The repository gitignores keypair JSON and
-  env files.
+  env files. The single exception is `keys/taop_reputation-keypair.json`: it is
+  the program-ID keypair (not an upgrade authority) and is committed so every
+  clone and CI run derives the same program address. See `keys/README.md`.
 - **Docs use the same commands the scripts expose**, not invented ones.
 - **Keep the benchmark honest.** If a mechanism scores worse than before, update
   `docs/methodology.md` with the reason rather than tuning the rubric silently.

@@ -41,6 +41,9 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           anchor --version
 
+      - name: Sync program keypair
+        run: ./scripts/sync-keypair.sh
+
       # The test suite include_bytes!()s target/deploy/taop_reputation.so and
       # declare_program! reads the IDL, so the build must come before any Rust
       # lint or test step on a clean checkout.
@@ -100,6 +103,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Sync program keypair
+        run: ./scripts/sync-keypair.sh
 
       - name: Build program and sync IDL
         run: anchor build && ./scripts/sync-idl.sh

@@ -39,7 +39,8 @@ packages/mcp-server/        @taopp/mcp-server — MCP tools for any agent runtim
 examples/solana-agent/      Runnable two-agent trust loop (SDK + MCP modes)
 benchmark/                  Gaming-resistance harness + CC-BY adversarial dataset
 docs/                       Architecture, account layout, tutorial, methodology
-scripts/                    IDL sync, localnet, devnet config bootstrap
+scripts/                    IDL sync, keypair sync, localnet, devnet bootstrap
+keys/                       Program-ID keypair (committed; not an authority)
 ```
 
 ## Quick start
