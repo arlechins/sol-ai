@@ -66,11 +66,11 @@ Expected: 59 passing tests.
 
 | File | Tests | Covers |
 |---|---:|---|
-| `tests/config.rs` | 10 | init/update/auth/pause |
-| `tests/reputation.rs` | 20 | attest, challenge, resolve, score decay |
-| `tests/capability.rs` | 11 | register, certify, slash, withdraw, index cap |
-| `tests/invariants.rs` | 3 | lamport conservation, vault lifecycle |
-| `tests/security.rs` | 9 | donations, account substitution, unauthorized ops, re-init |
+| `test-suite/tests/config.rs` | 10 | init/update/auth/pause |
+| `test-suite/tests/reputation.rs` | 20 | attest, challenge, resolve, score decay |
+| `test-suite/tests/capability.rs` | 11 | register, certify, slash, withdraw, index cap |
+| `test-suite/tests/invariants.rs` | 3 | lamport conservation, vault lifecycle |
+| `test-suite/tests/security.rs` | 9 | donations, account substitution, unauthorized ops, re-init |
 | `src/state.rs` (unit) | 5 | decay boundaries and 63-halving cap |
 | generated (`declare_program!`) | 1 | program ID stability |
 

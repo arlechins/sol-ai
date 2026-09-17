@@ -32,7 +32,8 @@ Program ID (fixed across clusters): `8soD4YteLDgkibSNBzmQJTztiNcXPcLoi3Y2FrY15Mn
 
 ```
 programs/taop_reputation/   Anchor program (Rust)
-  tests/                    Rust integration suite (LiteSVM, in-process)
+test-suite/                 Rust integration suite (LiteSVM, in-process)
+idls/                       Generated IDL for declare_program!/tests
 packages/solana/            @taopp/solana — TypeScript SDK
 packages/mcp-server/        @taopp/mcp-server — MCP tools for any agent runtime
 examples/solana-agent/      Runnable two-agent trust loop (SDK + MCP modes)

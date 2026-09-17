@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Sync the generated IDL and TypeScript types into the workspaces that need them:
-#   - programs/taop_reputation/idls/  -> `declare_program!` in Rust tests
-#   - packages/solana/src/idl/        -> @taopp/solana (published client)
+#   - idls/                          -> `declare_program!` in the Rust test suite
+#   - packages/solana/src/idl/       -> @taopp/solana (published client)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -13,7 +13,7 @@ if [[ ! -f "$IDL" || ! -f "$TYPES" ]]; then
   exit 1
 fi
 
-RUST_DIR="$ROOT/programs/taop_reputation/idls"
+RUST_DIR="$ROOT/idls"
 SDK_DIR="$ROOT/packages/solana/src/idl"
 
 mkdir -p "$RUST_DIR" "$SDK_DIR"

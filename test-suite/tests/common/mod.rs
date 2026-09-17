@@ -87,7 +87,7 @@ pub fn fresh_ctx() -> AnchorContext {
         PROGRAM_ID,
         include_bytes!(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/../../target/deploy/taop_reputation.so"
+            "/../target/deploy/taop_reputation.so"
         )),
     )
 }
@@ -121,7 +121,7 @@ pub fn setup_with(bond: u64, decay_period_secs: i64) -> Env {
         PROGRAM_ID,
         include_bytes!(concat!(
             env!("CARGO_MANIFEST_DIR"),
-            "/../../target/deploy/taop_reputation.so"
+            "/../target/deploy/taop_reputation.so"
         )),
     );
 

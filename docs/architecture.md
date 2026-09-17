@@ -6,7 +6,7 @@ and how its accounts, PDAs, and bonds fit together.
 
 Source of truth: `programs/taop_reputation/src/`, the generated IDL at
 `target/idl/taop_reputation.json`, and the LiteSVM tests under
-`programs/taop_reputation/tests/`.
+`test-suite/tests/`.
 
 ## 1. The v0.1 mechanism
 
@@ -199,8 +199,8 @@ normal system-account rules:
   `ChallengeResolved`.
 
 The bond invariants are covered by
-`programs/taop_reputation/tests/invariants.rs` (conservation, payout caps,
-vault lifecycle) and `programs/taop_reputation/tests/security.rs` (donation
+`test-suite/tests/invariants.rs` (conservation, payout caps,
+vault lifecycle) and `test-suite/tests/security.rs` (donation
 sweeps in both outcomes, substituted recipients, unauthorized privileged
 operations, re-initialization attempts).
 

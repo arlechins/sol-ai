@@ -21,7 +21,7 @@ compare() {
   fi
 }
 
-compare "target/idl/taop_reputation.json" "programs/taop_reputation/idls/taop_reputation.json"
+compare "target/idl/taop_reputation.json" "idls/taop_reputation.json"
 compare "target/idl/taop_reputation.json" "packages/solana/src/idl/taop_reputation.json"
 compare "target/types/taop_reputation.ts" "packages/solana/src/idl/taop_reputation.ts"
 

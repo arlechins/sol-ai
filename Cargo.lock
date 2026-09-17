@@ -4350,7 +4350,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "taop_reputation"
+name = "taop-reputation-tests"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
@@ -4362,6 +4362,14 @@ dependencies = [
  "solana-signer",
  "solana-system-interface 3.3.0",
  "solana-transaction",
+ "taop_reputation",
+]
+
+[[package]]
+name = "taop_reputation"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
 ]
 
 [[package]]

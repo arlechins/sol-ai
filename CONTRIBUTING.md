@@ -6,7 +6,8 @@ Thanks for helping improve agent reputation infrastructure.
 
 | Path | What it is |
 |---|---|
-| `programs/taop_reputation` | Anchor program (Rust) + LiteSVM integration tests |
+| `programs/taop_reputation` | Anchor program (Rust) |
+| `test-suite` | Rust integration suite (LiteSVM, in-process) |
 | `packages/solana` | `@taopp/solana` TypeScript SDK |
 | `packages/mcp-server` | `@taopp/mcp-server` MCP tools (Solana + Base adapters) |
 | `examples/solana-agent` | Runnable two-agent trust loop |
@@ -48,10 +49,10 @@ pnpm --filter @taopp/benchmark test                 # benchmark (9 tests)
 ## Rules of the road
 
 - **A program change requires a test.** Bond accounting, authority checks, and
-  vault invariants must stay covered; `tests/security.rs` is the place for
+  vault invariants must stay covered; `test-suite/tests/security.rs` is the place for
   attack-oriented cases.
 - **Re-run `./scripts/sync-idl.sh` after any program change** and commit the
-  updated IDL in `programs/taop_reputation/idls/` and
+  updated IDL in `idls/` and
   `packages/solana/src/idl/`. CI fails if they drift.
 - **Never commit keys or `.env`.** The repository gitignores keypair JSON and
   env files.
