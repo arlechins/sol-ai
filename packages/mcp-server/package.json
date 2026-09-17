@@ -32,12 +32,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lexagor/taop-solana.git",
+    "url": "git+https://github.com/arlechins/sol-ai.git",
     "directory": "packages/mcp-server"
   },
-  "homepage": "https://github.com/lexagor/taop-solana#readme",
+  "homepage": "https://github.com/arlechins/sol-ai#readme",
   "bugs": {
-    "url": "https://github.com/lexagor/taop-solana/issues"
+    "url": "https://github.com/arlechins/sol-ai/issues"
   },
   "publishConfig": {
     "access": "public"

@@ -1,6 +1,6 @@
 # Adversarial agent-reputation pattern dataset
 
-**License:** CC BY 4.0 · **Version:** 0.1.0 · **File:** `patterns.json` · **Schema:** `schema.json`
+**License:** CC BY 4.0 (full text in [`LICENSE-CC-BY-4.0`](LICENSE-CC-BY-4.0)) · **Version:** 0.1.0 · **File:** `patterns.json` · **Schema:** `schema.json`
 
 A curated, citable catalogue of adversarial patterns against agent-reputation and
 adjacent trust systems, grouped by the three attack classes used by the

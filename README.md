@@ -1,5 +1,9 @@
 # TAOP reputation on Solana
 
+[![CI](https://github.com/arlechins/sol-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/arlechins/sol-ai/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Dataset: CC BY 4.0](https://img.shields.io/badge/Dataset-CC%20BY%204.0-lightgrey.svg)](benchmark/dataset/LICENSE-CC-BY-4.0)
+
 Open infrastructure for **verifying other agents**: self-attested completions,
 native-SOL bonded challenges, inactivity-decayed reputation, and a bonded
 capability registry — implemented as a single Anchor program, with a TypeScript
