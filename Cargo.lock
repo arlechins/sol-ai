@@ -4451,7 +4451,7 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-litesvm",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "solana-clock 3.2.1",
  "solana-keypair",
  "solana-program",
