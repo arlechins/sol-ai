@@ -209,6 +209,103 @@ export type TaopReputation = {
       ]
     },
     {
+      "name": "cancelChallenge",
+      "docs": [
+        "Reclaim a challenge bond after the authority fails to resolve within",
+        "the timeout (challenger only)."
+      ],
+      "discriminator": [
+        231,
+        253,
+        0,
+        151,
+        179,
+        94,
+        5,
+        152
+      ],
+      "accounts": [
+        {
+          "name": "completion",
+          "writable": true,
+          "relations": [
+            "challenge"
+          ]
+        },
+        {
+          "name": "challenge",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  104,
+                  97,
+                  108,
+                  108,
+                  101,
+                  110,
+                  103,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "completion"
+              }
+            ]
+          }
+        },
+        {
+          "name": "challengeVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  104,
+                  97,
+                  108,
+                  108,
+                  101,
+                  110,
+                  103,
+                  101,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "completion"
+              }
+            ]
+          }
+        },
+        {
+          "name": "challenger",
+          "docs": [
+            "The original challenger, and the only key allowed to cancel."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "certifyCapability",
       "docs": [
         "Certify a capability (admin or certifier only)."
@@ -1279,6 +1376,37 @@ export type TaopReputation = {
           }
         },
         {
+          "name": "index",
+          "docs": [
+            "Type index, pruned on withdrawal so closed records cannot exhaust the",
+            "64-entry capacity and block new registrations."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  97,
+                  112,
+                  45,
+                  105,
+                  110,
+                  100,
+                  101,
+                  120
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "capability.capabilityType",
+                "account": "capability"
+              }
+            ]
+          }
+        },
+        {
           "name": "creator",
           "writable": true,
           "signer": true,
@@ -1493,6 +1621,19 @@ export type TaopReputation = {
       ]
     },
     {
+      "name": "challengeCancelled",
+      "discriminator": [
+        208,
+        99,
+        93,
+        81,
+        72,
+        248,
+        132,
+        172
+      ]
+    },
+    {
       "name": "challengeResolved",
       "discriminator": [
         100,
@@ -1653,6 +1794,11 @@ export type TaopReputation = {
       "code": 6018,
       "name": "decayPeriodTooLong",
       "msg": "Decay period exceeds the maximum allowed (366 days)"
+    },
+    {
+      "code": 6019,
+      "name": "challengeNotTimedOut",
+      "msg": "Challenge cannot be cancelled before the timeout (90 days)"
     }
   ],
   "types": [
@@ -2029,6 +2175,26 @@ export type TaopReputation = {
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "challengeCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "completion",
+            "type": "pubkey"
+          },
+          {
+            "name": "challenger",
+            "type": "pubkey"
+          },
+          {
+            "name": "sweptLamports",
+            "type": "u64"
           }
         ]
       }

@@ -231,7 +231,7 @@ Rules:
 
 ## Instruction-to-accounts matrix
 
-All 14 instructions in IDL order. `w` = writable, `s` = signer. Accounts
+All 15 instructions in IDL order. `w` = writable, `s` = signer. Accounts
 marked PDA are constrained by Anchor seeds; the rest are supplied by the
 caller. `system_program` is always the System program
 (`11111111111111111111111111111111`) and never signs.
@@ -350,8 +350,9 @@ as instruction return data.
 | 1 | `config` | | | PDA `["config"]` |
 | 2 | `capability` | w | | Has one `creator`; closed (`close = creator`) |
 | 3 | `capability_vault` | w | | PDA `["capability_vault", capability]`; fully drained |
-| 4 | `creator` | w | s | Must equal `capability.creator` |
-| 5 | `system_program` | | | |
+| 4 | `index` | w | | PDA `["cap-index", capability.capability_type]`; the pointer is pruned here |
+| 5 | `creator` | w | s | Must equal `capability.creator` |
+| 6 | `system_program` | | | |
 
 ### 13. `transfer_admin(new_admin: Pubkey)`
 
@@ -370,6 +371,20 @@ as instruction return data.
 | 2 | `pending` | w | | PDA `["pending-admin"]`; must equal the signer, closed on success |
 | 3 | `new_admin` | w | s | Receives the pending account rent |
 
+### 15. `cancel_challenge()`
+
+| # | Account | w | s | Notes |
+| --- | --- | --- | --- | --- |
+| 1 | `completion` | w | | Must be challenged |
+| 2 | `challenge` | w | | PDA `["challenge", completion]`; marked resolved, not upheld |
+| 3 | `challenge_vault` | w | | PDA `["challenge_vault", completion]`; balance swept to the challenger |
+| 4 | `challenger` | w | s | Must equal `challenge.challenger`; only the challenger can cancel |
+| 5 | `system_program` | | | |
+
+Only callable after `CHALLENGE_TIMEOUT_SECS` (90 days) from `challenge.timestamp`
+(`ChallengeNotTimedOut` otherwise). The completion stays `challenged`, so it
+cannot be re-challenged, and no dispute is recorded.
+
 ## Rent and bond summary
 
 | Item | Rule | Error |
@@ -383,3 +398,4 @@ as instruction return data.
 | Zero treasury or certifier | rejected in `initialize_config` and `set_certifier` | `InvalidAuthority` |
 | Init authority | `admin` must be the program's upgrade authority | `Unauthorized` |
 | Admin handover | proposed key must call `accept_admin` | `Unauthorized` |
+| Challenge timeout | `cancel_challenge` before 90 days | `ChallengeNotTimedOut` |

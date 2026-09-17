@@ -2,8 +2,13 @@ use anchor_lang::prelude::*;
 use anchor_lang::system_program::{transfer as system_transfer, Transfer};
 
 use crate::errors::TaopError;
-use crate::events::{ChallengeResolved, ChallengeSubmitted, CompletionAttested};
-use crate::state::{compute_score, Agent, Challenge, Completion, Config, ScoreView, MAX_URI_LEN};
+use crate::events::{
+    ChallengeCancelled, ChallengeResolved, ChallengeSubmitted, CompletionAttested,
+};
+use crate::state::{
+    compute_score, Agent, Challenge, Completion, Config, ScoreView, CHALLENGE_TIMEOUT_SECS,
+    MAX_URI_LEN,
+};
 
 #[derive(Accounts)]
 #[instruction(task_type: [u8; 32], result_uri: String, completion_seq: u64)]
@@ -271,4 +276,71 @@ pub fn get_score(ctx: Context<GetScore>) -> Result<ScoreView> {
         last_activity: agent.last_activity,
         decayed,
     })
+}
+
+#[derive(Accounts)]
+pub struct CancelChallenge<'info> {
+    #[account(mut)]
+    pub completion: Account<'info, Completion>,
+    #[account(
+        mut,
+        has_one = completion,
+        seeds = [b"challenge", completion.key().as_ref()],
+        bump = challenge.bump
+    )]
+    pub challenge: Account<'info, Challenge>,
+    /// CHECK: system-owned vault PDA escrowing the challenge bond.
+    #[account(mut, seeds = [b"challenge_vault", completion.key().as_ref()], bump)]
+    pub challenge_vault: SystemAccount<'info>,
+    /// The original challenger, and the only key allowed to cancel.
+    #[account(mut, address = challenge.challenger)]
+    pub challenger: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+/// Reclaim a bond from a challenge the authority never resolved after
+/// `CHALLENGE_TIMEOUT_SECS`. The challenge is marked resolved (not upheld); the
+/// completion stays challenged so it cannot be re-challenged.
+pub fn cancel_challenge(ctx: Context<CancelChallenge>) -> Result<()> {
+    require!(
+        !ctx.accounts.challenge.resolved,
+        TaopError::ChallengeNotPending
+    );
+    require!(
+        ctx.accounts.completion.challenged,
+        TaopError::ChallengeNotPending
+    );
+
+    let now = Clock::get()?.unix_timestamp;
+    require!(
+        now.saturating_sub(ctx.accounts.challenge.timestamp) >= CHALLENGE_TIMEOUT_SECS,
+        TaopError::ChallengeNotTimedOut
+    );
+
+    let amount = ctx.accounts.challenge_vault.lamports();
+    let completion_key = ctx.accounts.completion.key();
+    let vault_bump = [ctx.bumps.challenge_vault];
+    let vault_seeds: &[&[u8]] = &[b"challenge_vault", completion_key.as_ref(), &vault_bump];
+    system_transfer(
+        CpiContext::new_with_signer(
+            ctx.accounts.system_program.key(),
+            Transfer {
+                from: ctx.accounts.challenge_vault.to_account_info(),
+                to: ctx.accounts.challenger.to_account_info(),
+            },
+            &[vault_seeds],
+        ),
+        amount,
+    )?;
+
+    let challenge = &mut ctx.accounts.challenge;
+    challenge.resolved = true;
+    challenge.upheld = false;
+
+    emit!(ChallengeCancelled {
+        completion: challenge.completion,
+        challenger: challenge.challenger,
+        swept_lamports: amount,
+    });
+    Ok(())
 }

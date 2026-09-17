@@ -9,6 +9,7 @@ export type TaopErrorCode =
   | "InvalidCapabilityId"
   | "InvalidDecayPeriod"
   | "DecayPeriodTooLong"
+  | "ChallengeNotTimedOut"
   | "ZeroBond"
   | "PenaltyExceedsBond"
   | "InvalidPenalty"
@@ -32,6 +33,7 @@ const KNOWN_CODES = new Set<string>([
   "InvalidCapabilityId",
   "InvalidDecayPeriod",
   "DecayPeriodTooLong",
+  "ChallengeNotTimedOut",
   "ZeroBond",
   "PenaltyExceedsBond",
   "InvalidPenalty",

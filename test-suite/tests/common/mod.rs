@@ -549,6 +549,13 @@ impl Env {
     }
 
     pub fn withdraw_bond(&mut self, creator: &Keypair, capability: &Pubkey) -> TransactionResult {
+        // A closed capability has no readable index; fall back to a dummy PDA so
+        // the transaction fails on-chain instead of panicking in the harness.
+        let index = self
+            .ctx
+            .get_account::<::taop_reputation::state::Capability>(capability)
+            .map(|record| cap_index_pda(&record.capability_type))
+            .unwrap_or_else(|_| cap_index_pda(&[0u8; 32]));
         let ix = self
             .ctx
             .program()
@@ -556,6 +563,7 @@ impl Env {
                 config: self.config,
                 capability: *capability,
                 capability_vault: capability_vault_pda(capability),
+                index,
                 creator: creator.pubkey(),
                 system_program: anchor_lang::system_program::ID,
             })
@@ -563,6 +571,28 @@ impl Env {
             .instruction()
             .unwrap();
         self.send(ix, &[creator])
+    }
+
+    /// Cancel a timed-out challenge (challenger only).
+    pub fn cancel_challenge(
+        &mut self,
+        challenger: &Keypair,
+        completion: &Pubkey,
+    ) -> TransactionResult {
+        let ix = self
+            .ctx
+            .program()
+            .accounts(taop_reputation::client::accounts::CancelChallenge {
+                completion: *completion,
+                challenge: challenge_pda(completion),
+                challenge_vault: challenge_vault_pda(completion),
+                challenger: challenger.pubkey(),
+                system_program: anchor_lang::system_program::ID,
+            })
+            .args(taop_reputation::client::args::CancelChallenge {})
+            .instruction()
+            .unwrap();
+        self.send(ix, &[challenger])
     }
 
     /// Read the score via the on-chain `get_score` instruction (simulated).

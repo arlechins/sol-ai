@@ -67,6 +67,8 @@ Trust boundaries:
 | Config front-running | Attacker initializes a fresh deployment and claims admin | `initialize_config` requires the program's upgrade authority | `initialize_config_requires_upgrade_authority` |
 | Admin key loss or rotation | No way to move admin to a multisig | Two-step `transfer_admin` + `accept_admin` | `admin_transfer_is_two_step_and_swaps_authority` |
 | Decay disabled by fat-finger | `decay_period_secs` set to a huge value | Cap at 366 days (`DecayPeriodTooLong`) | `decay_period_is_capped` |
+| Unresolved challenge locks a bond forever | Authority never resolves | 90-day `cancel_challenge` refunds the challenger (challenger only) | `cancel_challenge_after_timeout_refunds_the_challenger` |
+| Index exhaustion by churn | Closed records fill the 64-entry index | Index pruned on withdrawal | `index_capacity_is_released_by_withdrawal` |
 | Supply-chain compromise | Malicious dependency or action | `cargo audit`, `pnpm audit --audit-level high`, Dependabot, dependency review on PRs, third-party actions pinned to SHAs | CI jobs |
 
 ## 4. Economic assumptions
@@ -90,12 +92,13 @@ Trust boundaries:
 3. **Unverified attestations.** Self-attested work is not checked on-chain.
    Mitigation path: interaction-grounded attestations with counterparty
    diversity weighting.
-4. **One challenge per completion, no timeout.** A rejected challenge cannot be
-   re-opened, and a pending challenge blocks re-challenge indefinitely.
-5. **Index staleness and capacity.** Withdrawing a capability leaves its pointer
-   in the per-type index; a busy type can fill up (64 entries). Consumers must
-   filter by account existence (the SDK does). Pinned by
-   `stale_index_entries_are_detectable_after_withdrawal`.
+4. **One challenge per completion.** A rejected challenge cannot be re-opened
+   and a cancelled one leaves the completion permanently marked challenged.
+   Liveness is bounded by the 90-day `cancel_challenge` timeout, which returns
+   the bond but not a fresh challenge opportunity.
+5. **Index capacity.** The per-type index caps at 64 entries, but withdrawn
+   capabilities are pruned, so capacity is reusable; a type can still hold at
+   most 64 live records. Covered by `index_capacity_is_released_by_withdrawal`.
 6. **Public RPC metadata.** Reads reveal which agents a client queries. No
    privacy guarantees are made.
 7. **Client-side key handling.** The SDK/MCP assume the operator protects keys;
@@ -111,7 +114,7 @@ Trust boundaries:
 ## 7. Verifying the mitigations
 
 ```bash
-cargo test --workspace          # 76 tests incl. test-suite/tests/hardening.rs and security.rs
+cargo test --workspace          # 80 tests incl. test-suite/tests/hardening.rs and security.rs
 ./scripts/check.sh              # full pre-flight, incl. audits and benchmark baseline
 ```
 

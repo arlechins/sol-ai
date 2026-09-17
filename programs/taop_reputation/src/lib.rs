@@ -89,6 +89,12 @@ pub mod taop_reputation {
         instructions::get_score(ctx)
     }
 
+    /// Reclaim a challenge bond after the authority fails to resolve within
+    /// the timeout (challenger only).
+    pub fn cancel_challenge(ctx: Context<CancelChallenge>) -> Result<()> {
+        instructions::cancel_challenge(ctx)
+    }
+
     /// Register a capability with a slashable native SOL bond.
     pub fn register_capability(
         ctx: Context<RegisterCapability>,

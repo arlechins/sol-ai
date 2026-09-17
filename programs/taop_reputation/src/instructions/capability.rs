@@ -229,6 +229,14 @@ pub struct WithdrawCapabilityBond<'info> {
     /// CHECK: system-owned vault PDA escrowing the capability bond.
     #[account(mut, seeds = [b"capability_vault", capability.key().as_ref()], bump)]
     pub capability_vault: SystemAccount<'info>,
+    /// Type index, pruned on withdrawal so closed records cannot exhaust the
+    /// 64-entry capacity and block new registrations.
+    #[account(
+        mut,
+        seeds = [b"cap-index", capability.capability_type.as_ref()],
+        bump = index.bump
+    )]
+    pub index: Account<'info, CapabilityIndex>,
     #[account(mut)]
     pub creator: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -263,6 +271,12 @@ pub fn withdraw_capability_bond(ctx: Context<WithdrawCapabilityBond>) -> Result<
         ),
         vault_balance,
     )?;
+
+    let capability_key = ctx.accounts.capability.key();
+    ctx.accounts
+        .index
+        .capabilities
+        .retain(|key| *key != capability_key);
 
     let capability = &mut ctx.accounts.capability;
     capability.bond_remaining = 0;

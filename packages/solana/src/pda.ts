@@ -9,6 +9,9 @@ export const MAX_URI_LEN = 200;
 /** Upper bound for the decay period, mirrored from the program. */
 export const MAX_DECAY_PERIOD_SECS = 366 * 24 * 60 * 60;
 
+/** After this long a challenger can reclaim an unresolved bond, mirrored from the program. */
+export const CHALLENGE_TIMEOUT_SECS = 90 * 24 * 60 * 60;
+
 /** BPF Loader Upgradeable program, owner of ProgramData accounts. */
 export const BPF_LOADER_UPGRADEABLE_ID = new PublicKey(
   "BPFLoaderUpgradeab1e11111111111111111111111",

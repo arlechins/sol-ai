@@ -4,6 +4,39 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.3] - 2026-09-17
+
+Availability and liveness hardening for bonds and the capability index.
+
+### Security
+
+- **Challenge liveness timeout.** `cancel_challenge` lets the original
+  challenger reclaim a bond after `CHALLENGE_TIMEOUT_SECS` (90 days) if the
+  authority never resolves. The challenge is marked resolved and not upheld;
+  the completion stays challenged so it cannot be re-challenged, and no dispute
+  is recorded. Before the timeout the instruction fails with
+  `ChallengeNotTimedOut`, and only the challenger can call it.
+- **Capability index pruning.** `withdraw_capability_bond` now removes the
+  capability pointer from its type index before closing the record. A type's
+  64-entry capacity can no longer be exhausted by churn, which previously
+  blocked new registrations permanently.
+- **Batched RPC reads.** The SDK chunks `getMultipleAccountsInfo` into groups
+  of 100, so discovery and score aggregation cannot fail on large sets.
+
+### Added
+
+- `cancel_challenge` instruction and `ChallengeCancelled` event.
+- SDK methods `cancelChallenge()` and `challengeTimedOut()`; `commitment`
+  configuration option.
+- Compute-unit budgets for `cancel_challenge` and `withdraw_capability_bond`.
+- `security-insights.yml` (OpenSSF) and a Scorecard badge; pinned Rust
+  toolchain via `rust-toolchain.toml`.
+
+### Changed
+
+- Test counts: 80 Rust tests total (69 integration + 11 unit/property) and 19
+  SDK tests.
+
 ## [0.1.2] - 2026-09-17
 
 Further hardening: deployment front-running protection, safe admin rotation,

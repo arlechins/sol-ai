@@ -40,6 +40,26 @@ fn instructions_stay_within_compute_budgets() {
     };
     slash.assert_success();
 
+    // cancel_challenge needs a fresh, unresolved challenge past the timeout.
+    env.attest(&agent, task_type("summarization"), "ipfs://r1", 1)
+        .assert_success();
+    let completion2 = completion_pda(&agent.pubkey(), 1);
+    env.challenge(&completion2, &challenger, "ipfs://fraud2")
+        .assert_success();
+    set_clock(
+        &mut env.ctx,
+        T0 + ::taop_reputation::state::CHALLENGE_TIMEOUT_SECS + 1,
+    );
+    let cancel = env.cancel_challenge(&challenger, &completion2);
+
+    // withdraw_capability_bond on a second capability.
+    env.register_capability(&creator, capability_type, "ipfs://cap2", 2, DEFAULT_BOND)
+        .assert_success();
+    let capability2 = capability_pda(&capability_type, &creator.pubkey(), 2);
+    let withdraw = env.withdraw_bond(&creator, &capability2);
+    cancel.assert_success();
+    withdraw.assert_success();
+
     // Probe actual usage so budgets can be reviewed from the printed output.
     println!("CU attest={}", attest.compute_units());
     println!("CU challenge={}", challenge.compute_units());
@@ -47,9 +67,12 @@ fn instructions_stay_within_compute_budgets() {
     println!("CU register_capability={}", register.compute_units());
     println!("CU certify={}", certify.compute_units());
     println!("CU slash={}", slash.compute_units());
+    println!("CU cancel_challenge={}", cancel.compute_units());
+    println!("CU withdraw_capability_bond={}", withdraw.compute_units());
 
-    // Observed on litesvm (toolchain 4.2.2 / anchor 1.1.2): attest 21.4K,
-    // challenge 16.7K, resolve 16.4K, register 23.8K, certify 5.3K, slash 10.1K.
+    // Observed on litesvm (toolchain 4.2.2 / anchor 1.1.2): attest 20.0K,
+    // challenge 21.2K, resolve 16.4K, register 26.8K, certify 5.3K, slash 10.1K,
+    // cancel 10.7K, withdraw 15.0K.
     // Budgets are ~3x observed so real regressions fail without toolchain noise.
     assert!(attest.compute_units() < 65_000, "attest CU regression");
     assert!(
@@ -63,6 +86,14 @@ fn instructions_stay_within_compute_budgets() {
     );
     assert!(certify.compute_units() < 25_000, "certify CU regression");
     assert!(slash.compute_units() < 40_000, "slash CU regression");
+    assert!(
+        cancel.compute_units() < 45_000,
+        "cancel_challenge CU regression"
+    );
+    assert!(
+        withdraw.compute_units() < 70_000,
+        "withdraw_capability_bond CU regression"
+    );
 }
 
 /// Deterministic randomized operation sequence with full accounting checks.
@@ -462,23 +493,128 @@ fn treasury_is_funded_at_init_and_accepts_micro_slashes() {
 }
 
 #[test]
-fn stale_index_entries_are_detectable_after_withdrawal() {
-    // Documents v0.1 behavior: withdrawing a capability closes its account but
-    // leaves the pointer in the type index. Consumers must filter by account
-    // existence (the SDK does); this test pins that behavior so it cannot change
-    // silently.
+fn withdrawal_prunes_the_capability_index() {
     let mut env = setup();
     let creator = funded(&mut env.ctx, 5);
     let capability_type = task_type("LoRA");
     let capability = capability_pda(&capability_type, &creator.pubkey(), 1);
     env.register_capability(&creator, capability_type, "ipfs://cap", 1, DEFAULT_BOND)
         .assert_success();
-    env.withdraw_bond(&creator, &capability).assert_success();
 
     let index: ::taop_reputation::state::CapabilityIndex = env
         .ctx
         .get_account(&cap_index_pda(&capability_type))
         .unwrap();
     assert!(index.capabilities.contains(&capability));
+
+    env.withdraw_bond(&creator, &capability).assert_success();
+
+    let pruned: ::taop_reputation::state::CapabilityIndex = env
+        .ctx
+        .get_account(&cap_index_pda(&capability_type))
+        .unwrap();
+    assert!(!pruned.capabilities.contains(&capability));
     assert!(!env.exists(&capability));
+}
+
+/// The 64-entry index used to fill with closed records and block new
+/// registrations forever; pruning releases the capacity.
+#[test]
+fn index_capacity_is_released_by_withdrawal() {
+    let mut env = setup();
+    let creator = funded(&mut env.ctx, 50);
+    let capability_type = task_type("LoRA");
+    let bond = env.rent_min();
+
+    for id in 1..=64u64 {
+        env.register_capability(&creator, capability_type, "ipfs://cap", id, bond)
+            .assert_success();
+    }
+
+    let first = capability_pda(&capability_type, &creator.pubkey(), 1);
+    env.withdraw_bond(&creator, &first).assert_success();
+
+    // Without pruning this call would fail with IndexFull.
+    env.register_capability(&creator, capability_type, "ipfs://cap", 65, bond)
+        .assert_success();
+}
+
+#[test]
+fn cancel_challenge_after_timeout_refunds_the_challenger() {
+    let mut env = setup();
+    let agent = funded(&mut env.ctx, 5);
+    let challenger = funded(&mut env.ctx, 5);
+    env.attest(&agent, task_type("summarization"), "ipfs://r0", 0)
+        .assert_success();
+    let completion = completion_pda(&agent.pubkey(), 0);
+    env.challenge(&completion, &challenger, "ipfs://fraud")
+        .assert_success();
+
+    // Not cancellable before the timeout.
+    env.cancel_challenge(&challenger, &completion)
+        .assert_anchor_error("ChallengeNotTimedOut");
+
+    set_clock(
+        &mut env.ctx,
+        T0 + ::taop_reputation::state::CHALLENGE_TIMEOUT_SECS + 1,
+    );
+    let before = env.lamports(&challenger.pubkey());
+    env.cancel_challenge(&challenger, &completion)
+        .assert_success();
+    let after = env.lamports(&challenger.pubkey());
+
+    // The challenger is the only signer and therefore pays the 5,000 lamport fee.
+    assert_eq!(after - before, DEFAULT_BOND - 5_000);
+    let challenge = env.challenge_account(&completion);
+    assert!(challenge.resolved);
+    assert!(!challenge.upheld);
+    // The completion stays challenged (no re-challenge) and no dispute is recorded.
+    assert!(env.completion(&agent.pubkey(), 0).challenged);
+    assert!(!env.completion(&agent.pubkey(), 0).disputed);
+    assert_eq!(env.agent(&agent.pubkey()).disputes, 0);
+    assert!(!env.exists(&challenge_vault_pda(&completion)));
+}
+
+#[test]
+fn cancel_challenge_requires_the_challenger() {
+    let mut env = setup();
+    let agent = funded(&mut env.ctx, 5);
+    let challenger = funded(&mut env.ctx, 5);
+    let other = funded(&mut env.ctx, 5);
+    env.attest(&agent, task_type("summarization"), "ipfs://r0", 0)
+        .assert_success();
+    let completion = completion_pda(&agent.pubkey(), 0);
+    env.challenge(&completion, &challenger, "ipfs://fraud")
+        .assert_success();
+
+    set_clock(
+        &mut env.ctx,
+        T0 + ::taop_reputation::state::CHALLENGE_TIMEOUT_SECS + 1,
+    );
+    env.cancel_challenge(&other, &completion).assert_failure();
+    assert_eq!(
+        env.lamports(&challenge_vault_pda(&completion)),
+        DEFAULT_BOND
+    );
+}
+
+#[test]
+fn cancel_challenge_is_rejected_after_resolution() {
+    let mut env = setup();
+    let agent = funded(&mut env.ctx, 5);
+    let challenger = funded(&mut env.ctx, 5);
+    env.attest(&agent, task_type("summarization"), "ipfs://r0", 0)
+        .assert_success();
+    let completion = completion_pda(&agent.pubkey(), 0);
+    env.challenge(&completion, &challenger, "ipfs://fraud")
+        .assert_success();
+    let admin = env.admin.insecure_clone();
+    env.resolve(&admin, &completion, true).assert_success();
+
+    set_clock(
+        &mut env.ctx,
+        T0 + ::taop_reputation::state::CHALLENGE_TIMEOUT_SECS + 1,
+    );
+    env.cancel_challenge(&challenger, &completion)
+        .assert_anchor_error("ChallengeNotPending");
 }

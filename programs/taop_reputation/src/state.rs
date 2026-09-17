@@ -10,6 +10,11 @@ pub const CAP_INDEX_CAPACITY: usize = 64;
 /// accidental (or malicious) configuration that effectively disables decay.
 pub const MAX_DECAY_PERIOD_SECS: i64 = 366 * 24 * 60 * 60;
 
+/// After this long, a challenger may reclaim a bond from a challenge the
+/// authority never resolved (`cancel_challenge`). Liveness guard: no bond is
+/// locked forever.
+pub const CHALLENGE_TIMEOUT_SECS: i64 = 90 * 24 * 60 * 60;
+
 /// Protocol-level configuration. Single PDA: seeds = ["config"].
 #[account]
 #[derive(InitSpace)]

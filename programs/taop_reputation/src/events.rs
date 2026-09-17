@@ -67,6 +67,13 @@ pub struct ChallengeResolved {
 }
 
 #[event]
+pub struct ChallengeCancelled {
+    pub completion: Pubkey,
+    pub challenger: Pubkey,
+    pub swept_lamports: u64,
+}
+
+#[event]
 pub struct CapabilityRegistered {
     pub capability: Pubkey,
     pub creator: Pubkey,

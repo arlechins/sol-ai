@@ -175,6 +175,31 @@ suite("TaopSolanaClient against a live cluster", () => {
     expect(local.completions).toBeGreaterThanOrEqual(1);
   });
 
+  it("rejects cancelling a challenge before the timeout", async () => {
+    const freshAgent = Keypair.generate();
+    const airdrop = await connection.requestAirdrop(
+      freshAgent.publicKey,
+      5 * LAMPORTS_PER_SOL,
+    );
+    await connection.confirmTransaction(airdrop, "confirmed");
+    const freshClient = new TaopSolanaClient({ connection, wallet: freshAgent });
+    const { completion: pendingCompletion } = await freshClient.attest({
+      taskType: "summarization",
+      resultUri: "ipfs://timeout-path",
+    });
+
+    const challenger = new TaopSolanaClient({ connection, wallet: agentB });
+    await challenger.challenge({
+      completion: pendingCompletion,
+      evidenceUri: "ipfs://ev",
+    });
+
+    expect(await challenger.challengeTimedOut(pendingCompletion)).toBe(false);
+    await expect(
+      challenger.cancelChallenge(pendingCompletion),
+    ).rejects.toMatchObject({ code: "ChallengeNotTimedOut" });
+  });
+
   it("surfaces typed program errors for invalid operations", async () => {
     const failureAgent = Keypair.generate();
     const airdrop = await connection.requestAirdrop(

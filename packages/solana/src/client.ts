@@ -7,6 +7,7 @@ import {
   PublicKey,
   SystemProgram,
   Transaction,
+  type Commitment,
 } from "@solana/web3.js";
 import bs58 from "bs58";
 
@@ -18,6 +19,7 @@ import {
   createPdas,
   hashType,
   typeToHex,
+  CHALLENGE_TIMEOUT_SECS,
   MAX_DECAY_PERIOD_SECS,
   MAX_URI_LEN,
   type Pdas,
@@ -45,6 +47,8 @@ export interface TaopSolanaClientConfig {
   /** Wallet used for writes; omit for read-only usage. */
   wallet?: Wallet | Keypair;
   programId?: PublicKey;
+  /** Commitment for reads and confirmations (default "confirmed"). */
+  commitment?: Commitment;
 }
 
 export interface TaopConfigRecord {
@@ -74,7 +78,7 @@ export class TaopSolanaClient {
     this.provider = new anchor.AnchorProvider(
       this.connection,
       this.wallet ?? READONLY_WALLET,
-      { commitment: "confirmed" },
+      { commitment: config.commitment ?? "confirmed" },
     );
     this.program = new anchor.Program(idlJson as unknown as TaopReputation, this.provider);
   }
@@ -119,15 +123,13 @@ export class TaopSolanaClient {
     return agents.get(authority.toBase58()) ?? null;
   }
 
-  /** Batch-fetch agent records via a single getMultipleAccounts call. */
+  /** Batch-fetch agent records (chunked to respect the RPC 100-account limit). */
   async fetchAgents(authorities: PublicKey[]): Promise<Map<string, AgentRecord>> {
     const unique = new Map<string, PublicKey>();
     for (const authority of authorities) unique.set(authority.toBase58(), authority);
     const keys = [...unique.values()];
     const pdas = keys.map((key) => this.pdas.agent(key));
-    const infos = pdas.length
-      ? await this.connection.getMultipleAccountsInfo(pdas)
-      : [];
+    const infos = pdas.length ? await this.getMultipleAccountsChunked(pdas) : [];
 
     const out = new Map<string, AgentRecord>();
     for (let i = 0; i < keys.length; i += 1) {
@@ -147,6 +149,18 @@ export class TaopSolanaClient {
         lastActivity: bnToNumber(raw.lastActivity),
         metadataUri: raw.metadataUri,
       });
+    }
+    return out;
+  }
+
+  /** getMultipleAccountsInfo in chunks of 100 (the RPC maximum). */
+  private async getMultipleAccountsChunked(
+    keys: PublicKey[],
+  ): Promise<Array<import("@solana/web3.js").AccountInfo<Buffer> | null>> {
+    const out: Array<import("@solana/web3.js").AccountInfo<Buffer> | null> = [];
+    for (let i = 0; i < keys.length; i += 100) {
+      const chunk = keys.slice(i, i + 100);
+      out.push(...(await this.connection.getMultipleAccountsInfo(chunk)));
     }
     return out;
   }
@@ -282,7 +296,7 @@ export class TaopSolanaClient {
     }
 
     const infos = capabilityKeys.length
-      ? await this.connection.getMultipleAccountsInfo(capabilityKeys)
+      ? await this.getMultipleAccountsChunked(capabilityKeys)
       : [];
 
     const decodedCapabilities = capabilityKeys.map((key, i) => {
@@ -664,12 +678,20 @@ export class TaopSolanaClient {
   /** Withdraw the remaining capability bond and close the record (creator only). */
   async withdrawCapabilityBond(capability: PublicKey): Promise<string> {
     const creator = this.requireWallet();
+    const record = await this.getCapability(capability);
+    if (!record) {
+      throw new TaopSolanaError(
+        "AccountNotFound",
+        `Capability ${capability.toBase58()} does not exist`,
+      );
+    }
     return this.program.methods
       .withdrawCapabilityBond()
       .accountsStrict({
         config: this.pdas.config,
         capability,
         capabilityVault: this.pdas.capabilityVault(capability),
+        index: this.pdas.capabilityIndex(record.capabilityType),
         creator,
         systemProgram: SystemProgram.programId,
       })
@@ -677,6 +699,48 @@ export class TaopSolanaClient {
       .catch((error) => {
         throw mapError(error);
       });
+  }
+
+  /**
+   * Reclaim a challenge bond after the authority fails to resolve within the
+   * on-chain timeout (90 days). Only the original challenger can cancel.
+   */
+  async cancelChallenge(completion: PublicKey): Promise<string> {
+    const challenger = this.requireWallet();
+    const challenge = await this.getChallenge(completion);
+    if (!challenge) {
+      throw new TaopSolanaError(
+        "AccountNotFound",
+        "No challenge recorded for this completion",
+      );
+    }
+    if (challenge.challenger.toBase58() !== challenger.toBase58()) {
+      throw new TaopSolanaError(
+        "Unauthorized",
+        "Only the original challenger can cancel this challenge",
+      );
+    }
+    return this.program.methods
+      .cancelChallenge()
+      .accountsStrict({
+        completion,
+        challenge: this.pdas.challenge(completion),
+        challengeVault: this.pdas.challengeVault(completion),
+        challenger,
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc()
+      .catch((error) => {
+        throw mapError(error);
+      });
+  }
+
+  /** Current cluster time in seconds (used by timeout helpers). */
+  async challengeTimedOut(completion: PublicKey): Promise<boolean> {
+    const challenge = await this.getChallenge(completion);
+    if (!challenge || challenge.resolved) return false;
+    const now = await this.clusterTime();
+    return now - challenge.timestamp >= CHALLENGE_TIMEOUT_SECS;
   }
 }
 

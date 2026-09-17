@@ -40,4 +40,6 @@ pub enum TaopError {
     InvalidAuthority,
     #[msg("Decay period exceeds the maximum allowed (366 days)")]
     DecayPeriodTooLong,
+    #[msg("Challenge cannot be cancelled before the timeout (90 days)")]
+    ChallengeNotTimedOut,
 }

@@ -146,12 +146,12 @@ Each capability type has one `CapabilityIndex` account holding a
 `CapabilityIndex::SPACE`). When the list already holds 64 entries,
 `register_capability` fails with `IndexFull` (6013). Consequences:
 
-- The index is **append-only**. Withdrawing a capability closes its record but
-  does not remove its pointer, so capacity is never reclaimed in v0.1.
-- Once the index for a type is full, no new capability of that type can be
-  registered, even if older entries have been withdrawn.
-- Discovery clients must tolerate stale pointers (closed accounts) and filter
-  by `active`/`slashed`/`certified`. When the index account does not exist at
+- The index is **pruned on withdrawal**: `withdraw_capability_bond` removes the
+  pointer before closing the record, so capacity is reclaimed and a full index
+  cannot be used to block new registrations.
+- Discovery clients should still tolerate missing accounts (defensive against
+  partially applied reads) and filter by `active`/`slashed`/`certified`. When
+  the index account does not exist at
   all, the SDK falls back to a `getProgramAccounts` scan filtered by
   `capability_type` (memcmp at offset `8 + 8 + 32`).
 
@@ -298,9 +298,10 @@ v0.1 intentionally ships a small, auditable trust loop. The current gaps:
 
 - **No verifier set.** Disputes are resolved by one admin/certifier key rather
   than a staked verifier set or oracle network.
-- **No optimistic resolution.** There is no challenge window, no timeout, and
-  no automatic settlement. A challenge stays pending until an authority
-  resolves it, and a completion can never be challenged a second time.
+- **No optimistic resolution.** There is no challenge window and no automatic
+  settlement. A challenge stays pending until an authority resolves it; after
+  `CHALLENGE_TIMEOUT_SECS` (90 days) the challenger can reclaim the bond with
+  `cancel_challenge`, but a completion can never be challenged a second time.
 - **No NFT/SPL representation of capabilities.** Unlike the Base registry,
   capabilities on Solana are plain PDAs with a `metadata_uri`, not minted
   tokens. There is no secondary market, transfer, or ownership beyond the

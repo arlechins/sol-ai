@@ -81,7 +81,7 @@ cargo test --workspace
   `idls/` (used by `declare_program!` in the Rust
   tests) and the IDL + types into `packages/solana/src/idl/` for the SDK.
   `cargo test` fails to compile without this step.
-- `cargo test --workspace` runs **76 tests**: 65 LiteSVM integration tests
+- `cargo test --workspace` runs **80 tests**: 69 LiteSVM integration tests
   (`test-suite/tests/config.rs`, `test-suite/tests/reputation.rs`,
   `test-suite/tests/capability.rs`, `test-suite/tests/invariants.rs`,
   `test-suite/tests/security.rs`, `test-suite/tests/hardening.rs`), 10 score

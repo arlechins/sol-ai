@@ -41,10 +41,10 @@ EOF
 Expected:
 
 ```
-['accept_admin', 'attest_completion', 'certify_capability', 'challenge_completion',
- 'get_score', 'initialize_config', 'register_agent', 'register_capability',
- 'resolve_challenge', 'set_certifier', 'slash_capability', 'transfer_admin',
- 'update_config', 'withdraw_capability_bond']
+['accept_admin', 'attest_completion', 'cancel_challenge', 'certify_capability',
+ 'challenge_completion', 'get_score', 'initialize_config', 'register_agent',
+ 'register_capability', 'resolve_challenge', 'set_certifier', 'slash_capability',
+ 'transfer_admin', 'update_config', 'withdraw_capability_bond']
 ```
 
 Source: `programs/taop_reputation/src/instructions/`
@@ -65,7 +65,7 @@ anchor build              # produces target/deploy/taop_reputation.so
 cargo test --workspace
 ```
 
-Expected: 76 passing tests.
+Expected: 80 passing tests.
 
 | File | Tests | Covers |
 |---|---:|---|
@@ -74,7 +74,7 @@ Expected: 76 passing tests.
 | `test-suite/tests/capability.rs` | 11 | register, certify, slash, withdraw, index cap |
 | `test-suite/tests/invariants.rs` | 3 | lamport conservation, vault lifecycle |
 | `test-suite/tests/security.rs` | 9 | donations, account substitution, unauthorized ops, re-init |
-| `test-suite/tests/hardening.rs` | 12 | CU budgets, randomized accounting invariants, URI/authority boundaries, treasury funding, upgrade-authority init guard, two-step admin transfer, decay cap |
+| `test-suite/tests/hardening.rs` | 16 | CU budgets, randomized accounting invariants, URI/authority boundaries, treasury funding, upgrade-authority init guard, two-step admin transfer, decay cap, index pruning, challenge timeout |
 | `src/state.rs` (unit) | 11 | decay boundaries, 63-halving cap, and 5 property-based invariants |
 | generated (`declare_program!`) | 1 | program ID stability |
 
@@ -140,7 +140,7 @@ pnpm install
 pnpm --filter @taopp/solana build && pnpm --filter @taopp/solana test
 ```
 
-Expected: build succeeds; **18 tests pass** (10 unit + 8 integration against a
+Expected: build succeeds; **19 tests pass** (10 unit + 9 integration against a
 local validator).
 
 Integration coverage: register/attest, local vs on-chain score parity, challenge
