@@ -124,8 +124,10 @@ the `Agent` PDA). `challenged` is set on the first challenge and never cleared;
 
 Created by `challenge_completion` with `init_if_needed` after checking
 `!Completion.challenged`. The account is **not closed** after resolution; it
-remains with `resolved = true` and `upheld` set. `bond_lamports` mirrors the
-exact bond transferred into the challenge vault.
+remains with `resolved = true` and `upheld` set. `bond_lamports` is the exact
+bond the challenger transferred into the challenge vault; because deposits are
+permissionless, the vault may also hold unsolicited lamports, which are swept on
+resolution (see "Vault accounting" below).
 
 ## Capability
 
@@ -188,21 +190,24 @@ bytes** — no Anchor discriminator, no fields, no rent-exempt data rent. The
 
 | Vault | PDA seeds | Holds |
 | --- | --- | --- |
-| Challenge vault | `["challenge_vault", completion]` | The challenge bond for one completion. |
-| Capability vault | `["capability_vault", capability]` | The remaining capability bond for one capability. |
+| Challenge vault | `["challenge_vault", completion]` | The challenge bond for one completion, plus any unsolicited lamports (swept on resolution). |
+| Capability vault | `["capability_vault", capability]` | The remaining capability bond for one capability, plus any unsolicited lamports (paid to the creator on withdrawal). |
 
 Rules:
 
 - **Rent-exempt minimum.** The minimum for a zero-data system account is
   `Rent::minimum_balance(0)` (890,880 lamports under the standard mainnet rent
   parameters; the tests call `env.rent_min()`). A vault at **0 lamports is
-  purged** by the runtime.
-- **Challenge deposits** must find the vault empty
-  (`lamports() == 0`, else `VaultBalanceMismatch`) and transfer exactly
-  `Config.challenge_bond_lamports`.
-- **Challenge payouts** transfer exactly `Challenge.bond_lamports` to the
-  challenger (upheld) or the treasury (rejected); the vault ends at 0 and is
-  purged.
+  purged** by the runtime, and a new account cannot be created below the
+  rent-exempt minimum (so the smallest donation to a fresh vault is
+  `Rent::minimum_balance(0)`).
+- **Challenge deposits** transfer exactly `Config.challenge_bond_lamports` into
+  the vault regardless of its current balance; unsolicited lamports are
+  permitted.
+- **Challenge payouts sweep the entire vault balance** to the challenger
+  (upheld) or the treasury (rejected); the vault ends at 0 and is purged. The
+  `ChallengeResolved` event records the recorded bond (`bond_lamports`) and the
+  total swept amount (`swept_lamports`).
 - **Capability partial slash:** with `penalty < bond_remaining`, the remaining
   bond must be `>= rent.minimum_balance(0)` or the instruction fails with
   `InvalidPenalty`; the penalty is transferred and the vault stays rent-exempt.
@@ -346,4 +351,4 @@ as instruction return data.
 | Capability bond | `> 0` and `>= Rent::minimum_balance(0)` | `ZeroBond`, `BondBelowRentExempt` |
 | Partial slash | `bond_remaining - penalty >= Rent::minimum_balance(0)` (or penalty == full bond) | `InvalidPenalty` |
 | Penalty | `0 < penalty <= bond_remaining` | `ZeroBond`, `PenaltyExceedsBond` |
-| Vault balance vs records | challenge: `>= Challenge.bond_lamports` before payout; capability: `>= Capability.bond_remaining` | `VaultBalanceMismatch` |
+| Vault balance vs records | challenge: `>= Challenge.bond_lamports` before the resolution sweep; capability: `>= Capability.bond_remaining` | `VaultBalanceMismatch` |

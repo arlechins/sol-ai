@@ -162,17 +162,19 @@ mutates lamports directly (there is no `try_borrow_mut_lamports` anywhere):
 
 - **Deposits** use `anchor_lang::system_program::transfer` with a plain
   `CpiContext::new(...)`:
-  - `challenge_completion` requires the vault balance to be exactly `0`
-    (`VaultBalanceMismatch`), then transfers exactly
-    `Config.challenge_bond_lamports` from the challenger to the challenge
-    vault.
+  - `challenge_completion` transfers exactly `Config.challenge_bond_lamports`
+    from the challenger to the challenge vault. Any lamports already sitting in
+    the vault (unsolicited deposits) are left in place and handled by the
+    resolution sweep below.
   - `register_capability` transfers the caller-specified bond into the
     capability vault.
 - **Withdrawals** use `transfer` with `CpiContext::new_with_signer(...)` and
   the vault's own PDA seeds, so the program can sign for the system-owned
   vault:
-  - `resolve_challenge` transfers the recorded bond to the challenger
-    (`upheld`) or to the treasury (not upheld).
+  - `resolve_challenge` **sweeps the entire vault balance** to the challenger
+    (`upheld`) or to the treasury (not upheld). The recorded bond is paid out
+    exactly on top of any unsolicited deposits, so donations are never stranded
+    and cannot block a challenge.
   - `slash_capability` transfers the penalty (or the drained vault balance
     when the remaining bond becomes zero) to the treasury.
   - `withdraw_capability_bond` transfers the full vault balance to the
@@ -184,17 +186,23 @@ normal system-account rules:
 - The **rent-exempt minimum for an empty account** is
   `Rent::minimum_balance(0)` (890,880 lamports with the standard mainnet rent
   parameters; the tests read it with `env.rent_min()`).
+- A new account cannot be created below the rent-exempt minimum, so the
+  smallest possible donation to an uninitialized vault is
+  `Rent::minimum_balance(0)`. `docs/account-layout.md` documents how donations
+  are swept.
 - A vault that has been drained to **0 lamports is purged** by the runtime.
   The tests assert that challenge vaults and capability vaults do not exist
-  after full resolution/withdrawal, and that an empty vault is never reused
-  for a second challenge (`VaultBalanceMismatch` guards the deposit).
+  after full resolution/withdrawal.
 - `Challenge.bond_lamports` is the authoritative record of the escrowed bond;
   `resolve_challenge` requires the vault balance to be `>= bond_lamports`
-  before paying out.
+  before sweeping it, and emits both `bond_lamports` and `swept_lamports` in
+  `ChallengeResolved`.
 
-The bond invariants are covered by `programs/taop_reputation/tests/invariants.rs`:
-bonds are conserved across resolutions, capability payouts never exceed the
-bond, and empty vaults are not reused.
+The bond invariants are covered by
+`programs/taop_reputation/tests/invariants.rs` (conservation, payout caps,
+vault lifecycle) and `programs/taop_reputation/tests/security.rs` (donation
+sweeps in both outcomes, substituted recipients, unauthorized privileged
+operations, re-initialization attempts).
 
 ## 5. Authority and trust model
 

@@ -65,8 +65,8 @@ and `"node": ">=20"`.
 ## 2. Install, build, and test
 
 ```sh
-git clone <this-repo> taop-solana
-cd taop-solana
+git clone https://github.com/arlechins/sol-ai.git
+cd sol-ai
 
 pnpm install
 anchor build
@@ -130,6 +130,23 @@ loop:
 CERTIFIER_KEYPAIR=~/.config/solana/id.json \
   pnpm --filter @taopp/example-solana-agent start -- --cluster localnet
 ```
+
+On devnet, pass funded keypair files with absolute paths (the command runs from
+the package directory) and reclaim the demo capability bond afterwards:
+
+```sh
+AGENT_A_KEYPAIR="$PWD/.keys/agent-a.json" \
+AGENT_B_KEYPAIR="$PWD/.keys/agent-b.json" \
+CERTIFIER_KEYPAIR=~/.config/solana/id.json \
+  pnpm --filter @taopp/example-solana-agent start -- --cluster devnet
+
+AGENT_A_KEYPAIR="$PWD/.keys/agent-a.json" \
+  pnpm --filter @taopp/example-solana-agent start -- --cluster devnet --reclaim
+```
+
+`--reclaim` withdraws every active capability bond owned by `AGENT_A_KEYPAIR`,
+so demo runs do not strand SOL. The challenge bond is refunded automatically
+when the certifier upholds the challenge.
 
 Expected shape of the output:
 
@@ -360,7 +377,7 @@ Claude Desktop configuration (`claude_desktop_config.json`):
       "command": "npx",
       "args": [
         "tsx",
-        "/absolute/path/to/taop-solana/packages/mcp-server/src/index.ts"
+        "/absolute/path/to/sol-ai/packages/mcp-server/src/index.ts"
       ],
       "env": {
         "TAOP_CHAIN": "solana",
@@ -378,6 +395,23 @@ default program id / `deployments.solana.json`. See
 
 ## 6. Devnet deployment
 
+### Already deployed
+
+This repository is live on devnet; you do not need to deploy to try it:
+
+| Item | Value |
+|---|---|
+| Program | `8soD4YteLDgkibSNBzmQJTztiNcXPcLoi3Y2FrY15MnE` ([explorer](https://explorer.solana.com/address/8soD4YteLDgkibSNBzmQJTztiNcXPcLoi3Y2FrY15MnE?cluster=devnet)) |
+| Config PDA | `B1JgvqXoGor9oGaoGUGa4cYhHn4xNLdYXVEBaCxcydVu` (bond 0.005 SOL, 30-day decay) |
+| Authority / certifier / treasury | `bxFpYgz8F4rbwLWTGbjuPtY4tmUZVQwMLSLSkG9TFq2` |
+| Verified loop | [attest](https://explorer.solana.com/tx/cS1rf1vMDRQppuwSb1civFhmyzqnUwtD49CT5qynNNZs5AZvUSEnknd6WfkdjGXdn8QgffEG7dpcy2gyfHq9VFd?cluster=devnet) → [challenge](https://explorer.solana.com/tx/5HCaz3oNUZQ2ytkhvMZwTmQkTTTbEoAHDgdpjmp5Bmixa1atLNMQgoNLXkgLVTtqP1MY6UtVQuEJzJ4bY1dZmbBS?cluster=devnet) → [resolve](https://explorer.solana.com/tx/p34x3tdMLPDPCz32g1UJXYihTGjBRDefnGgqw3n8Tj7MqwNvdEkJVkxQbBN8MpkNixZ6TfJyQMkuYKzvrV7Hbvd?cluster=devnet) |
+
+The public devnet RPC rate-limits bursts (HTTP 429); the SDK retries with
+backoff, but faucet requests and CLI transfers may need a pause between
+attempts.
+
+### Deploying your own
+
 ```sh
 solana config set --url devnet
 solana airdrop 2     # or fund the wallet another way
@@ -393,9 +427,9 @@ The program id comes from the `[programs.devnet]` entry in `Anchor.toml`
 the upgrade authority (your provider wallet).
 
 Next, initialize the protocol config once and record the deployment. The
-canonical way is **`scripts/init-config.ts`** (added with the repository
-tooling): it reads the program id from the IDL, calls `initializeConfig` with
-the operator-provided certifier/treasury/bond/decay values, and writes
+canonical way is **`scripts/init-config.ts`** (`pnpm deploy:init`): it reads the
+program id from the IDL, calls `initializeConfig` with the
+operator-provided certifier/treasury/bond/decay values, and writes
 `deployments.solana.json` for the SDK and the MCP server. The equivalent SDK
 call is:
 
