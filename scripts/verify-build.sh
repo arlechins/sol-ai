@@ -34,10 +34,24 @@ fi
 
 "$ROOT/scripts/sync-keypair.sh" >/dev/null
 
+# The pinned Anchor image is amd64-only; on Apple Silicon run it under
+# emulation so the rebuild can proceed.
+if [[ "$(uname -m)" == "arm64" && "$(uname -s)" == "Darwin" ]]; then
+  export DOCKER_DEFAULT_PLATFORM="${DOCKER_DEFAULT_PLATFORM:-linux/amd64}"
+fi
+
 echo "Building verifiably (image pinned by Anchor.toml anchor_version)..."
 anchor build --verifiable
 
-LOCAL_HASH="$(solana-verify get-executable-hash "$ROOT/target/deploy/taop_reputation.so")"
+# `anchor build --verifiable` writes the reproducible artifact to
+# target/verifiable/, separate from the local platform-tools build.
+ARTIFACT="$ROOT/target/verifiable/taop_reputation.so"
+if [[ ! -f "$ARTIFACT" ]]; then
+  echo "error: verifiable artifact not found at $ARTIFACT" >&2
+  exit 1
+fi
+
+LOCAL_HASH="$(solana-verify get-executable-hash "$ARTIFACT")"
 CHAIN_HASH="$(solana-verify get-program-hash -u "$URL" "$PROGRAM_ID")"
 
 echo
