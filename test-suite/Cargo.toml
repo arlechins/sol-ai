@@ -2,13 +2,14 @@
 name = "taop-reputation-tests"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
 publish = false
 
 # The program is built with `no-entrypoint` here so the test binaries do not
 # export a second `entrypoint` symbol next to the one from `spl-token`
 # (pulled in by anchor-litesvm). Linux lld rejects duplicate symbols.
 [dependencies]
-taop_reputation = { path = "../programs/taop_reputation", default-features = false, features = ["no-entrypoint"] }
+taop_reputation = { version = "0.1.0", path = "../programs/taop_reputation", default-features = false, features = ["no-entrypoint"] }
 
 [dev-dependencies]
 anchor-lang = { version = "=1.1.2", features = ["init-if-needed"] }

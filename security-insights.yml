@@ -61,9 +61,15 @@ security-testing:
   - type: unit
     comment: 80 Rust tests via LiteSVM plus SDK, MCP, and benchmark suites.
   - type: static-analysis
-    comment: cargo clippy, CodeQL (JavaScript/TypeScript), pnpm audit, cargo audit.
+    comment: cargo clippy, CodeQL (JavaScript/TypeScript), pnpm audit, cargo audit,
+      cargo-deny (licenses/bans/sources).
   - type: supply-chain
     comment: Dependabot, dependency review, OpenSSF Scorecard, actions pinned to SHAs.
+  - type: provenance
+    comment: |
+      .github/workflows/release.yml publishes npm packages via trusted publishing
+      (OIDC) with provenance; workflows are SHA-pinned with an allowlist and
+      content-read default permissions.
   - type: reproducible-build
     comment: |
       scripts/verify-build.sh rebuilds in the pinned Anchor Docker image and

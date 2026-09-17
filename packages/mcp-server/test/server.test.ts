@@ -53,6 +53,16 @@ describe("MCP server (stdio smoke test)", () => {
     expect(payload.wallet).toBeNull();
   });
 
+  it("rejects invalid addresses with a field-specific error", async () => {
+    const result = await client.callTool({
+      name: "get_agent_score",
+      arguments: { agent: "not-a-pubkey" },
+    });
+    expect(result.isError).toBe(true);
+    const content = result.content as Array<{ type: string; text: string }>;
+    expect(content[0].text).toContain("not a base58 Solana address");
+  });
+
   it("refuses writes without a signer", async () => {
     const result = await client.callTool({
       name: "attest_completion",

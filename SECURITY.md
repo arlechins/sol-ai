@@ -81,6 +81,12 @@ defects:
   period is capped, and admin handover is two-step (`transfer_admin` /
   `accept_admin`).
 - OpenSSF Scorecard and CodeQL run on a schedule and on every push.
+- **CI supply chain:** workflows are SHA-pinned with `sha_pinning_required`
+  enabled and an explicit allowlist of permitted actions; workflow tokens
+  default to `contents: read`. `cargo-deny` enforces a license allowlist,
+  wildcard bans, and registry-only sources.
+- **Release provenance:** `.github/workflows/release.yml` publishes packages via
+  npm trusted publishing (OIDC) with provenance attestations.
 - **Reproducible builds:** `./scripts/verify-build.sh` rebuilds the program in
   the pinned Anchor Docker image and compares the executable hash with the
   deployed program; a weekly workflow runs the same check in CI. The devnet

@@ -4,6 +4,37 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.6] - 2026-09-17
+
+Supply-chain and parser hardening.
+
+### Security
+
+- **ProgramData parser extracted and property-tested.** The hand-rolled
+  upgrade-authority parser now lives in `programdata.rs` with example-based and
+  proptest coverage (arbitrary bytes never panic; accepted payloads match the
+  documented 45-byte layout).
+- **`cargo-deny` in CI** enforces a license allowlist, bans wildcard
+  dependencies, and permits registry sources only (`deny.toml`).
+- **GitHub Actions locked down:** all actions pinned to commit SHAs with
+  `sha_pinning_required` enabled, an explicit allowlist of permitted actions,
+  and workflow tokens defaulting to `contents: read` (no PR approvals).
+- **Release provenance:** `.github/workflows/release.yml` publishes
+  `@taopp/solana` and `@taopp/mcp-server` through npm trusted publishing (OIDC)
+  with provenance attestations; `docs/publishing.md` documents setup and
+  rollback.
+
+### Added
+
+- `deny.toml`, `.github/workflows/release.yml`, `docs/publishing.md`.
+- MCP test for field-specific address validation (4 MCP tests, 90 Rust tests,
+  20 SDK tests, 10 benchmark tests).
+
+### Changed
+
+- License and version pinned on the `test-suite` crate so the dependency policy
+  passes.
+
 ## [0.1.5] - 2026-09-17
 
 Operational, publish, and monitoring hardening.

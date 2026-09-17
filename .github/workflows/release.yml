@@ -1,0 +1,70 @@
+name: Release packages
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Git tag or ref to publish from
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  npm:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing / provenance via OIDC
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+        with:
+          version: 9.15.4
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install current npm (trusted publishing needs >= 11.5.1)
+        run: npm install -g npm@latest
+
+      - name: Build and test
+        run: |
+          pnpm --filter @taopp/solana build
+          pnpm --filter @taopp/solana test
+          pnpm --filter @taopp/mcp-server build
+          pnpm --filter @taopp/mcp-server test
+
+      - name: Package lint
+        run: pnpm run lint:packages
+
+      - name: Publish @taopp/solana
+        working-directory: packages/solana
+        run: npm publish --provenance --access public
+        env:
+          # Only used when trusted publishing is not configured for the package.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @taopp/mcp-server
+        working-directory: packages/mcp-server
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

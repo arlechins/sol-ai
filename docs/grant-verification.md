@@ -65,7 +65,7 @@ anchor build              # produces target/deploy/taop_reputation.so
 cargo test --workspace
 ```
 
-Expected: 83 passing tests.
+Expected: 90 passing tests.
 
 | File | Tests | Covers |
 |---|---:|---|
@@ -76,6 +76,7 @@ Expected: 83 passing tests.
 | `test-suite/tests/security.rs` | 9 | donations, account substitution, unauthorized ops, re-init |
 | `test-suite/tests/hardening.rs` | 19 | CU budgets, randomized accounting invariants, URI/authority boundaries, treasury funding, upgrade-authority init guard, two-step admin transfer, decay cap, index pruning, challenge timeout |
 | `src/state.rs` (unit) | 11 | decay boundaries, 63-halving cap, and 5 property-based invariants |
+| `src/programdata.rs` (unit) | 7 | ProgramData metadata parser (examples + proptest) |
 | generated (`declare_program!`) | 1 | program ID stability |
 
 ### Verify devnet / mainnet deployment
