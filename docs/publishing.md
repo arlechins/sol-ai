@@ -14,8 +14,9 @@ configured. Set the repository variable `NPM_PUBLISH=true` when you are ready:
 gh variable set NPM_PUBLISH --body "true" --repo arlechins/sol-ai
 ```
 
-(Or run the workflow manually with `gh workflow run release.yml -f tag=<tag>`.)
-Until then, the job is skipped and releases only build/test through CI.
+Until then, the publish job is skipped and releases (and manual dispatches)
+only generate the SBOM and run CI. Manual dispatch is for validating the SBOM:
+`gh workflow run release.yml -f tag=<tag>`.
 
 ## One-time setup on npmjs.com
 

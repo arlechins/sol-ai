@@ -23,8 +23,9 @@ jobs:
     timeout-minutes: 30
     # Disabled until npm authentication is configured (trusted publishing on
     # npmjs.com, or the NPM_TOKEN secret). Enable by setting the repository
-    # variable NPM_PUBLISH=true, or run this workflow manually.
-    if: github.event_name == 'workflow_dispatch' || vars.NPM_PUBLISH == 'true'
+    # variable NPM_PUBLISH=true. Manual dispatches only generate the SBOM until
+    # the variable is set.
+    if: vars.NPM_PUBLISH == 'true'
     permissions:
       contents: read
       id-token: write # npm trusted publishing / provenance via OIDC

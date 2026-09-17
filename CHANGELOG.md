@@ -21,6 +21,8 @@ Developer-experience and compliance additions.
   workflow artifact.
 - Issue templates (bug report, feature request) with the private security
   advisory flow surfaced in the chooser.
+- The npm publish job is gated strictly on the `NPM_PUBLISH` repository
+  variable; manual dispatches only generate the SBOM until it is set.
 - Verifiable-build badge in the README.
 
 ## [0.1.7] - 2026-09-17
