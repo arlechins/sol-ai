@@ -54,6 +54,7 @@ documentation:
     - url: https://github.com/arlechins/sol-ai/blob/main/packages/solana/README.md
   security:
     - url: https://github.com/arlechins/sol-ai/blob/main/docs/threat-model.md
+    - url: https://github.com/arlechins/sol-ai/blob/main/docs/security-review.md
   reviewers-listing:
     - url: https://github.com/arlechins/sol-ai/blob/main/SECURITY.md
 

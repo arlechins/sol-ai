@@ -18,7 +18,7 @@ independently verified from a clean checkout.
 
 | Milestone | Deliverable | Status | Evidence |
 |---|---|---|---|
-| M1 | `taop_reputation` Anchor program: `attest_completion`, `challenge_completion` (native SOL bond), `resolve_challenge`, `get_score` with inactivity decay, bonded `register_capability`, `certify`, `slash` + Rust test suite | **Deployed on devnet** (program + config); mainnet gated on funding | 90 Rust tests (`cargo test --workspace`), IDL at `target/idl/taop_reputation.json`, [program source](programs/taop_reputation/src/lib.rs) |
+| M1 | `taop_reputation` Anchor program: `attest_completion`, `challenge_completion` (native SOL bond), `resolve_challenge`, `get_score` with inactivity decay, bonded `register_capability`, `certify`, `slash` + Rust test suite | **Deployed on devnet** (program + config); mainnet gated on funding | 94 Rust tests (`cargo test --workspace`), IDL at `target/idl/taop_reputation.json`, [program source](programs/taop_reputation/src/lib.rs) |
 | M2 | `@taopp/solana` TypeScript SDK (`attest()`, `challenge()`, `getScore()`, `discover()`) and Solana support in `@taopp/mcp-server`, plus a runnable example agent | Shipped | SDK + 20 tests (unit + local-validator integration), MCP tools with dual-chain adapters, example in [`examples/solana-agent`](examples/solana-agent) |
 | M3 | Open gaming-resistance benchmark with three attack classes, CC-BY dataset, architecture docs, account-layout reference, tutorial | Shipped | [`benchmark/`](benchmark), [`benchmark/dataset/`](benchmark/dataset), [`docs/methodology.md`](docs/methodology.md), [`docs/tutorial.md`](docs/tutorial.md) |
 
@@ -40,7 +40,7 @@ packages/mcp-server/        @taopp/mcp-server — MCP tools for any agent runtim
 examples/solana-agent/      Runnable two-agent trust loop (SDK + MCP modes)
 benchmark/                  Gaming-resistance harness + CC-BY adversarial dataset
 docs/                       Architecture, account layout, tutorial, methodology,
-                            runbook, mainnet checklist, publishing
+                            runbook, mainnet checklist, publishing, security review
 scripts/                    IDL sync, keypair sync, localnet, devnet bootstrap
 keys/                       Program-ID keypair (committed; not an authority)
 ```
@@ -50,7 +50,7 @@ keys/                       Program-ID keypair (committed; not an authority)
 ```bash
 # Toolchain: Rust stable, Solana CLI 4.2.x, Anchor 1.1.2, Node 20+, pnpm 9
 anchor build && ./scripts/sync-idl.sh     # compile + sync IDL for tests/SDK
-cargo test --workspace                    # 90 Rust tests (in-process LiteSVM)
+cargo test --workspace                    # 94 Rust tests (in-process LiteSVM)
 
 ./scripts/localnet.sh                     # validator + program deploy
 pnpm install

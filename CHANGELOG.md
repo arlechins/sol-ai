@@ -4,6 +4,29 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.7] - 2026-09-17
+
+Client-contract and review hardening.
+
+### Security
+
+- **Layout regression tests.** New `test-suite/tests/layout.rs` pins every
+  account size, all account and event discriminators, and the discovery memcmp
+  offset, so an accidental on-chain layout or rename change fails in CI instead
+  of silently breaking SDK and indexer consumers.
+- **Security review guide.** `docs/security-review.md` maps each trust
+  boundary and invariant to the code paths and tests that cover them, lists the
+  places to challenge hardest (ProgramData parsing, vault sweeping, slash
+  boundaries, index mutation), and states the accepted limitations.
+
+### Added
+
+- SDK README section documenting retry safety and idempotency guarantees.
+
+### Changed
+
+- Test counts: 94 Rust tests (72 integration + 18 unit/property + 4 layout).
+
 ## [0.1.6] - 2026-09-17
 
 Supply-chain and parser hardening.

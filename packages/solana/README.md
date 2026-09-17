@@ -142,6 +142,14 @@ Write methods validate inputs before signing: URIs must be at most 200 bytes
 wallet is required for writes and on-chain score reads (`WalletRequired`), and
 bond-bearing writes pre-check the signer balance (`InsufficientBalance`).
 
+## Idempotency and retries
+
+Writes are PDA-bound, so a resubmitted transaction cannot double-spend or
+double-count: a repeated `attest` with the same sequence fails
+(`InvalidCompletionSeq`), a repeated `challenge` fails (`AlreadyChallenged`),
+and a repeated `registerCapability` fails (`InvalidCapabilityId`). If a write
+fails during confirmation, it is safe to retry it.
+
 ## Bonds and costs
 
 | Item | Amount |

@@ -73,6 +73,7 @@ Expected: 90 passing tests.
 | `test-suite/tests/reputation.rs` | 20 | attest, challenge, resolve, score decay |
 | `test-suite/tests/capability.rs` | 11 | register, certify, slash, withdraw, index cap |
 | `test-suite/tests/invariants.rs` | 3 | lamport conservation, vault lifecycle |
+| `test-suite/tests/layout.rs` | 4 | account sizes, account/event discriminators, discovery offset |
 | `test-suite/tests/security.rs` | 9 | donations, account substitution, unauthorized ops, re-init |
 | `test-suite/tests/hardening.rs` | 19 | CU budgets, randomized accounting invariants, URI/authority boundaries, treasury funding, upgrade-authority init guard, two-step admin transfer, decay cap, index pruning, challenge timeout |
 | `src/state.rs` (unit) | 11 | decay boundaries, 63-halving cap, and 5 property-based invariants |
