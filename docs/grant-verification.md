@@ -24,7 +24,9 @@ package typechecks/builds/tests, and a benchmark smoke run all pass.
 `challenge_completion` (bonded via native SOL transfer), `resolve_challenge`,
 `get_score` with inactivity decay, plus bonded `register_capability`, `certify`,
 and `slash`; full Rust test suite; deployed to devnet and mainnet with a
-published program ID.
+published program ID. The program also gates config initialization on
+the upgrade authority, caps the decay period, and supports two-step admin
+rotation.
 
 ### Verify the instruction set
 
@@ -39,9 +41,10 @@ EOF
 Expected:
 
 ```
-['attest_completion', 'certify_capability', 'challenge_completion', 'get_score',
- 'initialize_config', 'register_agent', 'register_capability', 'resolve_challenge',
- 'set_certifier', 'slash_capability', 'update_config', 'withdraw_capability_bond']
+['accept_admin', 'attest_completion', 'certify_capability', 'challenge_completion',
+ 'get_score', 'initialize_config', 'register_agent', 'register_capability',
+ 'resolve_challenge', 'set_certifier', 'slash_capability', 'transfer_admin',
+ 'update_config', 'withdraw_capability_bond']
 ```
 
 Source: `programs/taop_reputation/src/instructions/`
@@ -62,7 +65,7 @@ anchor build              # produces target/deploy/taop_reputation.so
 cargo test --workspace
 ```
 
-Expected: 71 passing tests.
+Expected: 75 passing tests.
 
 | File | Tests | Covers |
 |---|---:|---|
@@ -71,7 +74,7 @@ Expected: 71 passing tests.
 | `test-suite/tests/capability.rs` | 11 | register, certify, slash, withdraw, index cap |
 | `test-suite/tests/invariants.rs` | 3 | lamport conservation, vault lifecycle |
 | `test-suite/tests/security.rs` | 9 | donations, account substitution, unauthorized ops, re-init |
-| `test-suite/tests/hardening.rs` | 7 | CU budgets, randomized accounting invariants, URI/authority boundaries, treasury funding |
+| `test-suite/tests/hardening.rs` | 11 | CU budgets, randomized accounting invariants, URI/authority boundaries, treasury funding, upgrade-authority init guard, two-step admin transfer, decay cap |
 | `src/state.rs` (unit) | 11 | decay boundaries, 63-halving cap, and 5 property-based invariants |
 | generated (`declare_program!`) | 1 | program ID stability |
 
@@ -135,7 +138,7 @@ pnpm install
 pnpm --filter @taopp/solana build && pnpm --filter @taopp/solana test
 ```
 
-Expected: build succeeds; **14 tests pass** (6 unit + 8 integration against a
+Expected: build succeeds; **18 tests pass** (10 unit + 8 integration against a
 local validator).
 
 Integration coverage: register/attest, local vs on-chain score parity, challenge

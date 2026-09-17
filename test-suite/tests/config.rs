@@ -40,8 +40,7 @@ fn initialize_config_rejects_zero_treasury() {
     // The default pubkey is the System program, which Anchor rejects as a
     // writable account (`ConstraintMut`) before the instruction body. The
     // program also guards against `Pubkey::default()` as defense in depth.
-    let mut ctx = fresh_ctx();
-    let admin = funded(&mut ctx, 10);
+    let (mut ctx, admin) = fresh_ctx_with_admin(10);
     let ix = initialize_config_ix(
         &ctx,
         &admin.pubkey(),
@@ -57,8 +56,7 @@ fn initialize_config_rejects_zero_treasury() {
 
 #[test]
 fn initialize_config_rejects_bond_below_rent_exempt() {
-    let mut ctx = fresh_ctx();
-    let admin = funded(&mut ctx, 10);
+    let (mut ctx, admin) = fresh_ctx_with_admin(10);
     let treasury = Pubkey::new_unique();
     let rent_min = ctx
         .svm
@@ -79,8 +77,7 @@ fn initialize_config_rejects_bond_below_rent_exempt() {
 
 #[test]
 fn initialize_config_rejects_zero_decay_period() {
-    let mut ctx = fresh_ctx();
-    let admin = funded(&mut ctx, 10);
+    let (mut ctx, admin) = fresh_ctx_with_admin(10);
     let treasury = Pubkey::new_unique();
     let ix = initialize_config_ix(
         &ctx,

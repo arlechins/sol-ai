@@ -64,6 +64,9 @@ Trust boundaries:
 | URI-storage abuse | Oversized URIs exhaust account space | `#[max_len(200)]` + explicit length checks | `uri_length_boundary_is_exact` |
 | CPI reentrancy | Program CPIs to the System program only | No external program callbacks; no self-CPI | code review + CU budgets |
 | Compute exhaustion | Instruction blows the CU limit | CU budgets asserted ~3x observed usage | `instructions_stay_within_compute_budgets` |
+| Config front-running | Attacker initializes a fresh deployment and claims admin | `initialize_config` requires the program's upgrade authority | `initialize_config_requires_upgrade_authority` |
+| Admin key loss or rotation | No way to move admin to a multisig | Two-step `transfer_admin` + `accept_admin` | `admin_transfer_is_two_step_and_swaps_authority` |
+| Decay disabled by fat-finger | `decay_period_secs` set to a huge value | Cap at 366 days (`DecayPeriodTooLong`) | `decay_period_is_capped` |
 | Supply-chain compromise | Malicious dependency or action | `cargo audit`, `pnpm audit --audit-level high`, Dependabot, dependency review on PRs, third-party actions pinned to SHAs | CI jobs |
 
 ## 4. Economic assumptions
@@ -81,8 +84,9 @@ Trust boundaries:
 
 1. **Centralized resolution.** A dishonest admin/certifier can invert outcomes.
    Mitigation path: optimistic resolution with bonded watchers (v2).
-2. **Upgrade authority.** The code can be replaced. Mitigation: multisig
-   authority and a published runbook before mainnet.
+2. **Upgrade authority.** The code can be replaced. The config admin can now
+   be rotated to a multisig, but the program's upgrade authority is separate;
+   mitigation: multisig authority and a published runbook before mainnet.
 3. **Unverified attestations.** Self-attested work is not checked on-chain.
    Mitigation path: interaction-grounded attestations with counterparty
    diversity weighting.
@@ -107,7 +111,7 @@ Trust boundaries:
 ## 7. Verifying the mitigations
 
 ```bash
-cargo test --workspace          # 71 tests incl. tests/hardening.rs and security.rs
+cargo test --workspace          # 75 tests incl. test-suite/tests/hardening.rs and security.rs
 ./scripts/check.sh              # full pre-flight, incl. audits and benchmark baseline
 ```
 

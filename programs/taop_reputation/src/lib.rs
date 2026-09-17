@@ -45,6 +45,17 @@ pub mod taop_reputation {
         instructions::set_certifier(ctx, certifier)
     }
 
+    /// Propose an admin handover (admin only). Takes effect when the proposed
+    /// key calls `accept_admin`.
+    pub fn transfer_admin(ctx: Context<TransferAdmin>, new_admin: Pubkey) -> Result<()> {
+        instructions::transfer_admin(ctx, new_admin)
+    }
+
+    /// Accept a pending admin handover (proposed key only).
+    pub fn accept_admin(ctx: Context<AcceptAdmin>) -> Result<()> {
+        instructions::accept_admin(ctx)
+    }
+
     /// Register an agent identity or update its profile metadata URI.
     pub fn register_agent(ctx: Context<RegisterAgent>, metadata_uri: String) -> Result<()> {
         instructions::register_agent(ctx, metadata_uri)

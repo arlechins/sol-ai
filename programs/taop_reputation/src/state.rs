@@ -6,6 +6,10 @@ pub const MAX_URI_LEN: usize = 200;
 /// Maximum number of capability pointers kept in one capability-type index.
 pub const CAP_INDEX_CAPACITY: usize = 64;
 
+/// Upper bound for the inactivity decay period (366 days). Prevents an
+/// accidental (or malicious) configuration that effectively disables decay.
+pub const MAX_DECAY_PERIOD_SECS: i64 = 366 * 24 * 60 * 60;
+
 /// Protocol-level configuration. Single PDA: seeds = ["config"].
 #[account]
 #[derive(InitSpace)]
@@ -125,6 +129,15 @@ pub struct CapabilityIndex {
 
 impl CapabilityIndex {
     pub const SPACE: usize = 8 + 32 + 4 + (32 * CAP_INDEX_CAPACITY) + 1;
+}
+
+/// Pending admin handover. PDA: seeds = ["pending-admin"].
+/// Two-step transfer prevents a typo from permanently bricking the admin role.
+#[account]
+#[derive(InitSpace)]
+pub struct PendingAdmin {
+    pub new_admin: Pubkey,
+    pub bump: u8,
 }
 
 /// Return payload of `get_score` (Anchor serializes instruction return values as return data).

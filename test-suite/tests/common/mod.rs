@@ -62,6 +62,41 @@ pub fn cap_index_pda(capability_type: &[u8; 32]) -> Pubkey {
     pda(&[b"cap-index", capability_type.as_ref()])
 }
 
+pub fn pending_admin_pda() -> Pubkey {
+    pda(&[b"pending-admin"])
+}
+
+pub const BPF_LOADER_UPGRADEABLE_ID: Pubkey =
+    anchor_lang::solana_program::bpf_loader_upgradeable::ID;
+
+pub fn program_data_pda() -> Pubkey {
+    Pubkey::find_program_address(&[PROGRAM_ID.as_ref()], &BPF_LOADER_UPGRADEABLE_ID).0
+}
+
+/// LiteSVM deploys programs with no upgrade authority; the on-chain
+/// `initialize_config` guard requires the signer to be the upgrade authority.
+/// Rewrite the ProgramData metadata so tests exercise the same constraint as a
+/// real deployment.
+pub fn set_upgrade_authority(ctx: &mut AnchorContext, authority: &Pubkey) {
+    use solana_loader_v3_interface::state::UpgradeableLoaderState;
+
+    let address = program_data_pda();
+    let mut account = ctx
+        .svm
+        .get_account(&address)
+        .expect("programdata account exists after deploy");
+    let metadata_len = UpgradeableLoaderState::size_of_programdata_metadata();
+    let state = UpgradeableLoaderState::ProgramData {
+        slot: 0,
+        upgrade_authority_address: Some(*authority),
+    };
+    bincode::serialize_into(&mut account.data[..metadata_len], &state)
+        .expect("programdata metadata serializes");
+    ctx.svm
+        .set_account(address, account)
+        .expect("programdata account updates");
+}
+
 pub fn task_type(name: &str) -> [u8; 32] {
     let digest = <sha2::Sha256 as sha2::Digest>::digest(name.as_bytes());
     let mut out = [0u8; 32];
@@ -92,6 +127,15 @@ pub fn fresh_ctx() -> AnchorContext {
     )
 }
 
+/// A fresh context with a funded admin that is also the program's upgrade
+/// authority (mirroring a real deployment), ready for `initialize_config`.
+pub fn fresh_ctx_with_admin(sol: u64) -> (AnchorContext, Keypair) {
+    let mut ctx = fresh_ctx();
+    let admin = funded(&mut ctx, sol);
+    set_upgrade_authority(&mut ctx, &admin.pubkey());
+    (ctx, admin)
+}
+
 pub fn initialize_config_ix(
     ctx: &AnchorContext,
     admin: &Pubkey,
@@ -105,6 +149,7 @@ pub fn initialize_config_ix(
             config: config_pda(),
             admin: *admin,
             treasury: *treasury,
+            program_data: program_data_pda(),
             system_program: anchor_lang::system_program::ID,
         })
         .args(taop_reputation::client::args::InitializeConfig {
@@ -130,12 +175,17 @@ pub fn setup_with(bond: u64, decay_period_secs: i64) -> Env {
     let treasury = Keypair::new().pubkey();
     let config = config_pda();
 
+    // Real deployments have the deployer as upgrade authority; initialize_config
+    // requires that signer, so give the programdata account the same authority.
+    set_upgrade_authority(&mut ctx, &admin.pubkey());
+
     let ix = ctx
         .program()
         .accounts(taop_reputation::client::accounts::InitializeConfig {
             config,
             admin: admin.pubkey(),
             treasury,
+            program_data: program_data_pda(),
             system_program: anchor_lang::system_program::ID,
         })
         .args(taop_reputation::client::args::InitializeConfig {
@@ -282,6 +332,39 @@ impl Env {
             .instruction()
             .unwrap();
         self.send(ix, &[authority])
+    }
+
+    pub fn transfer_admin(&mut self, admin: &Keypair, new_admin: &Pubkey) -> TransactionResult {
+        let ix = self
+            .ctx
+            .program()
+            .accounts(taop_reputation::client::accounts::TransferAdmin {
+                config: self.config,
+                pending: pending_admin_pda(),
+                admin: admin.pubkey(),
+                system_program: anchor_lang::system_program::ID,
+            })
+            .args(taop_reputation::client::args::TransferAdmin {
+                new_admin: *new_admin,
+            })
+            .instruction()
+            .unwrap();
+        self.send(ix, &[admin])
+    }
+
+    pub fn accept_admin(&mut self, new_admin: &Keypair) -> TransactionResult {
+        let ix = self
+            .ctx
+            .program()
+            .accounts(taop_reputation::client::accounts::AcceptAdmin {
+                config: self.config,
+                pending: pending_admin_pda(),
+                new_admin: new_admin.pubkey(),
+            })
+            .args(taop_reputation::client::args::AcceptAdmin {})
+            .instruction()
+            .unwrap();
+        self.send(ix, &[new_admin])
     }
 
     pub fn register_agent(&mut self, authority: &Keypair, metadata_uri: &str) -> TransactionResult {

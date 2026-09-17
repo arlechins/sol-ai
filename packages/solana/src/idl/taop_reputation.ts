@@ -22,6 +22,75 @@ export type TaopReputation = {
   ],
   "instructions": [
     {
+      "name": "acceptAdmin",
+      "docs": [
+        "Accept a pending admin handover (proposed key only)."
+      ],
+      "discriminator": [
+        112,
+        42,
+        45,
+        90,
+        116,
+        181,
+        13,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pending",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  110,
+                  100,
+                  105,
+                  110,
+                  103,
+                  45,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "newAdmin",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "attestCompletion",
       "docs": [
         "Self-attest a completed task. Creates the agent identity on first use."
@@ -388,6 +457,92 @@ export type TaopReputation = {
             "rent-exempt minimum here so that later micro-payouts can create the account."
           ],
           "writable": true
+        },
+        {
+          "name": "programData",
+          "docs": [
+            "ProgramData PDA of this program. Binding the account with seeds prevents",
+            "an attacker from initializing the config on first deploy: the signer must",
+            "be the program's upgrade authority."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  5,
+                  24,
+                  176,
+                  5,
+                  149,
+                  197,
+                  21,
+                  35,
+                  232,
+                  224,
+                  202,
+                  147,
+                  63,
+                  153,
+                  81,
+                  174,
+                  78,
+                  28,
+                  116,
+                  81,
+                  219,
+                  70,
+                  105,
+                  116,
+                  80,
+                  104,
+                  47,
+                  159,
+                  210,
+                  180,
+                  79
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                2,
+                168,
+                246,
+                145,
+                78,
+                136,
+                161,
+                176,
+                226,
+                16,
+                21,
+                62,
+                247,
+                99,
+                174,
+                43,
+                0,
+                194,
+                185,
+                61,
+                22,
+                193,
+                36,
+                210,
+                192,
+                83,
+                122,
+                16,
+                4,
+                128,
+                0,
+                0
+              ]
+            }
+          }
         },
         {
           "name": "systemProgram",
@@ -913,6 +1068,84 @@ export type TaopReputation = {
       ]
     },
     {
+      "name": "transferAdmin",
+      "docs": [
+        "Propose an admin handover (admin only). Takes effect when the proposed",
+        "key calls `accept_admin`."
+      ],
+      "discriminator": [
+        42,
+        242,
+        66,
+        106,
+        228,
+        10,
+        111,
+        156
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pending",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  110,
+                  100,
+                  105,
+                  110,
+                  103,
+                  45,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "newAdmin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
       "name": "updateConfig",
       "docs": [
         "Update bond/decay/pause parameters (admin only)."
@@ -1138,9 +1371,48 @@ export type TaopReputation = {
         204,
         130
       ]
+    },
+    {
+      "name": "pendingAdmin",
+      "discriminator": [
+        220,
+        45,
+        135,
+        16,
+        196,
+        153,
+        181,
+        56
+      ]
     }
   ],
   "events": [
+    {
+      "name": "adminTransferProposed",
+      "discriminator": [
+        203,
+        168,
+        175,
+        51,
+        239,
+        104,
+        20,
+        85
+      ]
+    },
+    {
+      "name": "adminTransferred",
+      "discriminator": [
+        255,
+        147,
+        182,
+        5,
+        199,
+        217,
+        38,
+        179
+      ]
+    },
     {
       "name": "agentRegistered",
       "discriminator": [
@@ -1375,9 +1647,46 @@ export type TaopReputation = {
       "code": 6017,
       "name": "invalidAuthority",
       "msg": "Authority must not be the default (all-zero) pubkey"
+    },
+    {
+      "code": 6018,
+      "name": "decayPeriodTooLong",
+      "msg": "Decay period exceeds the maximum allowed (366 days)"
     }
   ],
   "types": [
+    {
+      "name": "adminTransferProposed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "currentAdmin",
+            "type": "pubkey"
+          },
+          {
+            "name": "newAdmin",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "adminTransferred",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "previousAdmin",
+            "type": "pubkey"
+          },
+          {
+            "name": "newAdmin",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
     {
       "name": "agent",
       "docs": [
@@ -1991,6 +2300,26 @@ export type TaopReputation = {
           {
             "name": "paused",
             "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "pendingAdmin",
+      "docs": [
+        "Pending admin handover. PDA: seeds = [\"pending-admin\"].",
+        "Two-step transfer prevents a typo from permanently bricking the admin role."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "newAdmin",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }

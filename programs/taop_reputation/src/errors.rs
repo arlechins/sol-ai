@@ -38,4 +38,6 @@ pub enum TaopError {
     InvalidCapabilityId,
     #[msg("Authority must not be the default (all-zero) pubkey")]
     InvalidAuthority,
+    #[msg("Decay period exceeds the maximum allowed (366 days)")]
+    DecayPeriodTooLong,
 }

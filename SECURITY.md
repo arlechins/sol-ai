@@ -77,6 +77,10 @@ defects:
 - The program ships property-based score tests, compute-unit budgets, a
   randomized accounting-invariant test, and a full threat model in
   `docs/threat-model.md`.
+- Config initialization is gated on the program's upgrade authority, the decay
+  period is capped, and admin handover is two-step (`transfer_admin` /
+  `accept_admin`).
+- OpenSSF Scorecard and CodeQL run on a schedule and on every push.
 
 ## No bug bounty
 

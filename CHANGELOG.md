@@ -4,6 +4,44 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.2] - 2026-09-17
+
+Further hardening: deployment front-running protection, safe admin rotation,
+configuration caps, stricter input validation, and expanded supply-chain
+automation. The program is upgraded in place on devnet under the same program
+ID.
+
+### Security
+
+- **Deployment front-running guard.** `initialize_config` now takes the
+  program's `ProgramData` PDA, bound by seeds, and requires its
+  `upgrade_authority_address` to equal the admin signer. Nobody can initialize a
+  fresh deployment and claim the admin role.
+- **Two-step admin transfer.** New `transfer_admin` / `accept_admin`
+  instructions and a `PendingAdmin` PDA let the admin hand over to a multisig
+  without a typo risk; the old admin keeps control until the successor accepts.
+- **Decay cap.** The inactivity decay period is capped at 366 days
+  (`DecayPeriodTooLong`) so a fat-fingered config cannot disable decay.
+- **SDK input validation.** URIs are length-checked (`UriTooLong`), decay
+  periods are capped (`DecayPeriodTooLong`), reads that need a fee payer throw
+  `WalletRequired`, and missing accounts and challenges surface as typed
+  `AccountNotFound` errors instead of raw failures.
+- **MCP input validation.** Solana adapters reject non-base58 addresses and Base
+  adapters reject non-EVM addresses with field-specific messages.
+
+### Added
+
+- `PendingAdmin` account (PDA `["pending-admin"]`) and `AdminTransferProposed` /
+  `AdminTransferred` events.
+- OpenSSF Scorecard and CodeQL workflows (actions pinned to commit SHAs).
+- CI least-privilege permissions, per-branch concurrency, and job timeouts.
+- SDK client-validation unit tests.
+
+### Changed
+
+- Test counts: 75 Rust tests total (64 integration + 11 unit/property) and 18
+  SDK tests.
+
 ## [0.1.1] - 2026-09-17
 
 Security hardening release. The program is redeployed to devnet under the same

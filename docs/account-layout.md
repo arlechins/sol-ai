@@ -181,6 +181,16 @@ registration for a type the zero `capability_type` is filled in with the real
 type and the bump is stored. The list is append-only and never pruned; a 65th
 registration fails with `IndexFull`, even if earlier entries were withdrawn.
 
+## PendingAdmin
+
+- **PDA seeds:** `["pending-admin"]`
+- **Account space:** `8 + PendingAdmin::INIT_SPACE = 8 + 33 = 41` bytes.
+- **Fields:** `new_admin: Pubkey` (32), `bump: u8` (1).
+
+Created by `transfer_admin` (rent paid by the current admin) and closed by
+`accept_admin`, which refunds the rent to the new admin. Only one handover can
+be pending at a time; a second `transfer_admin` overwrites the proposal.
+
 ## Vault accounts
 
 Two PDAs hold bonded lamports. They are **system-owned accounts with zero data
@@ -221,7 +231,7 @@ Rules:
 
 ## Instruction-to-accounts matrix
 
-All 12 instructions in IDL order. `w` = writable, `s` = signer. Accounts
+All 14 instructions in IDL order. `w` = writable, `s` = signer. Accounts
 marked PDA are constrained by Anchor seeds; the rest are supplied by the
 caller. `system_program` is always the System program
 (`11111111111111111111111111111111`) and never signs.
@@ -233,7 +243,8 @@ caller. `system_program` is always the System program
 | 1 | `config` | w | | PDA `["config"]`, `init` |
 | 2 | `admin` | w | s | Payer; becomes `Config.admin` |
 | 3 | `treasury` | w | | Destination for forfeited/slashed bonds; funded with the rent-exempt minimum at init |
-| 4 | `system_program` | | | |
+| 4 | `program_data` | | | ProgramData PDA of this program (seeds `[program id]` under the BPF Loader Upgradeable); `upgrade_authority_address` must equal `admin` |
+| 5 | `system_program` | | | |
 
 ### 2. `update_config(challenge_bond_lamports: Option<u64>, decay_period_secs: Option<i64>, paused: Option<bool>)`
 
@@ -342,14 +353,33 @@ as instruction return data.
 | 4 | `creator` | w | s | Must equal `capability.creator` |
 | 5 | `system_program` | | | |
 
+### 13. `transfer_admin(new_admin: Pubkey)`
+
+| # | Account | w | s | Notes |
+| --- | --- | --- | --- | --- |
+| 1 | `config` | | | PDA `["config"]` |
+| 2 | `pending` | w | | PDA `["pending-admin"]`, `init_if_needed`; stores the proposed key |
+| 3 | `admin` | w | s | Payer; must equal `Config.admin` |
+| 4 | `system_program` | | | |
+
+### 14. `accept_admin()`
+
+| # | Account | w | s | Notes |
+| --- | --- | --- | --- | --- |
+| 1 | `config` | w | | PDA `["config"]`; `admin` is replaced |
+| 2 | `pending` | w | | PDA `["pending-admin"]`; must equal the signer, closed on success |
+| 3 | `new_admin` | w | s | Receives the pending account rent |
+
 ## Rent and bond summary
 
 | Item | Rule | Error |
 | --- | --- | --- |
 | Challenge bond at init/update | `>= Rent::minimum_balance(0)` | `BondBelowRentExempt` |
-| Decay period | `> 0` | `InvalidDecayPeriod` |
+| Decay period | `> 0` and `<= 366 days` | `InvalidDecayPeriod`, `DecayPeriodTooLong` |
 | Capability bond | `> 0` and `>= Rent::minimum_balance(0)` | `ZeroBond`, `BondBelowRentExempt` |
 | Partial slash | `bond_remaining - penalty >= Rent::minimum_balance(0)` (or penalty == full bond) | `InvalidPenalty` |
 | Penalty | `0 < penalty <= bond_remaining` | `ZeroBond`, `PenaltyExceedsBond` |
 | Vault balance vs records | challenge: `>= Challenge.bond_lamports` before the resolution sweep; capability: `>= Capability.bond_remaining` | `VaultBalanceMismatch` |
 | Zero treasury or certifier | rejected in `initialize_config` and `set_certifier` | `InvalidAuthority` |
+| Init authority | `admin` must be the program's upgrade authority | `Unauthorized` |
+| Admin handover | proposed key must call `accept_admin` | `Unauthorized` |

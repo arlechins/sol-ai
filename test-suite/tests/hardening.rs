@@ -282,8 +282,7 @@ fn uri_length_boundary_is_exact() {
 
 #[test]
 fn zero_pubkeys_are_rejected_for_authorities() {
-    let mut ctx = fresh_ctx();
-    let admin = funded(&mut ctx, 10);
+    let (mut ctx, admin) = fresh_ctx_with_admin(10);
     let treasury = Pubkey::new_unique();
 
     let ix = initialize_config_ix(
@@ -297,6 +296,116 @@ fn zero_pubkeys_are_rejected_for_authorities() {
     ctx.execute_instruction(ix, &[&admin])
         .unwrap()
         .assert_anchor_error("InvalidAuthority");
+}
+
+/// Config initialization must be signed by the program's upgrade authority so
+/// nobody can front-run a fresh deployment and claim the admin role.
+#[test]
+fn initialize_config_requires_upgrade_authority() {
+    let (mut ctx, admin) = fresh_ctx_with_admin(10);
+    let other = funded(&mut ctx, 10);
+    set_upgrade_authority(&mut ctx, &other.pubkey());
+
+    let ix = initialize_config_ix(
+        &ctx,
+        &admin.pubkey(),
+        &Pubkey::new_unique(),
+        &admin.pubkey(),
+        DEFAULT_BOND,
+        DECAY_PERIOD_SECS,
+    );
+    ctx.execute_instruction(ix, &[&admin])
+        .unwrap()
+        .assert_anchor_error("Unauthorized");
+}
+
+#[test]
+fn admin_transfer_is_two_step_and_swaps_authority() {
+    let mut env = setup();
+    let intruder = funded(&mut env.ctx, 5);
+    let new_admin = funded(&mut env.ctx, 5);
+    let admin = env.admin.insecure_clone();
+
+    // Only the admin can propose.
+    env.transfer_admin(&intruder, &new_admin.pubkey())
+        .assert_anchor_error("Unauthorized");
+
+    env.transfer_admin(&admin, &new_admin.pubkey())
+        .assert_success();
+    assert_eq!(env.config_account().admin, env.admin.pubkey());
+
+    // Only the proposed key can accept.
+    env.accept_admin(&intruder).assert_failure();
+    env.accept_admin(&new_admin).assert_success();
+
+    assert_eq!(env.config_account().admin, new_admin.pubkey());
+    // The pending account is closed and the old admin loses privileges.
+    assert!(!env.exists(&pending_admin_pda()));
+    env.set_certifier(&admin, &admin.pubkey())
+        .assert_anchor_error("Unauthorized");
+    let certifier = env.certifier.insecure_clone();
+    env.set_certifier(&new_admin, &certifier.pubkey())
+        .assert_success();
+}
+
+#[test]
+fn admin_transfer_rejects_zero_and_allows_reproposal() {
+    let mut env = setup();
+    let first = funded(&mut env.ctx, 5);
+    let second = funded(&mut env.ctx, 5);
+    let admin = env.admin.insecure_clone();
+
+    env.transfer_admin(&admin, &Pubkey::default())
+        .assert_anchor_error("InvalidAuthority");
+
+    env.transfer_admin(&admin, &first.pubkey()).assert_success();
+    env.transfer_admin(&admin, &second.pubkey())
+        .assert_success();
+
+    // The first proposal was overwritten; only the second key can accept.
+    env.accept_admin(&first).assert_failure();
+    env.accept_admin(&second).assert_success();
+    assert_eq!(env.config_account().admin, second.pubkey());
+}
+
+#[test]
+fn decay_period_is_capped() {
+    let (mut ctx, admin) = fresh_ctx_with_admin(10);
+    let treasury = Pubkey::new_unique();
+
+    let ix = initialize_config_ix(
+        &ctx,
+        &admin.pubkey(),
+        &treasury,
+        &admin.pubkey(),
+        DEFAULT_BOND,
+        ::taop_reputation::state::MAX_DECAY_PERIOD_SECS + 1,
+    );
+    ctx.execute_instruction(ix, &[&admin])
+        .unwrap()
+        .assert_anchor_error("DecayPeriodTooLong");
+
+    let ix = initialize_config_ix(
+        &ctx,
+        &admin.pubkey(),
+        &treasury,
+        &admin.pubkey(),
+        DEFAULT_BOND,
+        ::taop_reputation::state::MAX_DECAY_PERIOD_SECS,
+    );
+    ctx.execute_instruction(ix, &[&admin])
+        .unwrap()
+        .assert_success();
+
+    let mut env = setup();
+    let admin = env.admin.insecure_clone();
+    env.update_config(
+        &admin,
+        None,
+        Some(::taop_reputation::state::MAX_DECAY_PERIOD_SECS + 1),
+        None,
+    )
+    .assert_anchor_error("DecayPeriodTooLong");
 }
 
 #[test]

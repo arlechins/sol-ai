@@ -16,6 +16,75 @@
   ],
   "instructions": [
     {
+      "name": "accept_admin",
+      "docs": [
+        "Accept a pending admin handover (proposed key only)."
+      ],
+      "discriminator": [
+        112,
+        42,
+        45,
+        90,
+        116,
+        181,
+        13,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pending",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  110,
+                  100,
+                  105,
+                  110,
+                  103,
+                  45,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "new_admin",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "attest_completion",
       "docs": [
         "Self-attest a completed task. Creates the agent identity on first use."
@@ -382,6 +451,92 @@
             "rent-exempt minimum here so that later micro-payouts can create the account."
           ],
           "writable": true
+        },
+        {
+          "name": "program_data",
+          "docs": [
+            "ProgramData PDA of this program. Binding the account with seeds prevents",
+            "an attacker from initializing the config on first deploy: the signer must",
+            "be the program's upgrade authority."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  5,
+                  24,
+                  176,
+                  5,
+                  149,
+                  197,
+                  21,
+                  35,
+                  232,
+                  224,
+                  202,
+                  147,
+                  63,
+                  153,
+                  81,
+                  174,
+                  78,
+                  28,
+                  116,
+                  81,
+                  219,
+                  70,
+                  105,
+                  116,
+                  80,
+                  104,
+                  47,
+                  159,
+                  210,
+                  180,
+                  79
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                2,
+                168,
+                246,
+                145,
+                78,
+                136,
+                161,
+                176,
+                226,
+                16,
+                21,
+                62,
+                247,
+                99,
+                174,
+                43,
+                0,
+                194,
+                185,
+                61,
+                22,
+                193,
+                36,
+                210,
+                192,
+                83,
+                122,
+                16,
+                4,
+                128,
+                0,
+                0
+              ]
+            }
+          }
         },
         {
           "name": "system_program",
@@ -907,6 +1062,84 @@
       ]
     },
     {
+      "name": "transfer_admin",
+      "docs": [
+        "Propose an admin handover (admin only). Takes effect when the proposed",
+        "key calls `accept_admin`."
+      ],
+      "discriminator": [
+        42,
+        242,
+        66,
+        106,
+        228,
+        10,
+        111,
+        156
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "pending",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  101,
+                  110,
+                  100,
+                  105,
+                  110,
+                  103,
+                  45,
+                  97,
+                  100,
+                  109,
+                  105,
+                  110
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "new_admin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
       "name": "update_config",
       "docs": [
         "Update bond/decay/pause parameters (admin only)."
@@ -1132,9 +1365,48 @@
         204,
         130
       ]
+    },
+    {
+      "name": "PendingAdmin",
+      "discriminator": [
+        220,
+        45,
+        135,
+        16,
+        196,
+        153,
+        181,
+        56
+      ]
     }
   ],
   "events": [
+    {
+      "name": "AdminTransferProposed",
+      "discriminator": [
+        203,
+        168,
+        175,
+        51,
+        239,
+        104,
+        20,
+        85
+      ]
+    },
+    {
+      "name": "AdminTransferred",
+      "discriminator": [
+        255,
+        147,
+        182,
+        5,
+        199,
+        217,
+        38,
+        179
+      ]
+    },
     {
       "name": "AgentRegistered",
       "discriminator": [
@@ -1369,9 +1641,46 @@
       "code": 6017,
       "name": "InvalidAuthority",
       "msg": "Authority must not be the default (all-zero) pubkey"
+    },
+    {
+      "code": 6018,
+      "name": "DecayPeriodTooLong",
+      "msg": "Decay period exceeds the maximum allowed (366 days)"
     }
   ],
   "types": [
+    {
+      "name": "AdminTransferProposed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "current_admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_admin",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AdminTransferred",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "previous_admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_admin",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
     {
       "name": "Agent",
       "docs": [
@@ -1985,6 +2294,26 @@
           {
             "name": "paused",
             "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PendingAdmin",
+      "docs": [
+        "Pending admin handover. PDA: seeds = [\"pending-admin\"].",
+        "Two-step transfer prevents a typo from permanently bricking the admin role."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "new_admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }

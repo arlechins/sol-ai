@@ -3,6 +3,17 @@ import { PublicKey } from "@solana/web3.js";
 
 export const DEFAULT_DECAY_PERIOD_SECS = 30 * 24 * 60 * 60;
 
+/** Maximum URI length accepted by the program (`MAX_URI_LEN`). */
+export const MAX_URI_LEN = 200;
+
+/** Upper bound for the decay period, mirrored from the program. */
+export const MAX_DECAY_PERIOD_SECS = 366 * 24 * 60 * 60;
+
+/** BPF Loader Upgradeable program, owner of ProgramData accounts. */
+export const BPF_LOADER_UPGRADEABLE_ID = new PublicKey(
+  "BPFLoaderUpgradeab1e11111111111111111111111",
+);
+
 /** Canonical 32-byte tag for a task/capability type string (sha256). */
 export function hashType(value: string): number[] {
   return Array.from(crypto.createHash("sha256").update(value, "utf8").digest());
@@ -57,6 +68,8 @@ export function computeScore(params: {
 
 export interface Pdas {
   config: PublicKey;
+  programData: PublicKey;
+  pendingAdmin: PublicKey;
   agent(authority: PublicKey): PublicKey;
   completion(agent: PublicKey, seq: bigint | number): PublicKey;
   challenge(completion: PublicKey): PublicKey;
@@ -78,6 +91,11 @@ export function createPdas(programId: PublicKey): Pdas {
 
   return {
     config: find([Buffer.from("config")]),
+    programData: PublicKey.findProgramAddressSync(
+      [programId.toBuffer()],
+      BPF_LOADER_UPGRADEABLE_ID,
+    )[0],
+    pendingAdmin: find([Buffer.from("pending-admin")]),
     agent: (authority) => find([Buffer.from("agent"), authority.toBuffer()]),
     completion: (agent, seq) =>
       find([Buffer.from("completion"), agent.toBuffer(), u64Bytes(seq)]),

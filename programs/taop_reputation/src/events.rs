@@ -22,6 +22,18 @@ pub struct CertifierUpdated {
 }
 
 #[event]
+pub struct AdminTransferProposed {
+    pub current_admin: Pubkey,
+    pub new_admin: Pubkey,
+}
+
+#[event]
+pub struct AdminTransferred {
+    pub previous_admin: Pubkey,
+    pub new_admin: Pubkey,
+}
+
+#[event]
 pub struct AgentRegistered {
     pub agent: Pubkey,
     pub authority: Pubkey,

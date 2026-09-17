@@ -214,7 +214,7 @@ operations, re-initialization attempts).
 
 | Authority | Powers | Set by |
 | --- | --- | --- |
-| `admin` | `update_config` (bond, decay, pause), `set_certifier`, `resolve_challenge` | Becomes admin when calling `initialize_config` |
+| `admin` | `update_config` (bond, decay, pause), `set_certifier`, `transfer_admin`/`accept_admin`, `resolve_challenge` | Becomes admin when calling `initialize_config`; rotatable via the two-step transfer |
 | `certifier` | `resolve_challenge`, `certify_capability`, `slash_capability` | `initialize_config` arg, rotatable by admin via `set_certifier` |
 | `treasury` | Receives forfeited challenge bonds and slashed capability bonds | `initialize_config` arg; **immutable afterwards** (no instruction updates it) |
 
@@ -231,6 +231,16 @@ Trust assumptions in v0.1:
   admin key as the root of trust of a deployment.
 - The admin/certifier should not be the same key as the deployer's hot wallet.
   There is no staking, jury, or voting mechanism for resolution.
+- **Config initialization is gated by the program upgrade authority.** The
+  `program_data` account is bound to this program by PDA seeds and its
+  `upgrade_authority_address` must equal the admin signer, so nobody can
+  front-run a fresh deployment and claim the admin role.
+- **Admin rotation is two-step.** `transfer_admin` names a successor and
+  `accept_admin` must be signed by that key, so a typo cannot brick the role.
+  The pending proposal lives in its own PDA (`["pending-admin"]`) to avoid
+  touching the `Config` layout.
+- **The decay period is capped at 366 days** so a fat-fingered config cannot
+  disable decay entirely (`DecayPeriodTooLong`).
 - Because challenge bonds are refunded on upheld results, challengers are not
   compensated beyond the refund; there is no reward parameter.
 - `resolve_challenge` cannot be called on a resolved challenge

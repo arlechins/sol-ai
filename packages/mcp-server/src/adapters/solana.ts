@@ -25,6 +25,17 @@ function expandHome(value: string): string {
   return path.join(os.homedir(), value.slice(2));
 }
 
+/** Parse a base58 pubkey with a clear, field-specific error message. */
+function parsePubkey(value: string, field: string): PublicKey {
+  try {
+    return new PublicKey(value);
+  } catch {
+    throw new Error(
+      `Invalid ${field}: '${value}' is not a base58 Solana address`,
+    );
+  }
+}
+
 export function loadKeypair(value: string): Keypair {
   const expanded = expandHome(value);
   if (expanded.endsWith(".json") || fs.existsSync(expanded)) {
@@ -83,7 +94,7 @@ export class SolanaAdapter implements ChainAdapter {
   }
 
   async getAgentScore(agent: string): Promise<ScoreResult> {
-    const score = await this.client.getScore(new PublicKey(agent));
+    const score = await this.client.getScore(parsePubkey(agent, "agent"));
     return {
       agent,
       completions: score.completions,
@@ -114,7 +125,7 @@ export class SolanaAdapter implements ChainAdapter {
   }
 
   async getCapability(id: string): Promise<Record<string, unknown>> {
-    const capability = await this.client.getCapability(new PublicKey(id));
+    const capability = await this.client.getCapability(parsePubkey(id, "capabilityId"));
     if (!capability) return { capabilityId: id, exists: false };
     return {
       capabilityId: id,
@@ -129,7 +140,7 @@ export class SolanaAdapter implements ChainAdapter {
   }
 
   async getCompletion(id: string): Promise<Record<string, unknown>> {
-    const completion = await this.client.getCompletion(new PublicKey(id));
+    const completion = await this.client.getCompletion(parsePubkey(id, "completionId"));
     if (!completion) return { completionId: id, exists: false };
     return {
       completionId: id,
@@ -166,7 +177,7 @@ export class SolanaAdapter implements ChainAdapter {
     evidenceUri: string;
   }): Promise<Record<string, unknown>> {
     this.requireWallet();
-    const completion = new PublicKey(input.completion);
+    const completion = parsePubkey(input.completion, "completionId");
     const signature = await this.client.challenge({
       completion,
       evidenceUri: input.evidenceUri,
@@ -211,7 +222,7 @@ export class SolanaAdapter implements ChainAdapter {
   }): Promise<Record<string, unknown>> {
     this.requireWallet();
     const signature = await this.client.resolveChallenge({
-      completion: new PublicKey(input.completion),
+      completion: parsePubkey(input.completion, "completionId"),
       upheld: input.upheld,
     });
     return {

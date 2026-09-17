@@ -2,8 +2,10 @@ use anchor_lang::prelude::*;
 use anchor_lang::system_program::{transfer as system_transfer, Transfer};
 
 use crate::errors::TaopError;
-use crate::events::{CertifierUpdated, ConfigInitialized, ConfigUpdated};
-use crate::state::Config;
+use crate::events::{
+    AdminTransferProposed, AdminTransferred, CertifierUpdated, ConfigInitialized, ConfigUpdated,
+};
+use crate::state::{Config, PendingAdmin, MAX_DECAY_PERIOD_SECS};
 
 #[derive(Accounts)]
 pub struct InitializeConfig<'info> {
@@ -21,6 +23,17 @@ pub struct InitializeConfig<'info> {
     /// rent-exempt minimum here so that later micro-payouts can create the account.
     #[account(mut)]
     pub treasury: UncheckedAccount<'info>,
+    /// ProgramData PDA of this program. Binding the account with seeds prevents
+    /// an attacker from initializing the config on first deploy: the signer must
+    /// be the program's upgrade authority.
+    #[account(
+        seeds = [crate::ID.as_ref()],
+        bump,
+        seeds::program = anchor_lang::solana_program::bpf_loader_upgradeable::ID,
+        constraint = program_data.upgrade_authority_address == Some(admin.key())
+            @ TaopError::Unauthorized
+    )]
+    pub program_data: Account<'info, ProgramData>,
     pub system_program: Program<'info, System>,
 }
 
@@ -36,6 +49,10 @@ pub fn initialize_config(
         TaopError::BondBelowRentExempt
     );
     require!(decay_period_secs > 0, TaopError::InvalidDecayPeriod);
+    require!(
+        decay_period_secs <= MAX_DECAY_PERIOD_SECS,
+        TaopError::DecayPeriodTooLong
+    );
     require!(certifier != Pubkey::default(), TaopError::InvalidAuthority);
     require!(
         ctx.accounts.treasury.key() != Pubkey::default(),
@@ -107,6 +124,10 @@ pub fn update_config(
     }
     if let Some(period) = decay_period_secs {
         require!(period > 0, TaopError::InvalidDecayPeriod);
+        require!(
+            period <= MAX_DECAY_PERIOD_SECS,
+            TaopError::DecayPeriodTooLong
+        );
         config.decay_period_secs = period;
     }
     if let Some(p) = paused {
@@ -139,5 +160,74 @@ pub fn set_certifier(ctx: Context<SetCertifier>, certifier: Pubkey) -> Result<()
     config.certifier = certifier;
 
     emit!(CertifierUpdated { certifier });
+    Ok(())
+}
+
+#[derive(Accounts)]
+pub struct TransferAdmin<'info> {
+    #[account(seeds = [b"config"], bump = config.bump)]
+    pub config: Account<'info, Config>,
+    #[account(
+        init_if_needed,
+        payer = admin,
+        space = 8 + PendingAdmin::INIT_SPACE,
+        seeds = [b"pending-admin"],
+        bump
+    )]
+    pub pending: Account<'info, PendingAdmin>,
+    #[account(mut)]
+    pub admin: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+/// Propose an admin handover (admin only). The proposal is not effective until
+/// the proposed key accepts it with `accept_admin`, so a typo cannot brick the
+/// admin role.
+pub fn transfer_admin(ctx: Context<TransferAdmin>, new_admin: Pubkey) -> Result<()> {
+    require_keys_eq!(
+        ctx.accounts.admin.key(),
+        ctx.accounts.config.admin,
+        TaopError::Unauthorized
+    );
+    require!(new_admin != Pubkey::default(), TaopError::InvalidAuthority);
+
+    let pending = &mut ctx.accounts.pending;
+    pending.new_admin = new_admin;
+    pending.bump = ctx.bumps.pending;
+
+    emit!(AdminTransferProposed {
+        current_admin: ctx.accounts.config.admin,
+        new_admin,
+    });
+    Ok(())
+}
+
+#[derive(Accounts)]
+pub struct AcceptAdmin<'info> {
+    #[account(mut, seeds = [b"config"], bump = config.bump)]
+    pub config: Account<'info, Config>,
+    #[account(
+        mut,
+        close = new_admin,
+        seeds = [b"pending-admin"],
+        bump = pending.bump,
+        constraint = pending.new_admin == new_admin.key() @ TaopError::Unauthorized
+    )]
+    pub pending: Account<'info, PendingAdmin>,
+    #[account(mut)]
+    pub new_admin: Signer<'info>,
+}
+
+/// Accept a pending admin handover. Only the proposed key can accept; the
+/// pending account is closed and its rent refunded to the new admin.
+pub fn accept_admin(ctx: Context<AcceptAdmin>) -> Result<()> {
+    let previous_admin = ctx.accounts.config.admin;
+    let new_admin = ctx.accounts.new_admin.key();
+    ctx.accounts.config.admin = new_admin;
+
+    emit!(AdminTransferred {
+        previous_admin,
+        new_admin,
+    });
     Ok(())
 }

@@ -19,6 +19,14 @@ function expandHome(value: string): string {
   return path.join(process.env.HOME ?? "", value.slice(2));
 }
 
+/** Validate an EVM address with a clear, field-specific error message. */
+function parseAddress(value: string, field: string): string {
+  if (!ethers.isAddress(value)) {
+    throw new Error(`Invalid ${field}: '${value}' is not an EVM address`);
+  }
+  return value;
+}
+
 export class BaseAdapter implements ChainAdapter {
   readonly chain = "base" as const;
   private readonly rpcUrl: string;
@@ -86,7 +94,9 @@ export class BaseAdapter implements ChainAdapter {
   }
 
   async getAgentScore(agent: string): Promise<ScoreResult> {
-    const score = await this.readRon().getSelfAttestScore(agent);
+    const score = await this.readRon().getSelfAttestScore(
+      parseAddress(agent, "agent"),
+    );
     return {
       agent,
       completions: Number(score.completions),

@@ -89,6 +89,8 @@ Read-only properties: `connection`, `programId`, `program`, `provider`,
 | `initializeConfig` | `{ certifier: PublicKey, treasury: PublicKey, challengeBondLamports: number \| bigint, decayPeriodSecs: number \| bigint }` | `Promise<string>` (tx signature). One-time; the signer becomes admin. |
 | `updateConfig` | `{ challengeBondLamports?, decayPeriodSecs?, paused? }` | `Promise<string>`. Admin only. Validates the bond against the rent-exempt minimum and rejects zero decay periods. |
 | `setCertifier` | `certifier: PublicKey` | `Promise<string>`. Admin only. |
+| `transferAdmin` | `newAdmin: PublicKey` | `Promise<string>`. Admin only. Proposes a handover; the new admin must call `acceptAdmin`. |
+| `acceptAdmin` | - | `Promise<string>`. Accepts a pending handover (proposed key only); refunds the pending account rent. |
 | `registerAgent` | `metadataUri: string` | `Promise<string>`. Creates the agent profile or updates its metadata (<= 200 bytes). |
 | `attest` | `{ taskType: string \| number[] \| Uint8Array, resultUri: string, seq?: number \| bigint }` | `Promise<{ signature, completion: PublicKey, completionId: number }>`. `seq` defaults to the agent's current completion count. |
 | `challenge` | `{ completion: PublicKey, evidenceUri: string }` | `Promise<string>`. Posts exactly `Config.challengeBondLamports` into the challenge vault. Throws if the completion was already challenged. |
@@ -132,6 +134,12 @@ TypeScript types exported: `TaopSolanaClientConfig`, `TaopConfigRecord`,
 `ScoreView`, `AttestInput`, `AttestResult`, `ChallengeInput`, `ResolveInput`,
 `RegisterCapabilityInput`, `DiscoverInput`, `DiscoveryItem`,
 `SolanaDeployment`, `ScoreBreakdown`, `Pdas`.
+
+## Validation
+
+Write methods validate inputs before signing: URIs must be at most 200 bytes
+(`UriTooLong`), the decay period at most 366 days (`DecayPeriodTooLong`), and a
+wallet is required for writes and on-chain score reads (`WalletRequired`).
 
 ## Bonds and costs
 

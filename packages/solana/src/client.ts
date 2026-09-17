@@ -13,7 +13,15 @@ import bs58 from "bs58";
 import idlJson from "./idl/taop_reputation.json";
 import type { TaopReputation } from "./idl/taop_reputation";
 import { mapError, TaopSolanaError } from "./errors";
-import { computeScore, createPdas, hashType, typeToHex, type Pdas } from "./pda";
+import {
+  computeScore,
+  createPdas,
+  hashType,
+  typeToHex,
+  MAX_DECAY_PERIOD_SECS,
+  MAX_URI_LEN,
+  type Pdas,
+} from "./pda";
 import type {
   AgentRecord,
   AttestInput,
@@ -78,7 +86,8 @@ export class TaopSolanaClient {
   private requireWallet(): PublicKey {
     const pk = this.walletPublicKey;
     if (!pk) {
-      throw new Error(
+      throw new TaopSolanaError(
+        "WalletRequired",
         "This operation requires a wallet. Construct TaopSolanaClient with { wallet }.",
       );
     }
@@ -355,6 +364,12 @@ export class TaopSolanaClient {
     challengeBondLamports: number | bigint;
     decayPeriodSecs: number | bigint;
   }): Promise<string> {
+    if (Number(input.decayPeriodSecs) > MAX_DECAY_PERIOD_SECS) {
+      throw new TaopSolanaError(
+        "DecayPeriodTooLong",
+        `Decay period must be <= ${MAX_DECAY_PERIOD_SECS} seconds`,
+      );
+    }
     const admin = this.requireWallet();
     const signature = await this.program.methods
       .initializeConfig(
@@ -366,6 +381,7 @@ export class TaopSolanaClient {
         config: this.pdas.config,
         admin,
         treasury: input.treasury,
+        programData: this.pdas.programData,
         systemProgram: SystemProgram.programId,
       })
       .rpc()
@@ -381,6 +397,15 @@ export class TaopSolanaClient {
     decayPeriodSecs?: number | bigint;
     paused?: boolean;
   }): Promise<string> {
+    if (
+      input.decayPeriodSecs !== undefined &&
+      Number(input.decayPeriodSecs) > MAX_DECAY_PERIOD_SECS
+    ) {
+      throw new TaopSolanaError(
+        "DecayPeriodTooLong",
+        `Decay period must be <= ${MAX_DECAY_PERIOD_SECS} seconds`,
+      );
+    }
     const admin = this.requireWallet();
     const signature = await this.program.methods
       .updateConfig(
@@ -413,8 +438,46 @@ export class TaopSolanaClient {
     return signature;
   }
 
+  /**
+   * Propose an admin handover (admin only). The proposal takes effect when the
+   * new admin calls `acceptAdmin`, so a typo cannot brick the admin role.
+   */
+  async transferAdmin(newAdmin: PublicKey): Promise<string> {
+    const admin = this.requireWallet();
+    return this.program.methods
+      .transferAdmin(newAdmin)
+      .accountsStrict({
+        config: this.pdas.config,
+        pending: this.pdas.pendingAdmin,
+        admin,
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc()
+      .catch((error) => {
+        throw mapError(error);
+      });
+  }
+
+  /** Accept a pending admin handover (proposed key only). */
+  async acceptAdmin(): Promise<string> {
+    const newAdmin = this.requireWallet();
+    const signature = await this.program.methods
+      .acceptAdmin()
+      .accountsStrict({
+        config: this.pdas.config,
+        pending: this.pdas.pendingAdmin,
+        newAdmin,
+      })
+      .rpc()
+      .catch((error) => {
+        throw mapError(error);
+      });
+    return signature;
+  }
+
   /** Register or update the caller's agent profile. */
   async registerAgent(metadataUri: string): Promise<string> {
+    assertUriLength(metadataUri);
     const authority = this.requireWallet();
     const signature = await this.program.methods
       .registerAgent(metadataUri)
@@ -432,6 +495,7 @@ export class TaopSolanaClient {
 
   /** Self-attest a completion. Creates the agent profile on first use. */
   async attest(input: AttestInput): Promise<AttestResult> {
+    assertUriLength(input.resultUri);
     const authority = this.requireWallet();
     const seq =
       input.seq !== undefined
@@ -459,8 +523,17 @@ export class TaopSolanaClient {
 
   /** Challenge a completion with the configured native SOL bond. */
   async challenge(input: ChallengeInput): Promise<string> {
+    assertUriLength(input.evidenceUri);
     const challenger = this.requireWallet();
-    const completion = await this.program.account.completion.fetch(input.completion);
+    const completion = await this.program.account.completion
+      .fetchNullable(input.completion)
+      .catch(() => null);
+    if (!completion) {
+      throw new TaopSolanaError(
+        "AccountNotFound",
+        `Completion ${input.completion.toBase58()} does not exist`,
+      );
+    }
     if (completion.challenged) {
       throw new TaopSolanaError(
         "AlreadyChallenged",
@@ -491,7 +564,12 @@ export class TaopSolanaClient {
       this.getChallenge(input.completion),
       this.getConfig(),
     ]);
-    if (!challenge) throw new Error("No challenge recorded for this completion");
+    if (!challenge) {
+      throw new TaopSolanaError(
+        "AccountNotFound",
+        "No challenge recorded for this completion",
+      );
+    }
 
     return this.program.methods
       .resolveChallenge(input.upheld)
@@ -516,6 +594,7 @@ export class TaopSolanaClient {
   async registerCapability(
     input: RegisterCapabilityInput,
   ): Promise<{ signature: string; capability: PublicKey; capabilityId: number }> {
+    assertUriLength(input.metadataUri);
     const creator = this.requireWallet();
     const id =
       input.id !== undefined
@@ -629,6 +708,15 @@ function walletFromKeypair(keypair: Keypair): Wallet {
       return transactions;
     },
   } as unknown as Wallet;
+}
+
+function assertUriLength(uri: string): void {
+  if (uri.length > MAX_URI_LEN) {
+    throw new TaopSolanaError(
+      "UriTooLong",
+      `URI must be at most ${MAX_URI_LEN} bytes, got ${uri.length}`,
+    );
+  }
 }
 
 function toBytes(value: string | number[] | Uint8Array): number[] {
