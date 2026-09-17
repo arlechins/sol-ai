@@ -46,7 +46,7 @@ jobs:
       - name: Install Anchor CLI
         run: |
           mkdir -p "$HOME/.local/bin"
-          curl -sSfL -o "$HOME/.local/bin/anchor" \
+          curl -sSfL --retry 5 --retry-delay 2 --retry-all-errors -o "$HOME/.local/bin/anchor" \
             "https://github.com/otter-sec/anchor/releases/download/v${ANCHOR_VERSION}/anchor-${ANCHOR_VERSION}-x86_64-unknown-linux-gnu"
           chmod +x "$HOME/.local/bin/anchor"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
@@ -55,8 +55,8 @@ jobs:
         run: |
           mkdir -p "$HOME/.local/bin"
           base="https://github.com/Ellipsis-Labs/solana-verifiable-build/releases/download/v${SOLANA_VERIFY_VERSION}"
-          curl -sSfL -o "$HOME/.local/bin/solana-verify" "$base/solana-verify-${SOLANA_VERIFY_VERSION}-linux"
-          curl -sSfL -o /tmp/solana-verify.sha256 "$base/solana-verify-${SOLANA_VERIFY_VERSION}-linux.sha256"
+          curl -sSfL --retry 5 --retry-delay 2 --retry-all-errors -o "$HOME/.local/bin/solana-verify" "$base/solana-verify-${SOLANA_VERIFY_VERSION}-linux"
+          curl -sSfL --retry 5 --retry-delay 2 --retry-all-errors -o /tmp/solana-verify.sha256 "$base/solana-verify-${SOLANA_VERIFY_VERSION}-linux.sha256"
           expected="$(awk '{print $1}' /tmp/solana-verify.sha256)"
           actual="$(sha256sum "$HOME/.local/bin/solana-verify" | awk '{print $1}')"
           [ "$expected" = "$actual" ] || { echo "solana-verify checksum mismatch"; exit 1; }
