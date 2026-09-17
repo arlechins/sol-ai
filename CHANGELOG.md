@@ -4,6 +4,25 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.9] - 2026-09-17
+
+Developer-experience and compliance additions.
+
+### Added
+
+- **SDK event helpers.** `decodeEvents(logs)` and
+  `eventsForTransaction(signature)` decode TAOP program events from transaction
+  logs with the IDL coder; covered by a live-validator test (21 SDK tests).
+- **Borsh round-trip proofs.** `test-suite/tests/roundtrip.rs` property-tests
+  every account struct: serialization round-trips exactly and never exceeds its
+  precomputed `INIT_SPACE` (100 Rust tests).
+- **SPDX SBOM per release.** `anchore/sbom-action` generates
+  `taop-solana.spdx.json`, attached to the GitHub release and kept as a
+  workflow artifact.
+- Issue templates (bug report, feature request) with the private security
+  advisory flow surfaced in the chooser.
+- Verifiable-build badge in the README.
+
 ## [0.1.7] - 2026-09-17
 
 Client-contract and review hardening.

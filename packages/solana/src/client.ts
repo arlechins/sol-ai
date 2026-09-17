@@ -14,6 +14,7 @@ import bs58 from "bs58";
 import idlJson from "./idl/taop_reputation.json";
 import type { TaopReputation } from "./idl/taop_reputation";
 import { mapError, TaopSolanaError } from "./errors";
+import { decodeEvents, type TaopEvent } from "./events";
 import {
   computeScore,
   createPdas,
@@ -788,6 +789,21 @@ export class TaopSolanaClient {
       .catch((error) => {
         throw mapError(error);
       });
+  }
+
+  /** Decode TAOP events from raw transaction log lines. */
+  decodeEvents(logs: readonly string[]): TaopEvent[] {
+    return decodeEvents(this.program, logs);
+  }
+
+  /** Fetch a transaction and decode its TAOP events (useful for indexers). */
+  async eventsForTransaction(signature: string): Promise<TaopEvent[]> {
+    const transaction = await this.connection.getTransaction(signature, {
+      commitment: "confirmed",
+      maxSupportedTransactionVersion: 0,
+    });
+    const logs = transaction?.meta?.logMessages ?? [];
+    return this.decodeEvents(logs);
   }
 
   /** Current cluster time in seconds (used by timeout helpers). */

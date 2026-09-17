@@ -74,6 +74,7 @@ Expected: 90 passing tests.
 | `test-suite/tests/capability.rs` | 11 | register, certify, slash, withdraw, index cap |
 | `test-suite/tests/invariants.rs` | 3 | lamport conservation, vault lifecycle |
 | `test-suite/tests/layout.rs` | 4 | account sizes, account/event discriminators, discovery offset |
+| `test-suite/tests/roundtrip.rs` | 6 | Borsh round-trips and `INIT_SPACE` bounds for every account |
 | `test-suite/tests/security.rs` | 9 | donations, account substitution, unauthorized ops, re-init |
 | `test-suite/tests/hardening.rs` | 19 | CU budgets, randomized accounting invariants, URI/authority boundaries, treasury funding, upgrade-authority init guard, two-step admin transfer, decay cap, index pruning, challenge timeout |
 | `src/state.rs` (unit) | 11 | decay boundaries, 63-halving cap, and 5 property-based invariants |
@@ -171,7 +172,7 @@ pnpm install
 pnpm --filter @taopp/solana build && pnpm --filter @taopp/solana test
 ```
 
-Expected: build succeeds; **20 tests pass** (10 unit + 10 integration against a
+Expected: build succeeds; **21 tests pass** (10 unit + 11 integration against a
 local validator).
 
 Integration coverage: register/attest, local vs on-chain score parity, challenge

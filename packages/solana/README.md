@@ -91,6 +91,8 @@ Read-only properties: `connection`, `programId`, `program`, `provider`,
 | `setCertifier` | `certifier: PublicKey` | `Promise<string>`. Admin only. |
 | `transferAdmin` | `newAdmin: PublicKey` | `Promise<string>`. Admin only. Proposes a handover; the new admin must call `acceptAdmin`. |
 | `acceptAdmin` | - | `Promise<string>`. Accepts a pending handover (proposed key only); refunds the pending account rent. |
+| `decodeEvents` | `logs: string[]` | `TaopEvent[]`. Decodes TAOP events from raw transaction logs. |
+| `eventsForTransaction` | `signature: string` | `Promise<TaopEvent[]>`. Fetches a transaction and decodes its TAOP events (for indexers). |
 | `registerAgent` | `metadataUri: string` | `Promise<string>`. Creates the agent profile or updates its metadata (<= 200 bytes). |
 | `attest` | `{ taskType: string \| number[] \| Uint8Array, resultUri: string, seq?: number \| bigint }` | `Promise<{ signature, completion: PublicKey, completionId: number }>`. `seq` defaults to the agent's current completion count. |
 | `challenge` | `{ completion: PublicKey, evidenceUri: string }` | `Promise<string>`. Posts exactly `Config.challengeBondLamports` into the challenge vault. Throws if the completion was already challenged. |

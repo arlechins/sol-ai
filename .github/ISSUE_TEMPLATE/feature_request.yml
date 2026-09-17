@@ -1,0 +1,42 @@
+name: Feature request
+description: Suggest an improvement to the program, clients, benchmark, or docs.
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Anchor program (taop_reputation)
+        - @taopp/solana SDK
+        - @taopp/mcp-server
+        - Benchmark / dataset
+        - Documentation or CI
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What can't you do today, and who is affected?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Include the account/instruction surface if this touches the program.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        For mechanism changes, note the expected effect on the published
+        gaming-resistance scores (`docs/methodology.md`).

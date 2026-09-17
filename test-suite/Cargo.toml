@@ -15,6 +15,8 @@ taop_reputation = { version = "0.1.0", path = "../programs/taop_reputation", def
 anchor-lang = { version = "=1.1.2", features = ["init-if-needed"] }
 anchor-litesvm = "0.4.0"
 bincode = "1"
+borsh = "1"
+proptest = "1"
 sha2 = "0.10"
 solana-clock = "3.2"
 solana-keypair = "3.1.2"

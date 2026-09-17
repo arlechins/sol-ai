@@ -1,0 +1,61 @@
+name: Bug report
+description: Report a reproducible bug in the program, SDK, MCP server, or benchmark.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not report security vulnerabilities here.** Use the private
+        advisory flow linked in the issue chooser.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Anchor program (taop_reputation)
+        - @taopp/solana SDK
+        - @taopp/mcp-server
+        - Benchmark / dataset
+        - Documentation or CI
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: v0.1.8 or commit SHA
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the exact error, logs, or transaction signature.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: |
+        Minimal steps or a failing test. For on-chain issues, include the
+        cluster, program ID, and transaction signature.
+      placeholder: |
+        1. anchor build && cargo test -p taop-reputation-tests --test <file>
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "macOS 26 / Rust 1.98 / Anchor 1.1.2 / Node 24 / devnet"
+    validations:
+      required: false

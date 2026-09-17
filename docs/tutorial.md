@@ -81,13 +81,13 @@ cargo test --workspace
   `idls/` (used by `declare_program!` in the Rust
   tests) and the IDL + types into `packages/solana/src/idl/` for the SDK.
   `cargo test` fails to compile without this step.
-- `cargo test --workspace` runs **94 tests**: 72 LiteSVM integration tests
+- `cargo test --workspace` runs **100 tests**: 82 LiteSVM integration tests
   (`test-suite/tests/config.rs`, `test-suite/tests/reputation.rs`,
   `test-suite/tests/capability.rs`, `test-suite/tests/invariants.rs`,
   `test-suite/tests/security.rs`, `test-suite/tests/hardening.rs`,
-  `test-suite/tests/layout.rs`) plus the macro-generated `test_id`, and 18
-  program unit tests (11 score/decay tests in `src/state.rs` and 7 ProgramData
-  parser tests in `src/programdata.rs`). The
+  `test-suite/tests/layout.rs`, `test-suite/tests/roundtrip.rs`) plus the
+  macro-generated `test_id`, and 18 program unit tests (11 score/decay tests in
+  `src/state.rs` and 7 ProgramData parser tests in `src/programdata.rs`). The
   suite loads the built `.so` from `target/deploy/`, so `anchor build` must run
   first.
 

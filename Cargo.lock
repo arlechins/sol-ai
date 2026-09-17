@@ -4452,6 +4452,8 @@ dependencies = [
  "anchor-lang",
  "anchor-litesvm",
  "bincode",
+ "borsh",
+ "proptest",
  "sha2 0.10.9",
  "solana-clock 3.2.1",
  "solana-keypair",

@@ -60,6 +60,12 @@ broken export map cannot reach npm. It does not start a validator, so the SDK
 integration tests skip; run `./scripts/localnet.sh` and `pnpm -r --if-present
 test` locally before tagging if you changed program-facing code.
 
+## Software bill of materials
+
+Every release also produces an SPDX SBOM (`taop-solana.spdx.json`) via
+`anchore/sbom-action`, attached to the GitHub release and available as a
+workflow artifact. It covers the Cargo and pnpm dependency graphs.
+
 ## Verify a release
 
 ```bash

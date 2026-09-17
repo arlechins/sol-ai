@@ -207,6 +207,27 @@ suite("TaopSolanaClient against a live cluster", () => {
     ).rejects.toMatchObject({ code: "ChallengeNotTimedOut" });
   });
 
+  it("decodes program events from a transaction", async () => {
+    const agentClient = new TaopSolanaClient({ connection, wallet: agentA });
+    const result = await agentClient.attest({
+      taskType: "summarization",
+      resultUri: "ipfs://events",
+    });
+
+    // The validator may need a moment before the transaction is queryable.
+    let events: Awaited<ReturnType<TaopSolanaClient["eventsForTransaction"]>> = [];
+    for (let attempt = 0; attempt < 5 && events.length === 0; attempt += 1) {
+      events = await agentClient.eventsForTransaction(result.signature);
+      if (events.length === 0) await new Promise((r) => setTimeout(r, 500));
+    }
+
+    const attested = events.find((event) => /completionAttested/i.test(event.name));
+    expect(attested).toBeDefined();
+    const data = attested?.data as Record<string, unknown> | undefined;
+    expect(data?.completionId?.toString()).toBe(String(result.completionId));
+    expect(data?.resultUri).toBe("ipfs://events");
+  });
+
   it("fails fast with InsufficientBalance for unfunded writes", async () => {
     const broke = Keypair.generate(); // never funded
     const brokeClient = new TaopSolanaClient({ connection, wallet: broke });
