@@ -116,19 +116,18 @@ on `ubuntu-latest`, so the check is reproducible by anyone.
 
 Current status: **verified**. The devnet program was replaced with the
 reproducible artifact (deploy signature
-`WFqxgkyZnGjY81TBx9Vxcj7mX7zbaSnpGA9cYCiMM1cAZTdTS6hdjkJbvsDcc2sVQQiAQxQvYxxm4AwyVWtDdWw`)
+`W6ubhd3q9iVcjgvUnMZT3eAEMthBM1WJxh65dkT6GhfpZMq4zMCQq98vZYnnnye2fg7wNh7sQdXqr71bb8jfoAN`)
 and its executable hash matches the rebuild exactly:
 
 | Artifact | solana-verify executable hash |
 |---|---|
-| Docker reproducible build (`target/verifiable/`) | `7363373cc44175a1099674c627f74a623f640b95e57c0d06b7e43d624b169e14` |
-| Devnet program (on-chain) | `7363373cc44175a1099674c627f74a623f640b95e57c0d06b7e43d624b169e14` |
+| Docker reproducible build (`target/verifiable/`) | `4fc831ed93f4c8b84c76b83803abad0490bf59fefedcf5a2cb782b2faf39c01e` |
+| Devnet program (on-chain) | `4fc831ed93f4c8b84c76b83803abad0490bf59fefedcf5a2cb782b2faf39c01e` |
 
 Note: the local platform-tools build (`target/deploy/`) produces a different
-ELF (`sha256 17683837524f1087df526ac1ae12fe5d69824441573102a32d2ee08d525925de`)
-than the pinned Docker toolchain, so only the Docker artifact is treated as the
-canonical reproducible build and is what is deployed. `scripts/verify-build.sh`
-compares the Docker artifact.
+ELF than the pinned Docker toolchain (different SHA-256), so only the Docker
+artifact is treated as the canonical reproducible build and is what is
+deployed. `scripts/verify-build.sh` compares the Docker artifact.
 
 ### Devnet deployment evidence (live)
 

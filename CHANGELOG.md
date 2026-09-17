@@ -24,6 +24,15 @@ Supply-chain and parser hardening.
   with provenance attestations; `docs/publishing.md` documents setup and
   rollback.
 
+### Deployed
+
+- Devnet upgraded in place with the reproducible artifact of this commit:
+  signature
+  `W6ubhd3q9iVcjgvUnMZT3eAEMthBM1WJxh65dkT6GhfpZMq4zMCQq98vZYnnnye2fg7wNh7sQdXqr71bb8jfoAN`;
+  `solana-verify` reports
+  `4fc831ed93f4c8b84c76b83803abad0490bf59fefedcf5a2cb782b2faf39c01e` for both
+  the rebuild and the on-chain program.
+
 ### Added
 
 - `deny.toml`, `.github/workflows/release.yml`, `docs/publishing.md`.
