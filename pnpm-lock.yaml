@@ -31,25 +31,25 @@ importers:
         version: link:../packages/solana
     devDependencies:
       '@types/node':
-        specifier: ^22.20.3
+        specifier: ^22.14.0
         version: 22.20.3
       tsx:
-        specifier: ^4.23.13
+        specifier: ^4.21.0
         version: 4.23.13
       typescript:
-        specifier: ~5.8.3
+        specifier: ~5.8.2
         version: 5.8.3
       vitest:
-        specifier: ^3.2.7
+        specifier: ^3.0.0
         version: 3.2.7(@types/node@22.20.3)(tsx@4.23.13)
 
   examples/solana-agent:
     dependencies:
       '@modelcontextprotocol/sdk':
-        specifier: ^1.30.0
+        specifier: ^1.29.0
         version: 1.30.0(zod@4.6.5)
       '@solana/web3.js':
-        specifier: ^1.99.0
+        specifier: ^1.98.0
         version: 1.99.0(bufferutil@4.1.0)(typescript@5.8.3)(utf-8-validate@6.0.6)
       '@taopp/solana':
         specifier: workspace:*
@@ -58,26 +58,26 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
       dotenv:
-        specifier: ^16.6.1
-        version: 16.6.1
+        specifier: ^17.4.2
+        version: 17.4.2
     devDependencies:
       '@types/node':
-        specifier: ^22.20.3
+        specifier: ^22.14.0
         version: 22.20.3
       tsx:
-        specifier: ^4.23.13
+        specifier: ^4.21.0
         version: 4.23.13
       typescript:
-        specifier: ~5.8.3
+        specifier: ~5.8.2
         version: 5.8.3
 
   packages/mcp-server:
     dependencies:
       '@modelcontextprotocol/sdk':
-        specifier: ^1.30.0
+        specifier: ^1.29.0
         version: 1.30.0(zod@4.6.5)
       '@solana/web3.js':
-        specifier: ^1.99.0
+        specifier: ^1.98.0
         version: 1.99.0(bufferutil@4.1.0)(typescript@5.8.3)(utf-8-validate@6.0.6)
       '@taopp/sdk':
         specifier: ^0.1.1
@@ -89,51 +89,51 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
       dotenv:
-        specifier: ^16.6.1
-        version: 16.6.1
+        specifier: ^17.4.2
+        version: 17.4.2
       ethers:
-        specifier: ^6.17.0
+        specifier: ^6.13.5
         version: 6.17.0(bufferutil@4.1.0)
     devDependencies:
       '@types/node':
-        specifier: ^22.20.3
+        specifier: ^22.14.0
         version: 22.20.3
       tsup:
-        specifier: ^8.5.1
+        specifier: ^8.4.0
         version: 8.5.1(postcss@8.5.28)(tsx@4.23.13)(typescript@5.8.3)
       tsx:
-        specifier: ^4.23.13
+        specifier: ^4.21.0
         version: 4.23.13
       typescript:
-        specifier: ~5.8.3
+        specifier: ~5.8.2
         version: 5.8.3
       vitest:
-        specifier: ^3.2.7
+        specifier: ^3.0.0
         version: 3.2.7(@types/node@22.20.3)(tsx@4.23.13)
 
   packages/solana:
     dependencies:
       '@anchor-lang/core':
-        specifier: ^1.2.0
+        specifier: ^1.0.0
         version: 1.2.0(bufferutil@4.1.0)(typescript@5.8.3)
       '@solana/web3.js':
-        specifier: ^1.99.0
+        specifier: ^1.98.0
         version: 1.99.0(bufferutil@4.1.0)(typescript@5.8.3)(utf-8-validate@6.0.6)
       bs58:
         specifier: ^6.0.0
         version: 6.0.0
     devDependencies:
       '@types/node':
-        specifier: ^22.20.3
+        specifier: ^22.14.0
         version: 22.20.3
       tsup:
-        specifier: ^8.5.1
+        specifier: ^8.4.0
         version: 8.5.1(postcss@8.5.28)(tsx@4.23.13)(typescript@5.8.3)
       typescript:
-        specifier: ~5.8.3
+        specifier: ~5.8.2
         version: 5.8.3
       vitest:
-        specifier: ^3.2.7
+        specifier: ^3.0.0
         version: 3.2.7(@types/node@22.20.3)(tsx@4.23.13)
 
 packages:
@@ -922,8 +922,8 @@ packages:
     resolution: {integrity: sha512-g7nH6P6dyDioJogAAGprGpCtVImJhpPk/roCzdb3fIh61/s/nPsfR6onyMwkCAR/OlC3yBC0lESvUoQEAssIrw==}
     engines: {node: '>= 0.8'}
 
-  dotenv@16.6.1:
-    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+  dotenv@17.4.2:
+    resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
@@ -2266,7 +2266,7 @@ snapshots:
 
   depd@2.0.0: {}
 
-  dotenv@16.6.1: {}
+  dotenv@17.4.2: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -2520,7 +2520,7 @@ snapshots:
 
   isexe@2.0.0: {}
 
-  isomorphic-ws@4.0.1(ws@7.5.13(bufferutil@4.1.0)(utf-8-validate@6.0.6)):
+  isomorphic-ws@4.0.1(ws@7.5.13(bufferutil@4.1.0)):
     dependencies:
       ws: 7.5.13(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 
@@ -2533,7 +2533,7 @@ snapshots:
       delay: 5.0.0
       es6-promisify: 5.0.0
       eyes: 0.1.8
-      isomorphic-ws: 4.0.1(ws@7.5.13(bufferutil@4.1.0)(utf-8-validate@6.0.6))
+      isomorphic-ws: 4.0.1(ws@7.5.13(bufferutil@4.1.0))
       json-stringify-safe: 5.0.1
       stream-json: 1.9.1
       uuid: 8.3.2
