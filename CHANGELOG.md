@@ -29,6 +29,16 @@ ID.
 - **MCP input validation.** Solana adapters reject non-base58 addresses and Base
   adapters reject non-EVM addresses with field-specific messages.
 
+### Deployed
+
+- Devnet upgraded in place: signature
+  `uaeSPVgXdhb7Ts18u9F3Bo9NaWVULJVevc3CW3RsyEdxQm69qqnbdU74RDG192rBaxX1Vrws6ccf3ZNLFJ4iWyA`.
+  A two-step admin handover was executed on devnet and returned the admin to the
+  operator.
+- Note: the upgradeable loader keeps the programdata account at its maximum
+  size after the first upgrade; rent is refundable if the program is ever
+  closed.
+
 ### Added
 
 - `PendingAdmin` account (PDA `["pending-admin"]`) and `AdminTransferProposed` /
