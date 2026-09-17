@@ -87,6 +87,24 @@ export class TaopSolanaClient {
     return this.wallet?.publicKey;
   }
 
+  /**
+   * Fail fast with a typed error when the signer cannot cover an operation's
+   * bond and account rent, instead of surfacing a raw simulation failure.
+   */
+  private async assertBalance(
+    signer: PublicKey,
+    requiredLamports: number,
+    purpose: string,
+  ): Promise<void> {
+    const balance = await this.connection.getBalance(signer);
+    if (balance < requiredLamports) {
+      throw new TaopSolanaError(
+        "InsufficientBalance",
+        `Insufficient balance for ${purpose}: need ~${requiredLamports} lamports, have ${balance}`,
+      );
+    }
+  }
+
   private requireWallet(): PublicKey {
     const pk = this.walletPublicKey;
     if (!pk) {
@@ -385,6 +403,16 @@ export class TaopSolanaClient {
       );
     }
     const admin = this.requireWallet();
+    const configRent = await this.connection.getMinimumBalanceForRentExemption(
+      CONFIG_ACCOUNT_BYTES,
+    );
+    const treasuryFunding =
+      await this.connection.getMinimumBalanceForRentExemption(0);
+    await this.assertBalance(
+      admin,
+      configRent + treasuryFunding + 20_000,
+      "config rent + treasury funding + fee",
+    );
     const signature = await this.program.methods
       .initializeConfig(
         input.certifier,
@@ -517,6 +545,19 @@ export class TaopSolanaClient {
         : (await this.getAgent(authority))?.completions ?? 0;
     const completion = this.pdas.completion(authority, seq);
 
+    const completionRent = await this.connection.getMinimumBalanceForRentExemption(
+      COMPLETION_ACCOUNT_BYTES,
+    );
+    const agentRent =
+      seq === 0
+        ? await this.connection.getMinimumBalanceForRentExemption(AGENT_ACCOUNT_BYTES)
+        : 0;
+    await this.assertBalance(
+      authority,
+      completionRent + agentRent + 10_000,
+      "attestation (account rent + fee)",
+    );
+
     const signature = await this.program.methods
       .attestCompletion(toBytes(input.taskType), input.resultUri, new anchor.BN(seq))
       .accountsStrict({
@@ -539,6 +580,12 @@ export class TaopSolanaClient {
   async challenge(input: ChallengeInput): Promise<string> {
     assertUriLength(input.evidenceUri);
     const challenger = this.requireWallet();
+    const config = await this.getConfig();
+    await this.assertBalance(
+      challenger,
+      config.challengeBondLamports + 10_000,
+      "challenge bond + fee",
+    );
     const completion = await this.program.account.completion
       .fetchNullable(input.completion)
       .catch(() => null);
@@ -614,6 +661,14 @@ export class TaopSolanaClient {
       input.id !== undefined
         ? Number(input.id)
         : (await this.getConfig()).nextCapabilityId;
+    const capabilityRent = await this.connection.getMinimumBalanceForRentExemption(
+      CAPABILITY_ACCOUNT_BYTES,
+    );
+    await this.assertBalance(
+      creator,
+      Number(input.bondLamports) + capabilityRent + 10_000,
+      "capability bond + account rent + fee",
+    );
     const typeBytes = toBytes(input.capabilityType);
     const capability = this.pdas.capability(typeBytes, creator, id);
 
@@ -773,6 +828,13 @@ function walletFromKeypair(keypair: Keypair): Wallet {
     },
   } as unknown as Wallet;
 }
+
+// Serialized account sizes from docs/account-layout.md (8-byte discriminator
+// included); used only for balance pre-checks.
+const CONFIG_ACCOUNT_BYTES = 8 + 130;
+const AGENT_ACCOUNT_BYTES = 8 + 261;
+const COMPLETION_ACCOUNT_BYTES = 8 + 287;
+const CAPABILITY_ACCOUNT_BYTES = 8 + 288;
 
 function assertUriLength(uri: string): void {
   if (uri.length > MAX_URI_LEN) {

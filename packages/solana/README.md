@@ -139,7 +139,8 @@ TypeScript types exported: `TaopSolanaClientConfig`, `TaopConfigRecord`,
 
 Write methods validate inputs before signing: URIs must be at most 200 bytes
 (`UriTooLong`), the decay period at most 366 days (`DecayPeriodTooLong`), and a
-wallet is required for writes and on-chain score reads (`WalletRequired`).
+wallet is required for writes and on-chain score reads (`WalletRequired`), and
+bond-bearing writes pre-check the signer balance (`InsufficientBalance`).
 
 ## Bonds and costs
 

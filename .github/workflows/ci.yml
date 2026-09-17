@@ -125,6 +125,14 @@ jobs:
           pnpm --filter @taopp/mcp-server build
           pnpm -r --if-present typecheck
 
+      - name: Package lint (publint + arethetypeswrong)
+        run: pnpm run lint:packages
+
+      - name: ESM and CJS import smoke
+        run: |
+          node --input-type=module -e "import('@taopp/solana').then(m => { if (!m.TaopSolanaClient) throw new Error('missing ESM export'); console.log('esm ok'); })"
+          node -e "const m = require('@taopp/solana'); if (!m.TaopSolanaClient) throw new Error('missing CJS export'); console.log('cjs ok');"
+
       - name: Start local validator and deploy program
         run: ./scripts/localnet.sh
 

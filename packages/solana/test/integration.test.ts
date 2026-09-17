@@ -200,6 +200,23 @@ suite("TaopSolanaClient against a live cluster", () => {
     ).rejects.toMatchObject({ code: "ChallengeNotTimedOut" });
   });
 
+  it("fails fast with InsufficientBalance for unfunded writes", async () => {
+    const broke = Keypair.generate(); // never funded
+    const brokeClient = new TaopSolanaClient({ connection, wallet: broke });
+
+    await expect(
+      brokeClient.attest({ taskType: "summarization", resultUri: "ipfs://x" }),
+    ).rejects.toMatchObject({ code: "InsufficientBalance" });
+
+    await expect(
+      brokeClient.registerCapability({
+        capabilityType: "LoRA",
+        metadataUri: "ipfs://x",
+        bondLamports: 5_000_000,
+      }),
+    ).rejects.toMatchObject({ code: "InsufficientBalance" });
+  });
+
   it("surfaces typed program errors for invalid operations", async () => {
     const failureAgent = Keypair.generate();
     const airdrop = await connection.requestAirdrop(

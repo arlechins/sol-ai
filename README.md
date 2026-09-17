@@ -19,7 +19,7 @@ independently verified from a clean checkout.
 | Milestone | Deliverable | Status | Evidence |
 |---|---|---|---|
 | M1 | `taop_reputation` Anchor program: `attest_completion`, `challenge_completion` (native SOL bond), `resolve_challenge`, `get_score` with inactivity decay, bonded `register_capability`, `certify`, `slash` + Rust test suite | **Deployed on devnet** (program + config); mainnet gated on funding | 83 Rust tests (`cargo test --workspace`), IDL at `target/idl/taop_reputation.json`, [program source](programs/taop_reputation/src/lib.rs) |
-| M2 | `@taopp/solana` TypeScript SDK (`attest()`, `challenge()`, `getScore()`, `discover()`) and Solana support in `@taopp/mcp-server`, plus a runnable example agent | Shipped | SDK + 19 tests (unit + local-validator integration), MCP tools with dual-chain adapters, example in [`examples/solana-agent`](examples/solana-agent) |
+| M2 | `@taopp/solana` TypeScript SDK (`attest()`, `challenge()`, `getScore()`, `discover()`) and Solana support in `@taopp/mcp-server`, plus a runnable example agent | Shipped | SDK + 20 tests (unit + local-validator integration), MCP tools with dual-chain adapters, example in [`examples/solana-agent`](examples/solana-agent) |
 | M3 | Open gaming-resistance benchmark with three attack classes, CC-BY dataset, architecture docs, account-layout reference, tutorial | Shipped | [`benchmark/`](benchmark), [`benchmark/dataset/`](benchmark/dataset), [`docs/methodology.md`](docs/methodology.md), [`docs/tutorial.md`](docs/tutorial.md) |
 
 Program ID (fixed across clusters): `8soD4YteLDgkibSNBzmQJTztiNcXPcLoi3Y2FrY15MnE`
@@ -39,7 +39,8 @@ packages/solana/            @taopp/solana — TypeScript SDK
 packages/mcp-server/        @taopp/mcp-server — MCP tools for any agent runtime
 examples/solana-agent/      Runnable two-agent trust loop (SDK + MCP modes)
 benchmark/                  Gaming-resistance harness + CC-BY adversarial dataset
-docs/                       Architecture, account layout, tutorial, methodology
+docs/                       Architecture, account layout, tutorial, methodology,
+                            runbook, mainnet checklist
 scripts/                    IDL sync, keypair sync, localnet, devnet bootstrap
 keys/                       Program-ID keypair (committed; not an authority)
 ```
@@ -53,7 +54,7 @@ cargo test --workspace                    # 83 Rust tests (in-process LiteSVM)
 
 ./scripts/localnet.sh                     # validator + program deploy
 pnpm install
-pnpm --filter @taopp/solana test          # 19 SDK tests incl. local-validator E2E
+pnpm --filter @taopp/solana test          # 20 SDK tests incl. local-validator E2E
 pnpm --filter @taopp/mcp-server test      # MCP stdio smoke tests
 pnpm --filter @taopp/benchmark test       # benchmark determinism + dataset checks
 CERTIFIER_KEYPAIR=~/.config/solana/id.json \

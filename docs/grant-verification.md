@@ -170,7 +170,7 @@ pnpm install
 pnpm --filter @taopp/solana build && pnpm --filter @taopp/solana test
 ```
 
-Expected: build succeeds; **19 tests pass** (10 unit + 9 integration against a
+Expected: build succeeds; **20 tests pass** (10 unit + 10 integration against a
 local validator).
 
 Integration coverage: register/attest, local vs on-chain score parity, challenge

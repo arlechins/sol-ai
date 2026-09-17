@@ -10,6 +10,7 @@ export type TaopErrorCode =
   | "InvalidDecayPeriod"
   | "DecayPeriodTooLong"
   | "ChallengeNotTimedOut"
+  | "InsufficientBalance"
   | "ZeroBond"
   | "PenaltyExceedsBond"
   | "InvalidPenalty"

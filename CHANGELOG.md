@@ -4,6 +4,36 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.5] - 2026-09-17
+
+Operational, publish, and monitoring hardening.
+
+### Security
+
+- **Balance pre-checks.** Attestations, challenges, capability registrations,
+  and config initialization now fail fast with a typed `InsufficientBalance`
+  error when the signer cannot cover the bond, account rent, and fees, instead
+  of surfacing a raw simulation failure.
+- **Scheduled healthcheck.** `.github/workflows/healthcheck.yml` runs
+  `scripts/healthcheck.ts` every six hours against devnet (RPC reachability,
+  program account, config invariants) and fails loudly; run it manually with
+  `pnpm healthcheck`.
+- **Publish hygiene in CI.** `publint` and `arethetypeswrong` run on every
+  push, plus ESM/CJS import smoke tests for `@taopp/solana`.
+
+### Added
+
+- `docs/runbook.md`: key inventory, rotation procedures (certifier, admin,
+  upgrade authority), pause drill, verifiable upgrades, treasury handling, and
+  incident response.
+- `docs/mainnet-checklist.md`: go/no-go gates, funding math, deploy and
+  verification steps, and rollback.
+- SDK test count: 20 (balance pre-check coverage).
+
+### Changed
+
+- Root `lint:packages` script runs the publish linters across both packages.
+
 ## [0.1.4] - 2026-09-17
 
 Verifiable builds and further test-depth hardening.

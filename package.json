@@ -2,7 +2,7 @@
   "name": "taop-solana",
   "private": true,
   "version": "0.1.0",
-  "description": "TAOP reputation for Solana — bonded completions, challenges, score decay, and a bonded capability registry",
+  "description": "TAOP reputation for Solana \u2014 bonded completions, challenges, score decay, and a bonded capability registry",
   "license": "MIT",
   "packageManager": "pnpm@9.15.4",
   "engines": {
@@ -22,12 +22,16 @@
     "agent:demo": "pnpm --filter @taopp/example-solana-agent start",
     "bench": "pnpm --filter @taopp/benchmark start",
     "test:packages": "pnpm -r --if-present test",
-    "test": "cargo test --workspace && pnpm -r --if-present test"
+    "test": "cargo test --workspace && pnpm -r --if-present test",
+    "healthcheck": "tsx scripts/healthcheck.ts",
+    "lint:packages": "pnpm --filter @taopp/solana lint:package && pnpm --filter @taopp/mcp-server lint:package"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
     "@solana/web3.js": "^1.98.0",
     "@taopp/solana": "workspace:*",
     "bs58": "^6.0.0",
+    "publint": "0.3.24",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2"
   },
