@@ -15,30 +15,56 @@ const PROGRAM_ID =
   process.env.TAOP_PROGRAM_ID ?? "8soD4YteLDgkibSNBzmQJTztiNcXPcLoi3Y2FrY15MnE";
 const AGENT = process.env.TAOP_HEALTHCHECK_AGENT;
 
+/**
+ * Public RPC endpoints rate-limit shared CI IPs; retry transient failures so a
+ * scheduled healthcheck only fails for real problems.
+ */
+async function withRetry<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  const attempts = 4;
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      const message = String(error);
+      const transient = /429|rate|timeout|fetch failed|ECONN|503|502|500/i.test(
+        message,
+      );
+      if (!transient || attempt === attempts) break;
+      console.warn(`${label}: transient failure (attempt ${attempt}/${attempts})`);
+      await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+    }
+  }
+  throw lastError;
+}
+
 async function main(): Promise<void> {
   const connection = new Connection(RPC_URL, "confirmed");
   const problems: string[] = [];
 
-  const version = await connection.getVersion().catch((error) => {
-    problems.push(`rpc unreachable: ${String(error).slice(0, 120)}`);
-    return null;
-  });
+  const version = await withRetry("rpc", () => connection.getVersion()).catch(
+    (error) => {
+      problems.push(`rpc unreachable: ${String(error).slice(0, 120)}`);
+      return null;
+    },
+  );
 
   const client = new TaopSolanaClient({
     connection,
     programId: new PublicKey(PROGRAM_ID),
   });
 
-  const program = await connection
-    .getAccountInfo(client.programId)
-    .catch(() => null);
+  const program = await withRetry("program", () =>
+    connection.getAccountInfo(client.programId),
+  ).catch(() => null);
   if (!program?.executable) {
     problems.push(`program ${PROGRAM_ID} is not deployed or not executable`);
   }
 
   let config: Awaited<ReturnType<TaopSolanaClient["getConfig"]>> | null = null;
   try {
-    config = await client.getConfig();
+    config = await withRetry("config", () => client.getConfig());
   } catch (error) {
     problems.push(`config unreadable: ${String(error).slice(0, 120)}`);
   }
@@ -55,7 +81,9 @@ async function main(): Promise<void> {
   let agentScore: unknown = null;
   if (AGENT) {
     try {
-      agentScore = await client.getScore(new PublicKey(AGENT));
+      agentScore = await withRetry("score", () =>
+        client.getScore(new PublicKey(AGENT)),
+      );
     } catch (error) {
       problems.push(`agent score unreadable: ${String(error).slice(0, 120)}`);
     }

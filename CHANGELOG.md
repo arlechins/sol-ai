@@ -17,7 +17,8 @@ Operational, publish, and monitoring hardening.
 - **Scheduled healthcheck.** `.github/workflows/healthcheck.yml` runs
   `scripts/healthcheck.ts` every six hours against devnet (RPC reachability,
   program account, config invariants) and fails loudly; run it manually with
-  `pnpm healthcheck`.
+  `pnpm healthcheck`. RPC checks retry transient 429/timeout failures so shared
+  CI IPs do not produce false alarms.
 - **Publish hygiene in CI.** `publint` and `arethetypeswrong` run on every
   push, plus ESM/CJS import smoke tests for `@taopp/solana`.
 
