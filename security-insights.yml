@@ -1,0 +1,66 @@
+header:
+  schema-version: 2.0.0
+  last-updated: "2026-09-17"
+  last-reviewed: "2026-09-17"
+  url: https://github.com/arlechins/sol-ai/blob/main/security-insights.yml
+  comment: |
+    Security Insights for the TAOP reputation monorepo.
+
+project:
+  name: TAOP reputation on Solana
+  homepage: https://github.com/arlechins/sol-ai
+  administrators:
+    - name: arlechins
+      primary: true
+  repositories:
+    - url: https://github.com/arlechins/sol-ai
+      comment: |
+        Monorepo: Anchor program (programs/taop_reputation), TypeScript SDK
+        (packages/solana), MCP server (packages/mcp-server), evaluation harness
+        and adversarial dataset (benchmark/).
+  license:
+    - name: MIT
+      url: https://github.com/arlechins/sol-ai/blob/main/LICENSE
+    - name: CC-BY-4.0 (dataset only)
+      url: https://github.com/arlechins/sol-ai/blob/main/benchmark/dataset/LICENSE-CC-BY-4.0
+  lifecycle: active
+  release:
+    name: v0.1.2
+    url: https://github.com/arlechins/sol-ai/releases/tag/v0.1.2
+    date: "2026-09-17"
+
+security-contacts:
+  - type: policy
+    value: https://github.com/arlechins/sol-ai/security/policy
+    primary: true
+
+vulnerability-reporting:
+  reports-accepted: true
+  bug-bounty-available: false
+  contact:
+    policy: https://github.com/arlechins/sol-ai/security/policy
+    advisory: https://github.com/arlechins/sol-ai/security/advisories/new
+  comment: |
+    Report privately via GitHub Security Advisories. Acknowledgement target is
+    7 days; remediation timeline within 14 days of confirmation. See SECURITY.md
+    for known, documented advisories and the trust boundaries that are out of
+    scope.
+
+documentation:
+  detailed-guide:
+    - url: https://github.com/arlechins/sol-ai/blob/main/docs/architecture.md
+    - url: https://github.com/arlechins/sol-ai/blob/main/docs/account-layout.md
+  api:
+    - url: https://github.com/arlechins/sol-ai/blob/main/packages/solana/README.md
+  security:
+    - url: https://github.com/arlechins/sol-ai/blob/main/docs/threat-model.md
+  reviewers-listing:
+    - url: https://github.com/arlechins/sol-ai/blob/main/SECURITY.md
+
+security-testing:
+  - type: unit
+    comment: 80 Rust tests via LiteSVM plus SDK, MCP, and benchmark suites.
+  - type: static-analysis
+    comment: cargo clippy, CodeQL (JavaScript/TypeScript), pnpm audit, cargo audit.
+  - type: supply-chain
+    comment: Dependabot, dependency review, OpenSSF Scorecard, actions pinned to SHAs.
