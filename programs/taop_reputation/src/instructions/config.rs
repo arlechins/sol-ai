@@ -166,7 +166,6 @@ pub fn set_certifier(ctx: Context<SetCertifier>, certifier: Pubkey) -> Result<()
     Ok(())
 }
 
-
 /// UpgradeableLoaderState::ProgramData bincode layout:
 /// `[u32 tag = 3][u64 slot][u8 option][32-byte authority]` followed by the ELF.
 /// Parsed by hand to avoid linking bincode into the program.
@@ -180,14 +179,15 @@ fn assert_upgrade_authority(program_data: &UncheckedAccount, admin: &Pubkey) -> 
         data.len() >= PROGRAMDATA_METADATA_LEN,
         TaopError::InvalidAuthority
     );
-    let tag = u32::from_le_bytes(data[0..4].try_into().map_err(|_| TaopError::InvalidAuthority)?);
+    let tag = u32::from_le_bytes(
+        data[0..4]
+            .try_into()
+            .map_err(|_| TaopError::InvalidAuthority)?,
+    );
     require!(tag == PROGRAMDATA_TAG, TaopError::InvalidAuthority);
     // An immutable program (no upgrade authority) cannot prove a deployer, so
     // config initialization is rejected rather than left open to anyone.
-    require!(
-        data[12] == AUTHORITY_PRESENT,
-        TaopError::InvalidAuthority
-    );
+    require!(data[12] == AUTHORITY_PRESENT, TaopError::InvalidAuthority);
     let authority_bytes: [u8; 32] = data[13..45]
         .try_into()
         .map_err(|_| TaopError::InvalidAuthority)?;
