@@ -84,7 +84,7 @@ Everything below is verifiable from the repository and devnet today.
 | SDK | `@taopp/solana` — `attest()`, `challenge()`, `getScore()`, `discover()`; 21 tests, including a live-validator end-to-end suite and typed program errors |
 | MCP server | `@taopp/mcp-server` 0.2 — 9 reputation tools, dual-chain adapters (Solana + previous Base deployment), stdio smoke tests |
 | Example agent | `examples/solana-agent` — two agents and a certifier run the full loop in SDK and MCP modes, with a `--reclaim` mode for demo bonds |
-| Benchmark | 5 mechanisms × 3 attack classes, deterministic; published baseline and sensitivity tables; `pnpm bench` reproduces |
+| Benchmark | 6 mechanisms × 3 attack classes, deterministic; published baseline and sensitivity tables; `pnpm bench` reproduces |
 | Dataset | 34 CC BY 4.0 adversarial patterns with sources and honest confidence labels |
 | Docs | Architecture, account-layout reference, tutorial, methodology, grant-verification guide |
 | CI | Builds, lints, tests, deploys to a local validator, audits dependencies, and runs CodeQL/Scorecard plus a weekly reproducible-build check |
@@ -121,7 +121,7 @@ stated bar.
 | Field | Content |
 |---|---|
 | Deliverables | Open benchmark that scores an agent-reputation mechanism across three attack classes (Sybil farming, slow-burn harvest, collusive rings); public CC BY dataset of documented adversarial patterns; architecture docs, account-layout reference, and a step-by-step integration tutorial; reproducible in one command with published results including poor scores |
-| Already in repo | Benchmark with 5 mechanisms, 3 scenarios, deterministic seeds, published baseline and sensitivity tables; 34-pattern dataset with schema + license; architecture/account-layout/tutorial/methodology docs |
+| Already in repo | Benchmark with 6 mechanisms, 3 scenarios, deterministic seeds, published baseline and sensitivity tables; 34-pattern dataset with schema + license; architecture/account-layout/tutorial/methodology docs |
 | Funded remaining work | On-chain adapter so the benchmark executes the real program bytecode in-process and parity-tests simulation vs on-chain; independent reproduction by two external reviewers (small bounties); methodology peer notes; dataset expansion to 60+ patterns with a public contributions process |
 | Verification | Public repo, published dataset, published benchmark results, published tutorial; reproduction reports from external reviewers |
 | Amount | $3,000 |

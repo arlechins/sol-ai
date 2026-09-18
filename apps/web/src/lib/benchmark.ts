@@ -91,6 +91,11 @@ const LABELS: Record<string, { label: string; blurb: string }> = {
     label: "Stake-gated",
     blurb: "Score = min(count − disputes, floor(stake / 0.01 SOL)), fully slashable.",
   },
+  two_sided_receipts: {
+    label: "Two-sided receipts",
+    blurb:
+      "Base-style counterparty-confirmed completions with a 5 × distinct-confirmer diversity cap.",
+  },
 };
 
 export interface MechanismRow extends RawReport {

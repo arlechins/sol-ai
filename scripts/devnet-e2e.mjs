@@ -85,7 +85,12 @@ if (!(await connection.getAccountInfo(configPda))) {
       payer.publicKey.toBase58(),
     ],
     {
-      env: { ...process.env, SOLANA_RPC_URL: rpcUrl, ANCHOR_WALLET: keyPath },
+      env: {
+        ...process.env,
+        SOLANA_RPC_URL: rpcUrl,
+        ANCHOR_WALLET: keyPath,
+        DEPLOYMENTS_PATH: path.join(os.tmpdir(), `taop-e2e-deployment-${cluster}.json`),
+      },
       stdio: "inherit",
     },
   );

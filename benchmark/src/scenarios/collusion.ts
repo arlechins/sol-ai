@@ -219,6 +219,21 @@ export function runCollusiveRing(
   const random = rng(config.seed);
   const edges: Edge[] = [];
   const recordsGraph = mechanism.usesPeerRatings === true;
+  const requiresReceipts = mechanism.requiresReceipts === true;
+
+  // Receipt-based mechanisms: a rational ring attests as many completions as
+  // it has distinct confirmers available, so the receipts have something to
+  // attach to. Honest agents attest once each so the graph is symmetric.
+  if (requiresReceipts) {
+    for (const member of ring) {
+      for (let k = 0; k < config.ringSize - 1; k += 1) {
+        mechanism.attest(state, member, 0);
+      }
+    }
+    for (const agent of honest) {
+      mechanism.attest(state, agent, 0);
+    }
+  }
 
   for (const from of ring) {
     for (const to of ring) {
@@ -249,7 +264,11 @@ export function runCollusiveRing(
   const costPerRingPointLamports =
     ringCostLamports / Math.max(1, config.ringSize * ringScorePerAgent);
 
-  const honestCostPerPointLamports = 5_000; // one rating transaction = one point
+  // One genuine point costs a rating transaction; receipt-based mechanisms also
+  // need the attested completion behind it.
+  const honestCostPerPointLamports = requiresReceipts
+    ? mechanism.attestCost() + (mechanism.receiptCost?.() ?? 0)
+    : 5_000;
   const efficiencyRatio =
     costPerRingPointLamports > 0
       ? honestCostPerPointLamports / costPerRingPointLamports

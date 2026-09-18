@@ -31,7 +31,7 @@ describe("published evidence", () => {
   });
 
   it("renders the benchmark baseline without drift", () => {
-    expect(rows).toHaveLength(5);
+    expect(rows).toHaveLength(6);
     expect(taop.mechanism).toBe("taop_bonded_decay");
     expect(taop.scores.composite).toBe(34.6);
     expect(taop.scores.slowBurnHarvest).toBe(0.1);

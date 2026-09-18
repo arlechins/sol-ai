@@ -7,6 +7,9 @@
  *   pnpm tsx scripts/init-config.ts --cluster devnet \
  *     --certifier <PUBKEY> --treasury <PUBKEY> [--bond-sol 0.005] [--decay-days 30]
  *
+ * Set DEPLOYMENTS_PATH (or --out) to write the descriptor somewhere other than
+ * the repository root, which keeps tooling from overwriting operator metadata.
+ *
  * Safe to re-run: the config is only initialized once; the deployment file is
  * always refreshed with the current on-chain values.
  */
@@ -104,7 +107,14 @@ async function main(): Promise<void> {
     deployedAt: new Date().toISOString(),
   };
 
-  const outPath = path.join(ROOT, "deployments.solana.json");
+  // Never clobber the operator's metadata by accident: callers that only want
+  // the current on-chain values (CI, E2E scripts) can redirect the output.
+  const outPath = expandHome(
+    process.env.DEPLOYMENTS_PATH ??
+      arg("out") ??
+      path.join(ROOT, "deployments.solana.json"),
+  );
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, `${JSON.stringify(deployment, null, 2)}\n`);
   console.log(`wrote ${outPath}`);
   console.log(

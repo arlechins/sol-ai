@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generatedAt": "2026-09-18T06:55:14.484Z",
+    "generatedAt": "2026-09-18T09:20:07.257Z",
     "seed": 42,
     "nodeVersion": "v24.14.1",
     "version": "0.1.0",
@@ -527,6 +527,138 @@
       },
       "weakSpots": [
         "Bonded capital does not cover a high-value harvest"
+      ]
+    },
+    {
+      "mechanism": "two_sided_receipts",
+      "description": "Baseline: counterparty-confirmed completions with a diversity cap (Base-style two-sided receipts): score = max(0, min(confirmed completions, 5 × distinct confirmers) - disputes), same halving decay.",
+      "sybil": {
+        "scenario": "sybil_farming",
+        "mechanism": "two_sided_receipts",
+        "config": {
+          "sybils": 20,
+          "attestsPerSybil": 10,
+          "challengeProbability": 0.1,
+          "upheldProbability": 0.9,
+          "seed": 42
+        },
+        "metrics": {
+          "sybilAgents": 20,
+          "totalAttestations": 200,
+          "totalScore": 185,
+          "spentLamports": 588055820,
+          "lockedLamports": 0,
+          "capitalPerPointLamports": 0,
+          "costPerPointLamports": 3178680.108108108,
+          "honestCostPerPointLamports": 2940279.1,
+          "efficiencyRatio": 0.925,
+          "challenges": 16,
+          "disputes": 15,
+          "costToThreshold": {
+            "10": "0.026888590 SOL",
+            "100": "0.268885900 SOL",
+            "1000": "2.688859000 SOL"
+          }
+        },
+        "findings": "Attacker commits 0.003178680 SOL per effective reputation point (0.000000000 SOL of it locked capital) versus 0.002940279 SOL for honest work (efficiency 0.93x). 15/16 challenges were upheld. Self-attested work is indistinguishable from honest work at this challenge rate."
+      },
+      "slowBurn": {
+        "scenario": "slow_burn_harvest",
+        "mechanism": "two_sided_receipts",
+        "config": {
+          "targetScore": 50,
+          "harvestValueLamports": 5000000000,
+          "attestsPerDay": 2,
+          "horizonDays": 180
+        },
+        "metrics": {
+          "reachable": true,
+          "daysToThreshold": 25,
+          "scoreAtHarvest": 50,
+          "spentLamports": 136962151,
+          "slashableLamports": 5000000,
+          "harvestValueLamports": 5000000000,
+          "slashCoverage": 0.001,
+          "netAttackerProfitLamports": 4858037849,
+          "scoreAfterSlash": 0
+        },
+        "findings": "Reached score 50 in 25 days for 0.136962151 SOL. Bonded capital (0.005000000 SOL) covers 0.1% of the 5.000000000 SOL harvest. Underbonded capabilities are the attack surface; raise the bond or gate the contract on more than score."
+      },
+      "collusion": {
+        "scenario": "collusive_ring",
+        "mechanism": "two_sided_receipts",
+        "config": {
+          "ringSize": 10,
+          "ratingsPerPair": 1,
+          "reciprocityThreshold": 0.8,
+          "honestAgents": 30,
+          "honestRatings": 2,
+          "coreThreshold": 4,
+          "seed": 42
+        },
+        "metrics": {
+          "ringScorePerAgent": 9,
+          "ringCostLamports": 267139320,
+          "costPerRingPointLamports": 2968214.6666666665,
+          "honestCostPerPointLamports": 2688859,
+          "efficiencyRatio": 0.9058842779116156,
+          "detectorPrecision": 1,
+          "detectorRecall": 1,
+          "detectors": [
+            {
+              "name": "reciprocity",
+              "flagged": 10,
+              "truePositives": 10,
+              "falsePositives": 0,
+              "falseNegatives": 0,
+              "precision": 1,
+              "recall": 1,
+              "f1": 1
+            },
+            {
+              "name": "mutual_degree",
+              "flagged": 10,
+              "truePositives": 10,
+              "falsePositives": 0,
+              "falseNegatives": 0,
+              "precision": 1,
+              "recall": 1,
+              "f1": 1
+            },
+            {
+              "name": "k_core",
+              "flagged": 10,
+              "truePositives": 10,
+              "falsePositives": 0,
+              "falseNegatives": 0,
+              "precision": 1,
+              "recall": 1,
+              "f1": 1
+            },
+            {
+              "name": "ensemble",
+              "flagged": 10,
+              "truePositives": 10,
+              "falsePositives": 0,
+              "falseNegatives": 0,
+              "precision": 1,
+              "recall": 1,
+              "f1": 1
+            }
+          ]
+        },
+        "findings": "A ring of 10 accounts manufactures 9 points per member at 0.002968215 SOL per point, versus 0.002688859 SOL for a genuine rating. Best detector: reciprocity (precision 1.00, recall 1.00, F1 1.00) over a mixed graph of 40 accounts."
+      },
+      "scores": {
+        "composite": 4.4,
+        "sybilFarming": 3.7,
+        "slowBurnHarvest": 0.1,
+        "collusiveRing": 9.4
+      },
+      "weakSpots": [
+        "Sybil farming is cheap (self-attestation has no verifier)",
+        "Bonded capital does not cover a high-value harvest",
+        "Fabricated peer ratings are accepted at face value"
       ]
     }
   ]

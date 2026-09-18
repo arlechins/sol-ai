@@ -121,7 +121,7 @@ export const sections = {
   benchmarkCopy: {
     eyebrow: "Published weakness",
     title: "We benchmark the mechanism against the people who would game it.",
-    lede: "Three attack classes, five mechanisms, one seed-42 baseline. The rubric is simple and published, including the parts where TAOP performs badly — self-attestation is cheap, and bonded capital does not cover a high-value harvest.",
+    lede: "Three attack classes, six mechanisms, one seed-42 baseline. The rubric is simple and published, including the parts where TAOP performs badly — self-attestation is cheap, and bonded capital does not cover a high-value harvest.",
     rubric:
       "Composite = equal-weight mean of the three class scores. Sybil = cost efficiency + locked capital per point. Slow burn = slashable capital ÷ harvest value. Collusion = ring efficiency versus honest efficiency.",
   },

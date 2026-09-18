@@ -1,6 +1,6 @@
 # TAOP gaming-resistance benchmark — results
 
-Generated: 2026-09-18T06:55:14.484Z
+Generated: 2026-09-18T09:20:07.257Z
 Seed: 42 · Node: v24.14.1
 
 ## Composite resistance scores (0-100, higher is better)
@@ -12,6 +12,7 @@ Seed: 42 · Node: v24.14.1
 | `completions_minus_disputes` | 3.7 | 0.1 | 100.0 | **34.6** |
 | `peer_ratings` | 100.0 | 100.0 | 0.0 | **66.7** |
 | `stake_gated` | 53.8 | 10.0 | 100.0 | **54.6** |
+| `two_sided_receipts` | 3.7 | 0.1 | 9.4 | **4.4** |
 
 ## Configuration
 
@@ -189,6 +190,47 @@ Scores — Sybil farming: **53.8**, slow-burn harvest: **10.0**, collusive ring:
 Weak spots (published deliberately):
 
 - Bonded capital does not cover a high-value harvest
+
+## two_sided_receipts
+
+Baseline: counterparty-confirmed completions with a diversity cap (Base-style two-sided receipts): score = max(0, min(confirmed completions, 5 × distinct confirmers) - disputes), same halving decay.
+
+Scores — Sybil farming: **3.7**, slow-burn harvest: **0.1**, collusive ring: **9.4**
+
+### Sybil farming
+
+- Attacker: 20 identities × 10 attestations = 200 completions
+- Effective score: 185 · spend: 0.588055820 SOL · locked: 0.000000000 SOL · cost per point: 0.003178680 SOL
+- Locked capital per point: 0.000000000 SOL · honest cost per point: 0.002940279 SOL · efficiency ratio: 0.93x
+- Challenges: 16 · upheld: 15
+- Attacker commits 0.003178680 SOL per effective reputation point (0.000000000 SOL of it locked capital) versus 0.002940279 SOL for honest work (efficiency 0.93x). 15/16 challenges were upheld. Self-attested work is indistinguishable from honest work at this challenge rate.
+
+### Slow burn then harvest
+
+- Target score: 50 · harvest value: 5.000000000 SOL
+- Reachable: true in 25 days · spent: 0.136962151 SOL
+- Slashable capital: 0.005000000 SOL · coverage: 0.1% · score after slash: 0
+- Reached score 50 in 25 days for 0.136962151 SOL. Bonded capital (0.005000000 SOL) covers 0.1% of the 5.000000000 SOL harvest. Underbonded capabilities are the attack surface; raise the bond or gate the contract on more than score.
+
+### Collusive ring
+
+- Ring of 10 × 1 ratings per pair
+- Manufactured score per member: 9 · ring spend: 0.267139320 SOL · cost per point: 0.002968215 SOL
+- Detector ensemble precision/recall: 1.00 / 1.00
+
+| Detector | Flagged | Precision | Recall | F1 |
+|---|---:|---:|---:|---:|
+| reciprocity | 10 | 1.00 | 1.00 | 1.00 |
+| mutual_degree | 10 | 1.00 | 1.00 | 1.00 |
+| k_core | 10 | 1.00 | 1.00 | 1.00 |
+| ensemble | 10 | 1.00 | 1.00 | 1.00 |
+- A ring of 10 accounts manufactures 9 points per member at 0.002968215 SOL per point, versus 0.002688859 SOL for a genuine rating. Best detector: reciprocity (precision 1.00, recall 1.00, F1 1.00) over a mixed graph of 40 accounts.
+
+Weak spots (published deliberately):
+
+- Sybil farming is cheap (self-attestation has no verifier)
+- Bonded capital does not cover a high-value harvest
+- Fabricated peer ratings are accepted at face value
 
 ## Reproducing
 

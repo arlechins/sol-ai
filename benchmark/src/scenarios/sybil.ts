@@ -68,6 +68,18 @@ export function runSybilFarming(
     mechanism.attest(state, -1, 0);
   }
 
+  // Receipt-based mechanisms: honest work needs a counterparty as well, so that
+  // cost is included and the diversity cap is satisfied on both sides.
+  const honestConfirmers = mechanism.requiresReceipts
+    ? (mechanism.counterpartiesRequiredForScore?.(config.attestsPerSybil) ?? 1)
+    : 0;
+  for (let c = 0; c < honestConfirmers; c += 1) {
+    const confirmer = mechanism.ensureAgent(state, -2 - c);
+    for (let k = 0; k < config.attestsPerSybil / honestConfirmers; k += 1) {
+      mechanism.rate(state, confirmer.id, honest.id, 0);
+    }
+  }
+
   let challenges = 0;
   let disputes = 0;
   for (let sybil = 0; sybil < config.sybils; sybil += 1) {
@@ -80,6 +92,12 @@ export function runSybilFarming(
     }
     for (let k = 0; k < config.attestsPerSybil; k += 1) {
       mechanism.attest(state, sybil, 0);
+      if (mechanism.requiresReceipts) {
+        const confirmer =
+          (sybil + 1 + (k % (mechanism.counterpartiesRequiredForScore?.(config.attestsPerSybil) ?? 1))) %
+          config.sybils;
+        mechanism.rate(state, confirmer, sybil, 0);
+      }
       const completionId = state.completions[state.completions.length - 1].id;
       if (random() < config.challengeProbability) {
         challenges += 1;
@@ -112,7 +130,12 @@ export function runSybilFarming(
   );
   const attackerCapital = spentLamports + lockedLamports;
   const honestScore = mechanism.score(state, honest.id, 0);
-  const honestCapital = honest.spentLamports + honest.lockedLamports;
+  const honestConfirmerCapital = Array.from(
+    { length: honestConfirmers },
+    (_, c) => mechanism.ensureAgent(state, -2 - c).spentLamports,
+  ).reduce((sum, value) => sum + value, 0);
+  const honestCapital =
+    honest.spentLamports + honest.lockedLamports + honestConfirmerCapital;
 
   const costPerPointLamports = attackerCapital / Math.max(1, totalScore);
   const capitalPerPointLamports =
@@ -124,7 +147,9 @@ export function runSybilFarming(
       ? 0
       : honestCostPerPointLamports / costPerPointLamports;
 
-  const perAttestCost = mechanism.attestCost();
+  const perAttestCost =
+    mechanism.attestCost() +
+    (mechanism.requiresReceipts ? (mechanism.receiptCost?.() ?? 0) : 0);
   const costToThreshold: Record<string, string> = {};
   for (const threshold of [10, 100, 1_000]) {
     costToThreshold[String(threshold)] = sol(threshold * perAttestCost);
