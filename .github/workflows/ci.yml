@@ -173,6 +173,14 @@ jobs:
           node scripts/check-coverage.mjs sdk packages/solana/coverage/coverage-summary.json
           node scripts/check-coverage.mjs web apps/web/coverage/coverage-summary.json
 
+      # End-to-end: runs the two-agent trust loop against the local validator
+      # (bootstraps config if needed, reclaims bonds, sweeps test SOL).
+      - name: Example trust loop (local validator)
+        run: |
+          TAOP_E2E_CLUSTER=localnet \
+            TAOP_E2E_KEYPAIR="$HOME/.config/solana/id.json" \
+            node scripts/devnet-e2e.mjs
+
       - name: Benchmark smoke run
         run: pnpm --filter @taopp/benchmark start -- --seed 7 --json-only --out /tmp/benchmark-smoke
 

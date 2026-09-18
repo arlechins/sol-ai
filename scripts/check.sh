@@ -71,4 +71,13 @@ else
   echo "no committed baseline; skipping"
 fi
 
+step "Example trust loop (local validator)"
+if solana cluster-version -u http://127.0.0.1:8899 >/dev/null 2>&1; then
+  TAOP_E2E_CLUSTER=localnet \
+    TAOP_E2E_KEYPAIR="${ANCHOR_WALLET:-$HOME/.config/solana/id.json}" \
+    node "$ROOT/scripts/devnet-e2e.mjs"
+else
+  echo "skipping: no local validator on :8899 (run ./scripts/localnet.sh)"
+fi
+
 printf '\nAll checks passed.\n'

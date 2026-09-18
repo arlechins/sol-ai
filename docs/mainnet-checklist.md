@@ -88,10 +88,25 @@ SOLANA_RPC_URL=https://api.mainnet-beta.solana.com pnpm deploy:init -- --cluster
 
 ## 6. Observability
 
-- [ ] Healthcheck workflow enabled (`.github/workflows/healthcheck.yml`)
+- [ ] Healthcheck workflow enabled (`.github/workflows/healthcheck.yml`) — it
+      verifies the on-chain executable hash against the pinned reproducible
+      build and fails when live config drifts from the committed descriptor
+- [ ] `TAOP_EXPECTED_UPGRADE_AUTHORITY` set to the Squads vault so an
+      unexpected authority change fails the check
 - [ ] `SOLANA_RPC_URL` for the healthcheck points at a private RPC if possible
 - [ ] Explorer links added to the README table
 - [ ] `deployments.solana.json` mirrored into the release notes
+
+## 6b. Supply-chain gates (all green before launch)
+
+- [ ] `secrets-history` (gitleaks over the full git history) passes on the
+      release commit
+- [ ] `mutation.yml` weekly spot-check passes (16 seeded faults, all caught)
+- [ ] Coverage ratchet (`coverage-baseline.json`) passes; SDK/web floors met
+- [ ] `pnpm audit --audit-level high` and `cargo audit` report no high issues
+- [ ] GitHub Actions remain SHA-pinned; Anchor/solana-verify downloads are
+      checksum-verified; the release workflow npm version stays pinned
+- [ ] CI's local-validator example trust loop passes on the release commit
 
 ## 7. Post-launch verification
 
@@ -99,6 +114,8 @@ SOLANA_RPC_URL=https://api.mainnet-beta.solana.com pnpm deploy:init -- --cluster
 - [ ] First challenge and resolution executed by the certifier
 - [ ] Score read by a third-party SDK/MCP client
 - [ ] `./scripts/verify-build.sh mainnet-beta` passes on the release commit
+- [ ] `node scripts/devnet-e2e.mjs` (or the devnet E2E workflow) passes against
+      a funded key before the first production loop
 
 ## 8. Rollback
 
