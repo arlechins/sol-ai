@@ -56,8 +56,10 @@ git tag vX.Y.Z && git push origin vX.Y.Z
 gh release create vX.Y.Z --title "vX.Y.Z" --notes "..."
 ```
 
-The workflow runs `publint` and `arethetypeswrong` before publishing, so a
-broken export map cannot reach npm. It does not start a validator, so the SDK
+The workflow runs `publint`, `arethetypeswrong`, and built-artifact smokes
+(the MCP server over stdio from both builds, webhook signing from ESM and CJS)
+before publishing, so a broken export map or bundle cannot reach npm. The npm
+version it installs is pinned (trusted publishing needs >= 11.5.1). It does not start a validator, so the SDK
 integration tests skip; run `./scripts/localnet.sh` and `pnpm -r --if-present
 test` locally before tagging if you changed program-facing code.
 

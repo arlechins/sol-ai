@@ -61,8 +61,10 @@ jobs:
       - name: Build
         run: pnpm --filter @taopp/web build
 
-      - name: Bundle budget
-        run: node scripts/check-web-bundle.mjs
+      - name: Bundle budget and dist completeness
+        run: |
+          node scripts/check-web-bundle.mjs
+          node scripts/check-web-dist.mjs
 
   deploy:
     name: Deploy to Cloudflare Pages

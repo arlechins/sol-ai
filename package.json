@@ -35,6 +35,7 @@
     "web:build": "pnpm --filter @taopp/web build",
     "web:test": "pnpm --filter @taopp/web test",
     "web:budget": "node scripts/check-web-bundle.mjs",
+    "web:dist": "node scripts/check-web-dist.mjs",
     "web:sync": "./scripts/sync-web-data.sh"
   },
   "devDependencies": {
