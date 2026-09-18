@@ -48,8 +48,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install current npm (trusted publishing needs >= 11.5.1)
-        run: npm install -g npm@latest
+      - name: Install npm (trusted publishing needs >= 11.5.1; pinned)
+        run: npm install -g --ignore-scripts npm@11.19.1
 
       - name: Build and test
         run: |

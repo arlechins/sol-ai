@@ -8,6 +8,11 @@
  *   SOLANA_RPC_URL=... TAOP_HEALTHCHECK_AGENT=<pubkey> pnpm healthcheck
  *   SOLANA_RPC_URL=... TAOP_EXPECTED_BUILD_HASH=<sha256> pnpm healthcheck
  *   SOLANA_RPC_URL=... TAOP_EXPECTED_UPGRADE_AUTHORITY=<pubkey> pnpm healthcheck
+ *   SOLANA_RPC_URL=... TAOP_DESCRIPTOR=<path> pnpm healthcheck
+ *
+ * Descriptor drift: when the committed deployment descriptor for the same
+ * cluster exists (default `apps/web/src/data/deployment.json`), the live
+ * config is compared against it so a silent config change fails the check.
  *
  * Bytecode check: mirrors `solana-verify get-program-hash` — sha256 over the
  * program data after the 45-byte ProgramData metadata, with trailing zero
@@ -15,6 +20,8 @@
  * reproducible build and only applies when the RPC host contains "devnet".
  */
 import { createHash } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { BPF_LOADER_UPGRADEABLE_ID, TaopSolanaClient } from "@taopp/solana";
 
@@ -30,6 +37,16 @@ const EXPECTED_BUILD_HASH =
   (RPC_URL.includes("devnet") ? DEVNET_BUILD_HASH : null);
 const EXPECTED_UPGRADE_AUTHORITY =
   process.env.TAOP_EXPECTED_UPGRADE_AUTHORITY ?? null;
+const DESCRIPTOR_PATH =
+  process.env.TAOP_DESCRIPTOR ??
+  path.join(process.cwd(), "apps/web/src/data/deployment.json");
+
+function inferCluster(rpc: string): string | null {
+  if (/devnet/.test(rpc)) return "devnet";
+  if (/mainnet/.test(rpc)) return "mainnet-beta";
+  if (/127\.0\.0\.1|localhost/.test(rpc)) return "localnet";
+  return null;
+}
 
 /** Size of the `ProgramData` metadata prefix (state, slot, authority). */
 const PROGRAMDATA_METADATA_BYTES = 45;
@@ -153,6 +170,48 @@ async function main(): Promise<void> {
     }
   }
 
+  const descriptorDrift: string[] = [];
+  const cluster = inferCluster(RPC_URL);
+  if (fs.existsSync(DESCRIPTOR_PATH)) {
+    try {
+      const descriptor = JSON.parse(
+        fs.readFileSync(DESCRIPTOR_PATH, "utf8"),
+      ) as Record<string, unknown>;
+      if (!cluster || descriptor.cluster === cluster) {
+        const compare = (label: string, expected: unknown, actual: unknown) => {
+          if (
+            expected !== undefined &&
+            expected !== null &&
+            String(expected) !== String(actual)
+          ) {
+            descriptorDrift.push(
+              `${label}: on-chain ${String(actual)} != descriptor ${String(expected)}`,
+            );
+          }
+        };
+        compare("programId", descriptor.programId, PROGRAM_ID);
+        compare("config", descriptor.config, client.pdas.config.toBase58());
+        if (config) {
+          compare("certifier", descriptor.certifier, config.certifier.toBase58());
+          compare("treasury", descriptor.treasury, config.treasury.toBase58());
+          compare(
+            "challengeBondLamports",
+            descriptor.challengeBondLamports,
+            config.challengeBondLamports,
+          );
+          compare(
+            "decayPeriodSecs",
+            descriptor.decayPeriodSecs,
+            config.decayPeriodSecs,
+          );
+        }
+      }
+    } catch (error) {
+      descriptorDrift.push(`descriptor unreadable: ${String(error).slice(0, 120)}`);
+    }
+  }
+  problems.push(...descriptorDrift);
+
   let agentScore: unknown = null;
   if (AGENT) {
     try {
@@ -179,6 +238,10 @@ async function main(): Promise<void> {
         paused: config?.paused ?? null,
         challengeBondLamports: config?.challengeBondLamports ?? null,
         decayPeriodSecs: config?.decayPeriodSecs ?? null,
+        descriptor: {
+          path: fs.existsSync(DESCRIPTOR_PATH) ? DESCRIPTOR_PATH : null,
+          drift: descriptorDrift,
+        },
         agentScore,
         problems,
       },

@@ -45,6 +45,8 @@ jobs:
           mkdir -p "$HOME/.local/bin"
           curl -sSfL -o "$HOME/.local/bin/anchor" \
             "https://github.com/otter-sec/anchor/releases/download/v${ANCHOR_VERSION}/anchor-${ANCHOR_VERSION}-x86_64-unknown-linux-gnu"
+          # sha256 is for v1.1.2; bump it alongside ANCHOR_VERSION.
+          echo "fdea9979629e9416e5f5e5622ff6c11b8c691d1e559581ece368e903c0c980c1  $HOME/.local/bin/anchor" | sha256sum -c -
           chmod +x "$HOME/.local/bin/anchor"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           anchor --version
@@ -121,6 +123,8 @@ jobs:
           mkdir -p "$HOME/.local/bin"
           curl -sSfL -o "$HOME/.local/bin/anchor" \
             "https://github.com/otter-sec/anchor/releases/download/v${ANCHOR_VERSION}/anchor-${ANCHOR_VERSION}-x86_64-unknown-linux-gnu"
+          # sha256 is for v1.1.2; bump it alongside ANCHOR_VERSION.
+          echo "fdea9979629e9416e5f5e5622ff6c11b8c691d1e559581ece368e903c0c980c1  $HOME/.local/bin/anchor" | sha256sum -c -
           chmod +x "$HOME/.local/bin/anchor"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
