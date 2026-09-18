@@ -23,6 +23,17 @@ updates:
       - dependency-name: "proptest"
         update-types: ["version-update:semver-minor"]
 
+  # NOTE: this is a pnpm workspace with a single root lockfile. Dependabot
+  # cannot update npm dependencies from a workspace subdirectory
+  # ("misconfigured_tooling: Updating workspaces from inside a workspace
+  # subdirectory is not supported"), so keep exactly one root npm entry and
+  # never add per-package directories here.
+  #
+  # Two advisories are deliberately dismissed on GitHub (not ignored here,
+  # since ignore rules do not apply to security updates):
+  #   - stream-json (moderate): stream-json 3.x renamed the subpaths jayson
+  #     requires, so the "fix" breaks the RPC client. See SECURITY.md.
+  #   - rand (low): dev-only via litesvm/libsecp256k1, no patched 0.7.x.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
