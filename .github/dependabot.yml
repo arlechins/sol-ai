@@ -55,3 +55,10 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    groups:
+      # init/analyze/upload-sarif must move together: bumping one sub-action
+      # alone leaves the workflow with mixed major versions and CodeQL fails
+      # with "configuration file for version X, but running version Y".
+      codeql-action:
+        patterns:
+          - "github/codeql-action/*"
