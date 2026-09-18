@@ -342,7 +342,7 @@ class balance.
 
 | Workflow | Trigger | What it proves |
 |---|---|---|
-| `ci.yml` | push / PR | Program: fmt, clippy, `anchor build`, IDL-drift check, `cargo test` (101 tests incl. the CU snapshot), `cargo-audit`, `cargo-deny`. Packages: typecheck, build, local validator + SDK integration, package tests, and the coverage ratchet. Plus `dependency-review` (PRs) and `secrets-history` (gitleaks over the full git history). |
+| `ci.yml` | push / PR | Program: fmt, clippy, `anchor build`, IDL-drift check, `cargo test` (101 tests incl. the CU snapshot), `cargo-audit`, `cargo-deny`. Packages: typecheck, build, built-artifact smokes (MCP over stdio, webhook signing), local validator + SDK integration, package tests, and the coverage ratchet. Plus `dependency-review` (PRs) and `secrets-history` (gitleaks over the full git history). |
 | `mutation.yml` | weekly | 16 seeded program faults; every one must be caught by the suite. |
 | `fuzz.yml` | weekly | cargo-fuzz targets for score, ProgramData parsing, and account decoding. |
 | `healthcheck.yml` | every 6h | Devnet config plus on-chain executable hash against the pinned reproducible build. |

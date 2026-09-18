@@ -144,6 +144,11 @@ jobs:
           pnpm --filter @taopp/webhooks build
           pnpm -r --if-present typecheck
 
+      - name: Built artifact smoke (MCP + webhooks dist)
+        run: |
+          node packages/mcp-server/test/dist-smoke.mjs
+          node packages/webhooks/test/dist-smoke.mjs
+
       - name: Package lint (publint + arethetypeswrong)
         run: pnpm run lint:packages
 

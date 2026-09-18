@@ -36,6 +36,11 @@ pnpm -r --if-present typecheck
 step "Package builds"
 pnpm --filter @taopp/solana build
 pnpm --filter @taopp/mcp-server build
+pnpm --filter @taopp/webhooks build
+
+step "Built artifact smoke (MCP + webhooks dist)"
+node "$ROOT/packages/mcp-server/test/dist-smoke.mjs"
+node "$ROOT/packages/webhooks/test/dist-smoke.mjs"
 
 step "Package tests"
 if solana cluster-version -u http://127.0.0.1:8899 >/dev/null 2>&1; then
