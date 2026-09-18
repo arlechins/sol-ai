@@ -1,7 +1,7 @@
 header:
   schema-version: 2.0.0
-  last-updated: "2026-09-17"
-  last-reviewed: "2026-09-17"
+  last-updated: "2026-09-18"
+  last-reviewed: "2026-09-18"
   url: https://github.com/arlechins/sol-ai/blob/main/security-insights.yml
   comment: |
     Security Insights for the TAOP reputation monorepo.
@@ -25,9 +25,9 @@ project:
       url: https://github.com/arlechins/sol-ai/blob/main/benchmark/dataset/LICENSE-CC-BY-4.0
   lifecycle: active
   release:
-    name: v0.1.2
-    url: https://github.com/arlechins/sol-ai/releases/tag/v0.1.2
-    date: "2026-09-17"
+    name: v0.2.0
+    url: https://github.com/arlechins/sol-ai/releases/tag/v0.2.0
+    date: "2026-09-18"
 
 security-contacts:
   - type: policy
@@ -60,12 +60,30 @@ documentation:
 
 security-testing:
   - type: unit
-    comment: 80 Rust tests via LiteSVM plus SDK, MCP, and benchmark suites.
+    comment: |
+      101 Rust tests via LiteSVM (including a compute-unit regression snapshot)
+      plus SDK (21), MCP (15), webhooks (10), website (65), and benchmark (17)
+      suites. Coverage ratchets (coverage-baseline.json) enforce SDK and web
+      baselines in CI.
+  - type: integration
+    comment: |
+      Local-validator SDK/webhook integration tests in CI, a 6-hourly devnet
+      healthcheck that verifies the on-chain executable hash and config against
+      the published descriptor, and a manual-dispatch devnet E2E that runs the
+      full attest -> challenge -> resolve loop with throwaway agents.
+  - type: fuzzing
+    comment: |
+      cargo-fuzz targets for the score function, ProgramData parser, and account
+      decoding run weekly; a curated mutation spot-check (scripts/mutation-
+      spotcheck.py, 16 seeded faults) runs weekly and fails if any survives.
   - type: static-analysis
     comment: cargo clippy, CodeQL (JavaScript/TypeScript), pnpm audit, cargo audit,
       cargo-deny (licenses/bans/sources).
   - type: supply-chain
-    comment: Dependabot, dependency review, OpenSSF Scorecard, actions pinned to SHAs.
+    comment: |
+      Dependabot, dependency review, OpenSSF Scorecard, actions pinned to SHAs,
+      gitleaks scanning the full git history, and checksum-verified Anchor /
+      solana-verify downloads in CI.
   - type: provenance
     comment: |
       .github/workflows/release.yml publishes npm packages via trusted publishing

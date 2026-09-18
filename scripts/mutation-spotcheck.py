@@ -99,6 +99,36 @@ MUTANTS: list[Mutant] = [
         "    // mutated: upgrade-authority check removed",
     ),
     Mutant(
+        CAPABILITY,
+        "withdraw: capability index not pruned",
+        "        .retain(|key| *key != capability_key);",
+        "        .retain(|_| true); // mutated: index pruning removed",
+    ),
+    Mutant(
+        CONFIG,
+        "update_config: admin check removed",
+        "pub fn update_config(\n    ctx: Context<UpdateConfig>,\n    challenge_bond_lamports: Option<u64>,\n    decay_period_secs: Option<i64>,\n    paused: Option<bool>,\n) -> Result<()> {\n    require_keys_eq!(\n        ctx.accounts.admin.key(),\n        ctx.accounts.config.admin,\n        TaopError::Unauthorized\n    );",
+        "pub fn update_config(\n    ctx: Context<UpdateConfig>,\n    challenge_bond_lamports: Option<u64>,\n    decay_period_secs: Option<i64>,\n    paused: Option<bool>,\n) -> Result<()> {\n    // mutated: admin check removed",
+    ),
+    Mutant(
+        CONFIG,
+        "update_config: decay cap removed",
+        "            period <= MAX_DECAY_PERIOD_SECS,",
+        "            period <= i64::MAX,",
+    ),
+    Mutant(
+        REPUTATION,
+        "challenge: completion not marked as challenged",
+        "    completion.challenged = true;",
+        "    completion.challenged = false;",
+    ),
+    Mutant(
+        CONFIG,
+        "accept_admin: pending recipient constraint removed",
+        "        constraint = pending.new_admin == new_admin.key() @ TaopError::Unauthorized",
+        "        // mutated: pending recipient constraint removed",
+    ),
+    Mutant(
         CONFIG,
         "init: zero certifier accepted",
         "    require!(\n        decay_period_secs <= MAX_DECAY_PERIOD_SECS,\n        TaopError::DecayPeriodTooLong\n    );\n    require!(certifier != Pubkey::default(), TaopError::InvalidAuthority);",
@@ -159,7 +189,12 @@ def run_suite() -> subprocess.CompletedProcess[str]:
 
 def main() -> int:
     only = os.environ.get("MUTATION_ONLY")
-    selected = [mutant for mutant in MUTANTS if not only or only in mutant.label]
+    filters = [part.strip().lower() for part in only.split(",")] if only else []
+    selected = [
+        mutant
+        for mutant in MUTANTS
+        if not filters or any(f in mutant.label.lower() for f in filters)
+    ]
 
     caught: list[str] = []
     survived: list[str] = []

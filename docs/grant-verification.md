@@ -87,9 +87,9 @@ Beyond pass/fail counts, the repository publishes evidence that the suite
 actually detects faults and that the pipeline cannot regress silently:
 
 ```bash
-# Mutation spot-check: 11 seeded program faults; every one must be caught.
+# Mutation spot-check: 16 seeded program faults; every one must be caught.
 python3 scripts/mutation-spotcheck.py
-# Expected: "11 caught · 0 survived"; also runs weekly (.github/workflows/mutation.yml).
+# Expected: "16 caught · 0 survived"; also runs weekly (.github/workflows/mutation.yml).
 
 # Compute-unit snapshot: fails when an instruction costs more than the budget.
 cargo test -p taop-reputation-tests --test compute
@@ -233,7 +233,7 @@ Public API: `packages/solana/src/client.ts` (`attest`, `challenge`, `getScore`,
 pnpm --filter @taopp/mcp-server build && pnpm --filter @taopp/mcp-server test
 ```
 
-Expected: **4 tests pass**; `listTools` returns the reputation toolset; writes
+Expected: **15 tests pass**; `listTools` returns the reputation toolset; writes
 without a signer return a typed error.
 
 Tool list (same names for both chains): `get_deployment_info`,
@@ -343,7 +343,7 @@ class balance.
 | Workflow | Trigger | What it proves |
 |---|---|---|
 | `ci.yml` | push / PR | Program: fmt, clippy, `anchor build`, IDL-drift check, `cargo test` (101 tests incl. the CU snapshot), `cargo-audit`, `cargo-deny`. Packages: typecheck, build, local validator + SDK integration, package tests, and the coverage ratchet. Plus `dependency-review` (PRs) and `secrets-history` (gitleaks over the full git history). |
-| `mutation.yml` | weekly | 11 seeded program faults; every one must be caught by the suite. |
+| `mutation.yml` | weekly | 16 seeded program faults; every one must be caught by the suite. |
 | `fuzz.yml` | weekly | cargo-fuzz targets for score, ProgramData parsing, and account decoding. |
 | `healthcheck.yml` | every 6h | Devnet config plus on-chain executable hash against the pinned reproducible build. |
 | `verifiable-build.yml` | weekly | Rebuilds in the pinned Docker toolchain and compares the hash with devnet. |
