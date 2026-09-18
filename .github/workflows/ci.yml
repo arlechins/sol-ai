@@ -151,6 +151,9 @@ jobs:
         run: |
           node --input-type=module -e "import('@taopp/solana').then(m => { if (!m.TaopSolanaClient) throw new Error('missing ESM export'); console.log('esm ok'); })"
           node -e "const m = require('@taopp/solana'); if (!m.TaopSolanaClient) throw new Error('missing CJS export'); console.log('cjs ok');"
+          # Node 20/22 miss Anchor's getter-style BN re-export; the SDK guards
+          # against it, and this asserts the underlying assumption still holds.
+          node --input-type=module -e "import * as anchor from '@anchor-lang/core'; const m = typeof anchor.BN === 'function' ? anchor : anchor.default; if (typeof m.BN !== 'function') throw new Error('BN interop unavailable'); console.log('bn interop ok');"
 
       - name: Start local validator and deploy program
         run: ./scripts/localnet.sh

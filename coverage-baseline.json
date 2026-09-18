@@ -1,11 +1,31 @@
 {
-  "note": "Re-baselined 2026-09-18 when vitest upgraded 3.2.7 -> 4.1.11 (CVE-2026-* path traversal in vitest/@vitest/mocker). Vitest 4's v8 provider counts uncovered functions/branches more strictly. SDK integration paths depend on ledger state (fresh validator vs an accumulated one), so its baseline tracks the low-water mark (~1pt of drift); the ratchet still catches real regressions.",
+  "note": "Re-baselined 2026-09-18 when vitest upgraded 3.2.7 -> 4.1.11 (CVE-2026-* path traversal in vitest/@vitest/mocker). Vitest 4's v8 provider counts uncovered functions/branches more strictly. SDK integration paths depend on ledger state and on the Node version (the Anchor BN interop fallback only executes on Node 20/22, i.e. in CI), so the SDK baseline tracks the low-water mark; the ratchet still catches real regressions.",
   "sdk": {
-    "floor": { "statements": 74, "branches": 64, "functions": 66, "lines": 74 },
-    "baseline": { "statements": 76.5, "branches": 65.5, "functions": 68.0, "lines": 78.5 }
+    "floor": {
+      "statements": 74,
+      "branches": 64,
+      "functions": 66,
+      "lines": 74
+    },
+    "baseline": {
+      "statements": 76.5,
+      "branches": 65.0,
+      "functions": 68.0,
+      "lines": 78.5
+    }
   },
   "web": {
-    "floor": { "statements": 50, "branches": 48, "functions": 55, "lines": 52 },
-    "baseline": { "statements": 54.1, "branches": 51.8, "functions": 60.6, "lines": 56.8 }
+    "floor": {
+      "statements": 50,
+      "branches": 48,
+      "functions": 55,
+      "lines": 52
+    },
+    "baseline": {
+      "statements": 54.1,
+      "branches": 51.8,
+      "functions": 60.6,
+      "lines": 56.8
+    }
   }
 }

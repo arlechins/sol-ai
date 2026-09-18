@@ -1,6 +1,6 @@
 import fs from "node:fs";
-import * as anchor from "@anchor-lang/core";
-import type { Wallet } from "@anchor-lang/core";
+import type { AnchorProvider, BN, Program, Wallet } from "@anchor-lang/core";
+import { anchor } from "./anchor";
 import {
   Connection,
   Keypair,
@@ -67,8 +67,8 @@ export class TaopSolanaClient {
   readonly connection: Connection;
   readonly programId: PublicKey;
   readonly pdas: Pdas;
-  readonly provider: anchor.AnchorProvider;
-  readonly program: anchor.Program<TaopReputation>;
+  readonly provider: AnchorProvider;
+  readonly program: Program<TaopReputation>;
   private readonly wallet?: Wallet;
 
   constructor(config: TaopSolanaClientConfig) {
@@ -156,9 +156,9 @@ export class TaopSolanaClient {
       if (!info) continue;
       const raw = this.program.coder.accounts.decode("agent", info.data) as {
         authority: PublicKey;
-        completions: anchor.BN;
-        disputes: anchor.BN;
-        lastActivity: anchor.BN;
+        completions: BN;
+        disputes: BN;
+        lastActivity: BN;
         metadataUri: string;
       };
       out.set(keys[i].toBase58(), {
@@ -866,7 +866,7 @@ function toBytes(value: string | number[] | Uint8Array): number[] {
   return Array.from(value);
 }
 
-function bnToNumber(value: anchor.BN | number | bigint): number {
+function bnToNumber(value: BN | number | bigint): number {
   if (typeof value === "number") return value;
   if (typeof value === "bigint") return Number(value);
   return Number(value.toString());
@@ -874,11 +874,11 @@ function bnToNumber(value: anchor.BN | number | bigint): number {
 
 function decodeCapability(raw: Record<string, unknown>): CapabilityRecord {
   return {
-    id: bnToNumber(raw.id as anchor.BN),
+    id: bnToNumber(raw.id as BN),
     creator: raw.creator as PublicKey,
     capabilityType: Array.from(raw.capabilityType as number[]),
     metadataUri: raw.metadataUri as string,
-    bondRemaining: bnToNumber(raw.bondRemaining as anchor.BN),
+    bondRemaining: bnToNumber(raw.bondRemaining as BN),
     certified: Boolean(raw.certified),
     slashed: Boolean(raw.slashed),
     active: Boolean(raw.active),
@@ -886,7 +886,7 @@ function decodeCapability(raw: Record<string, unknown>): CapabilityRecord {
 }
 
 function decodeCapabilityByCoder(
-  program: anchor.Program<TaopReputation>,
+  program: Program<TaopReputation>,
   data: Buffer,
 ): CapabilityRecord | null {
   try {
