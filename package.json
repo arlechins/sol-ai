@@ -44,7 +44,7 @@
     "bs58": "^6.0.0",
     "publint": "0.3.24",
     "tsx": "^4.21.0",
-    "typescript": "~5.8.2"
+    "typescript": "~5.9.3"
   },
   "pnpm": {
     "overrides": {
