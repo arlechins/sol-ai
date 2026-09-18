@@ -89,6 +89,12 @@ jobs:
       - name: Dependency policy (licenses, bans, sources)
         run: cargo-deny check licenses bans sources
 
+      - name: Install nightly toolchain (fuzz target compile check)
+        run: rustup toolchain install nightly --profile minimal
+
+      - name: Compile fuzz targets
+        run: cargo +nightly build --manifest-path fuzz/Cargo.toml --bins
+
   packages:
     name: Packages (SDK, MCP, example, benchmark)
     runs-on: ubuntu-latest
@@ -131,6 +137,7 @@ jobs:
         run: |
           pnpm --filter @taopp/solana build
           pnpm --filter @taopp/mcp-server build
+          pnpm --filter @taopp/webhooks build
           pnpm -r --if-present typecheck
 
       - name: Package lint (publint + arethetypeswrong)

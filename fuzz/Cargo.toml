@@ -1,0 +1,38 @@
+[package]
+name = "taop-reputation-fuzz"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "MIT"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+anchor-lang = "=1.1.2"
+borsh = "1"
+libfuzzer-sys = "0.4"
+taop_reputation = { path = "../programs/taop_reputation" }
+
+[workspace]
+
+[[bin]]
+name = "score"
+path = "fuzz_targets/score.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "programdata"
+path = "fuzz_targets/programdata.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "account_decode"
+path = "fuzz_targets/account_decode.rs"
+test = false
+doc = false
+bench = false

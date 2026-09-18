@@ -38,8 +38,10 @@ test-suite/                 Rust integration suite (LiteSVM, in-process)
 idls/                       Generated IDL for declare_program!/tests
 packages/solana/            @taopp/solana — TypeScript SDK
 packages/mcp-server/        @taopp/mcp-server — MCP tools for any agent runtime
+packages/webhooks/          Event watcher that delivers signed webhooks
 examples/solana-agent/      Runnable two-agent trust loop (SDK + MCP modes)
 benchmark/                  Gaming-resistance harness + CC-BY adversarial dataset
+fuzz/                       cargo-fuzz targets (score, parser, account decoding)
 docs/                       Architecture, account layout, tutorial, methodology,
                             runbook, mainnet checklist, publishing, security review
 scripts/                    IDL sync, keypair sync, localnet, devnet bootstrap
@@ -57,7 +59,8 @@ cargo test --workspace                    # 100 Rust tests (in-process LiteSVM)
 pnpm install
 pnpm --filter @taopp/solana test          # 21 SDK tests incl. local-validator E2E
 pnpm --filter @taopp/mcp-server test      # MCP stdio smoke tests
-pnpm --filter @taopp/benchmark test       # benchmark determinism + dataset checks
+pnpm --filter @taopp/webhooks test        # 10 tests incl. live-validator delivery
+pnpm --filter @taopp/benchmark test       # 12 benchmark tests (detectors + dataset)
 CERTIFIER_KEYPAIR=~/.config/solana/id.json \
   pnpm --filter @taopp/example-solana-agent start -- --cluster localnet
 ```

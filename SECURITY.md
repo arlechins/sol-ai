@@ -85,6 +85,9 @@ defects:
   enabled and an explicit allowlist of permitted actions; workflow tokens
   default to `contents: read`. `cargo-deny` enforces a license allowlist,
   wildcard bans, and registry-only sources.
+- **Fuzzing:** `fuzz/` carries cargo-fuzz targets for the score function, the
+  ProgramData parser, and account decoding; the harness compiles on every push
+  and the targets run for two minutes each in a weekly workflow.
 - **Release provenance:** `.github/workflows/release.yml` publishes packages via
   npm trusted publishing (OIDC) with provenance attestations.
 - **Reproducible builds:** `./scripts/verify-build.sh` rebuilds the program in

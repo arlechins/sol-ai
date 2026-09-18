@@ -1,5 +1,7 @@
 [workspace]
 members = ["programs/*", "test-suite"]
+# The fuzz crate uses a nightly toolchain and must stay out of the workspace.
+exclude = ["fuzz"]
 resolver = "2"
 
 [profile.release]

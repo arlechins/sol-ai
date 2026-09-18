@@ -77,6 +77,34 @@ describe("rubric bounds", () => {
     expect(report.scores.sybilFarming).toBeLessThan(10);
   });
 
+  it("detectors identify the planted ring in a mixed graph", () => {
+    const configs = defaultBenchmarkConfigs(42);
+    const peer = allMechanisms(defaultParams()).find(
+      (mechanism) => mechanism.name === "peer_ratings",
+    )!;
+    const report = buildMechanismReport(peer, configs, ["collusion"]);
+    const detectors = report.collusion!.metrics.detectors;
+    expect(detectors.map((detector) => detector.name)).toEqual([
+      "reciprocity",
+      "mutual_degree",
+      "k_core",
+      "ensemble",
+    ]);
+    const ensemble = detectors.find((detector) => detector.name === "ensemble")!;
+    expect(ensemble.precision).toBeGreaterThanOrEqual(0.8);
+    expect(ensemble.recall).toBeGreaterThanOrEqual(0.8);
+    expect(ensemble.f1).toBeGreaterThanOrEqual(0.8);
+  });
+
+  it("mechanisms that ignore ratings record no detector graph", () => {
+    const configs = defaultBenchmarkConfigs(42);
+    const taop = allMechanisms(defaultParams())[0];
+    const report = buildMechanismReport(taop, configs, ["collusion"]);
+    expect(report.collusion!.metrics.detectors).toHaveLength(0);
+    expect(report.collusion!.metrics.detectorPrecision).toBeNull();
+    expect(report.collusion!.metrics.detectorRecall).toBeNull();
+  });
+
   it("supports scenario filtering", () => {
     const configs = defaultBenchmarkConfigs(42);
     const mechanism = allMechanisms(defaultParams())[0];

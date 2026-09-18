@@ -113,12 +113,22 @@ export function renderReport(
         `- Manufactured score per member: ${ring.ringScorePerAgent} · ring spend: ${sol(ring.ringCostLamports)} · cost per point: ${sol(ring.costPerRingPointLamports)}`,
       );
       lines.push(
-        `- Reciprocity detector precision/recall: ${
+        `- Detector ensemble precision/recall: ${
           ring.detectorPrecision === null
-            ? "n/a"
+            ? "n/a (mechanism records no rating graph)"
             : `${ring.detectorPrecision.toFixed(2)} / ${ring.detectorRecall?.toFixed(2)}`
         }`,
       );
+      if (report.collusion.metrics.detectors.length > 0) {
+        lines.push("");
+        lines.push("| Detector | Flagged | Precision | Recall | F1 |");
+        lines.push("|---|---:|---:|---:|---:|");
+        for (const detector of report.collusion.metrics.detectors) {
+          lines.push(
+            `| ${detector.name} | ${detector.flagged} | ${detector.precision.toFixed(2)} | ${detector.recall.toFixed(2)} | ${detector.f1.toFixed(2)} |`,
+          );
+        }
+      }
       lines.push(`- ${report.collusion.findings}`);
       lines.push("");
     }

@@ -21,11 +21,12 @@ example, CI workflow configuration.
 ```bash
 git clone https://github.com/arlechins/sol-ai.git && cd sol-ai
 anchor build && ./scripts/sync-idl.sh
-cargo test --workspace                  # 94 tests, in-process
+cargo test --workspace                  # 100 tests, in-process
 ./scripts/localnet.sh
 pnpm install
-pnpm -r --if-present test               # SDK, MCP, benchmark
+pnpm -r --if-present test               # SDK, MCP, webhooks, benchmark
 ./scripts/verify-build.sh devnet        # reproducible build vs devnet
+cd fuzz && cargo +nightly fuzz run account_decode -- -max_total_time=60
 ```
 
 ## Assets and invariants to challenge
@@ -68,7 +69,8 @@ pnpm -r --if-present test               # SDK, MCP, benchmark
 
 - `programdata.rs`: hand-rolled parsing of loader metadata. Prove the 45-byte
   layout against `solana_loader_v3_interface::UpgradeableLoaderState` and the
-  bincode option encoding. The property tests only check self-consistency.
+  bincode option encoding. The property tests only check self-consistency; the
+  `fuzz/programdata` target explores arbitrary byte layouts.
 - `resolve_challenge` / `cancel_challenge`: vault sweeping and destination
   constraints.
 - `slash_capability`: the partial-vs-full penalty boundary and rent checks.

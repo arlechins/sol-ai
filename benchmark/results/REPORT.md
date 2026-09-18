@@ -1,6 +1,6 @@
 # TAOP gaming-resistance benchmark — results
 
-Generated: 2026-09-17T11:34:45.953Z
+Generated: 2026-09-18T06:55:14.484Z
 Seed: 42 · Node: v24.14.1
 
 ## Composite resistance scores (0-100, higher is better)
@@ -17,7 +17,7 @@ Seed: 42 · Node: v24.14.1
 
 - Sybil: 20 identities × 10 attestations, challenge probability 0.1, upheld probability 0.9
 - Slow burn: target score 50, harvest 5 SOL, 2 attestations/day
-- Collusion: ring of 10, 1 ratings per pair, reciprocity threshold 0.8
+- Collusion: ring of 10, 1 ratings per pair, 30 honest agents x 2 ratings, reciprocity threshold 0.8, k-core threshold 4
 - Economics: 0.005 SOL challenge bond, 0.005 SOL capability bond, 30-day decay
 
 ## taop_bonded_decay
@@ -45,8 +45,8 @@ Scores — Sybil farming: **3.7**, slow-burn harvest: **0.1**, collusive ring: *
 
 - Ring of 10 × 1 ratings per pair
 - Manufactured score per member: 0 · ring spend: 0.000450000 SOL · cost per point: 0.000450000 SOL
-- Reciprocity detector precision/recall: 1.00 / 1.00
-- Peer ratings do not contribute to the score, so the ring manufactures nothing. The reciprocity detector has no graph to inspect (null precision/recall).
+- Detector ensemble precision/recall: n/a (mechanism records no rating graph)
+- Peer ratings do not contribute to the score, so the ring manufactures nothing and there is no recorded rating graph to inspect. This is immunity by omission, not detection.
 
 Weak spots (published deliberately):
 
@@ -78,8 +78,8 @@ Scores — Sybil farming: **0.0**, slow-burn harvest: **0.1**, collusive ring: *
 
 - Ring of 10 × 1 ratings per pair
 - Manufactured score per member: 0 · ring spend: 0.000450000 SOL · cost per point: 0.000450000 SOL
-- Reciprocity detector precision/recall: 1.00 / 1.00
-- Peer ratings do not contribute to the score, so the ring manufactures nothing. The reciprocity detector has no graph to inspect (null precision/recall).
+- Detector ensemble precision/recall: n/a (mechanism records no rating graph)
+- Peer ratings do not contribute to the score, so the ring manufactures nothing and there is no recorded rating graph to inspect. This is immunity by omission, not detection.
 
 Weak spots (published deliberately):
 
@@ -111,8 +111,8 @@ Scores — Sybil farming: **3.7**, slow-burn harvest: **0.1**, collusive ring: *
 
 - Ring of 10 × 1 ratings per pair
 - Manufactured score per member: 0 · ring spend: 0.000450000 SOL · cost per point: 0.000450000 SOL
-- Reciprocity detector precision/recall: 1.00 / 1.00
-- Peer ratings do not contribute to the score, so the ring manufactures nothing. The reciprocity detector has no graph to inspect (null precision/recall).
+- Detector ensemble precision/recall: n/a (mechanism records no rating graph)
+- Peer ratings do not contribute to the score, so the ring manufactures nothing and there is no recorded rating graph to inspect. This is immunity by omission, not detection.
 
 Weak spots (published deliberately):
 
@@ -144,8 +144,15 @@ Scores — Sybil farming: **100.0**, slow-burn harvest: **100.0**, collusive rin
 
 - Ring of 10 × 1 ratings per pair
 - Manufactured score per member: 9 · ring spend: 0.000450000 SOL · cost per point: 0.000005000 SOL
-- Reciprocity detector precision/recall: 1.00 / 1.00
-- A ring of 10 accounts manufactures 9 points per member at 0.000005000 SOL per point, versus 0.000005000 SOL for a genuine rating. A reciprocity detector flagged 10 accounts (precision 1.00, recall 1.00).
+- Detector ensemble precision/recall: 1.00 / 1.00
+
+| Detector | Flagged | Precision | Recall | F1 |
+|---|---:|---:|---:|---:|
+| reciprocity | 10 | 1.00 | 1.00 | 1.00 |
+| mutual_degree | 10 | 1.00 | 1.00 | 1.00 |
+| k_core | 10 | 1.00 | 1.00 | 1.00 |
+| ensemble | 10 | 1.00 | 1.00 | 1.00 |
+- A ring of 10 accounts manufactures 9 points per member at 0.000005000 SOL per point, versus 0.000005000 SOL for a genuine rating. Best detector: reciprocity (precision 1.00, recall 1.00, F1 1.00) over a mixed graph of 40 accounts.
 
 Weak spots (published deliberately):
 
@@ -176,8 +183,8 @@ Scores — Sybil farming: **53.8**, slow-burn harvest: **10.0**, collusive ring:
 
 - Ring of 10 × 1 ratings per pair
 - Manufactured score per member: 0 · ring spend: 0.000450000 SOL · cost per point: 0.000450000 SOL
-- Reciprocity detector precision/recall: 1.00 / 1.00
-- Peer ratings do not contribute to the score, so the ring manufactures nothing. The reciprocity detector has no graph to inspect (null precision/recall).
+- Detector ensemble precision/recall: n/a (mechanism records no rating graph)
+- Peer ratings do not contribute to the score, so the ring manufactures nothing and there is no recorded rating graph to inspect. This is immunity by omission, not detection.
 
 Weak spots (published deliberately):
 
@@ -187,6 +194,7 @@ Weak spots (published deliberately):
 
 ```bash
 pnpm --filter @taopp/benchmark start
+# targeted: pnpm --filter @taopp/benchmark start -- --scenario sybil --mechanism taop_bonded_decay
 # or: pnpm bench -- --seed 42 --out benchmark/results
 ```
 

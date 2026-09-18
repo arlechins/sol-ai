@@ -42,6 +42,11 @@ Outputs are written to `results/`: a full JSON run and a rendered `REPORT.md`.
 | `peer_ratings` | 100.0 | 100.0 | 0.0 | 66.7 |
 | `stake_gated` | 53.8 | 10.0 | 100.0 | 54.6 |
 
+The collusion scenario plants a mutual-rating ring inside a mixed graph of
+honest raters and reports precision/recall/F1 for three structural detectors
+(reciprocity, mutual degree, k-core) plus their ensemble. Mechanisms that
+record no rating graph correctly report no detector results.
+
 The published TAOP results include its weak spots: self-attestation is cheap to
 farm, and the default capability bond does not cover a high-value harvest.
 `docs/methodology.md` analyzes both and lists the v2 agenda the rubric implies.

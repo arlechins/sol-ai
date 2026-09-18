@@ -91,10 +91,21 @@ per genuine rating.
 collusionResistance = 100 * (1 - min(1, ringCostPerPoint / honestCostPerPoint))
 ```
 
-The scenario also runs a deliberately simple reciprocity detector (flag agents
-whose outgoing ratings are mostly reciprocated at a configurable threshold) and
-reports precision/recall, because score-level immunity and detection-evidence
-quality are separate properties.
+The scenario also builds a **mixed graph** — the ring plus honest agents that
+rate other honest agents organically — and runs three deliberately simple
+detectors, reporting precision/recall/F1 for each and for their union:
+
+| Detector | Signal |
+|---|---|
+| `reciprocity` | outgoing ratings mostly reciprocated (configurable threshold) |
+| `mutual_degree` | at least `max(3, (ring-1)/2)` mutual-rating partners |
+| `k_core` | core number >= `coreThreshold` (a mutual ring is a dense clique) |
+| `ensemble` | union of the three |
+
+For mechanisms that record no rating graph (self-attestation or naive counting)
+the detector list is empty and detection metrics are `null` — there is nothing
+to inspect. Score-level immunity and detection-evidence quality are separate
+properties.
 
 The composite score is the equal-weight mean of the three class scores.
 Weights are a choice, not a result; they are stated here so they can be
@@ -175,9 +186,12 @@ Reproduce with `pnpm --filter @taopp/benchmark sensitivity`.
   the mechanism being used to gate value it does not control.
 - **Challenge and upheld probabilities are assumptions.** Real watcher behavior
   depends on incentives (bond refunds, rewards) not modeled here.
-- **Detector evaluation is minimal.** The reciprocity detector is a baseline; it
-  does not represent state-of-the-art graph fraud detection and its numbers
-  should not be quoted as an upper bound.
+- **Detector evaluation is simple by design.** Three structural detectors
+  (reciprocity, mutual degree, k-core) are baselines; they do not represent
+  state-of-the-art graph fraud detection, do not model adaptive rings that
+  rotate membership, and their numbers should not be quoted as an upper bound.
+  The ensemble scores perfectly on the planted ring because the planted ring is
+  an ideal clique; real rings are harder.
 - **No priority fees, MEV, or latency.** Fee assumptions are conservative for
   cost comparisons but understate congested-mainnet attack costs.
 - **Single-identity transitions are not modeled.** Reputation laundering across

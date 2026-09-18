@@ -1,9 +1,14 @@
 {
   "metadata": {
-    "generatedAt": "2026-09-17T11:34:45.953Z",
+    "generatedAt": "2026-09-18T06:55:14.484Z",
     "seed": 42,
     "nodeVersion": "v24.14.1",
-    "version": "0.1.0"
+    "version": "0.1.0",
+    "scenarios": [
+      "sybil",
+      "slow-burn",
+      "collusion"
+    ]
   },
   "configs": {
     "sybil": {
@@ -22,7 +27,11 @@
     "collusion": {
       "ringSize": 10,
       "ratingsPerPair": 1,
-      "reciprocityThreshold": 0.8
+      "reciprocityThreshold": 0.8,
+      "honestAgents": 30,
+      "honestRatings": 2,
+      "coreThreshold": 4,
+      "seed": 42
     }
   },
   "params": {
@@ -92,7 +101,11 @@
         "config": {
           "ringSize": 10,
           "ratingsPerPair": 1,
-          "reciprocityThreshold": 0.8
+          "reciprocityThreshold": 0.8,
+          "honestAgents": 30,
+          "honestRatings": 2,
+          "coreThreshold": 4,
+          "seed": 42
         },
         "metrics": {
           "ringScorePerAgent": 0,
@@ -100,16 +113,17 @@
           "costPerRingPointLamports": 450000,
           "honestCostPerPointLamports": 5000,
           "efficiencyRatio": 0.011111111111111112,
-          "detectorPrecision": 1,
-          "detectorRecall": 1
+          "detectorPrecision": null,
+          "detectorRecall": null,
+          "detectors": []
         },
-        "findings": "Peer ratings do not contribute to the score, so the ring manufactures nothing. The reciprocity detector has no graph to inspect (null precision/recall)."
+        "findings": "Peer ratings do not contribute to the score, so the ring manufactures nothing and there is no recorded rating graph to inspect. This is immunity by omission, not detection."
       },
       "scores": {
+        "composite": 34.6,
         "sybilFarming": 3.7,
         "slowBurnHarvest": 0.1,
-        "collusiveRing": 100,
-        "composite": 34.6
+        "collusiveRing": 100
       },
       "weakSpots": [
         "Sybil farming is cheap (self-attestation has no verifier)",
@@ -177,7 +191,11 @@
         "config": {
           "ringSize": 10,
           "ratingsPerPair": 1,
-          "reciprocityThreshold": 0.8
+          "reciprocityThreshold": 0.8,
+          "honestAgents": 30,
+          "honestRatings": 2,
+          "coreThreshold": 4,
+          "seed": 42
         },
         "metrics": {
           "ringScorePerAgent": 0,
@@ -185,16 +203,17 @@
           "costPerRingPointLamports": 450000,
           "honestCostPerPointLamports": 5000,
           "efficiencyRatio": 0.011111111111111112,
-          "detectorPrecision": 1,
-          "detectorRecall": 1
+          "detectorPrecision": null,
+          "detectorRecall": null,
+          "detectors": []
         },
-        "findings": "Peer ratings do not contribute to the score, so the ring manufactures nothing. The reciprocity detector has no graph to inspect (null precision/recall)."
+        "findings": "Peer ratings do not contribute to the score, so the ring manufactures nothing and there is no recorded rating graph to inspect. This is immunity by omission, not detection."
       },
       "scores": {
+        "composite": 33.4,
         "sybilFarming": 0,
         "slowBurnHarvest": 0.1,
-        "collusiveRing": 100,
-        "composite": 33.4
+        "collusiveRing": 100
       },
       "weakSpots": [
         "Sybil farming is cheap (self-attestation has no verifier)",
@@ -262,7 +281,11 @@
         "config": {
           "ringSize": 10,
           "ratingsPerPair": 1,
-          "reciprocityThreshold": 0.8
+          "reciprocityThreshold": 0.8,
+          "honestAgents": 30,
+          "honestRatings": 2,
+          "coreThreshold": 4,
+          "seed": 42
         },
         "metrics": {
           "ringScorePerAgent": 0,
@@ -270,16 +293,17 @@
           "costPerRingPointLamports": 450000,
           "honestCostPerPointLamports": 5000,
           "efficiencyRatio": 0.011111111111111112,
-          "detectorPrecision": 1,
-          "detectorRecall": 1
+          "detectorPrecision": null,
+          "detectorRecall": null,
+          "detectors": []
         },
-        "findings": "Peer ratings do not contribute to the score, so the ring manufactures nothing. The reciprocity detector has no graph to inspect (null precision/recall)."
+        "findings": "Peer ratings do not contribute to the score, so the ring manufactures nothing and there is no recorded rating graph to inspect. This is immunity by omission, not detection."
       },
       "scores": {
+        "composite": 34.6,
         "sybilFarming": 3.7,
         "slowBurnHarvest": 0.1,
-        "collusiveRing": 100,
-        "composite": 34.6
+        "collusiveRing": 100
       },
       "weakSpots": [
         "Sybil farming is cheap (self-attestation has no verifier)",
@@ -347,7 +371,11 @@
         "config": {
           "ringSize": 10,
           "ratingsPerPair": 1,
-          "reciprocityThreshold": 0.8
+          "reciprocityThreshold": 0.8,
+          "honestAgents": 30,
+          "honestRatings": 2,
+          "coreThreshold": 4,
+          "seed": 42
         },
         "metrics": {
           "ringScorePerAgent": 9,
@@ -356,15 +384,57 @@
           "honestCostPerPointLamports": 5000,
           "efficiencyRatio": 1,
           "detectorPrecision": 1,
-          "detectorRecall": 1
+          "detectorRecall": 1,
+          "detectors": [
+            {
+              "name": "reciprocity",
+              "flagged": 10,
+              "truePositives": 10,
+              "falsePositives": 0,
+              "falseNegatives": 0,
+              "precision": 1,
+              "recall": 1,
+              "f1": 1
+            },
+            {
+              "name": "mutual_degree",
+              "flagged": 10,
+              "truePositives": 10,
+              "falsePositives": 0,
+              "falseNegatives": 0,
+              "precision": 1,
+              "recall": 1,
+              "f1": 1
+            },
+            {
+              "name": "k_core",
+              "flagged": 10,
+              "truePositives": 10,
+              "falsePositives": 0,
+              "falseNegatives": 0,
+              "precision": 1,
+              "recall": 1,
+              "f1": 1
+            },
+            {
+              "name": "ensemble",
+              "flagged": 10,
+              "truePositives": 10,
+              "falsePositives": 0,
+              "falseNegatives": 0,
+              "precision": 1,
+              "recall": 1,
+              "f1": 1
+            }
+          ]
         },
-        "findings": "A ring of 10 accounts manufactures 9 points per member at 0.000005000 SOL per point, versus 0.000005000 SOL for a genuine rating. A reciprocity detector flagged 10 accounts (precision 1.00, recall 1.00)."
+        "findings": "A ring of 10 accounts manufactures 9 points per member at 0.000005000 SOL per point, versus 0.000005000 SOL for a genuine rating. Best detector: reciprocity (precision 1.00, recall 1.00, F1 1.00) over a mixed graph of 40 accounts."
       },
       "scores": {
+        "composite": 66.7,
         "sybilFarming": 100,
         "slowBurnHarvest": 100,
-        "collusiveRing": 0,
-        "composite": 66.7
+        "collusiveRing": 0
       },
       "weakSpots": [
         "Fabricated peer ratings are accepted at face value"
@@ -431,7 +501,11 @@
         "config": {
           "ringSize": 10,
           "ratingsPerPair": 1,
-          "reciprocityThreshold": 0.8
+          "reciprocityThreshold": 0.8,
+          "honestAgents": 30,
+          "honestRatings": 2,
+          "coreThreshold": 4,
+          "seed": 42
         },
         "metrics": {
           "ringScorePerAgent": 0,
@@ -439,16 +513,17 @@
           "costPerRingPointLamports": 450000,
           "honestCostPerPointLamports": 5000,
           "efficiencyRatio": 0.011111111111111112,
-          "detectorPrecision": 1,
-          "detectorRecall": 1
+          "detectorPrecision": null,
+          "detectorRecall": null,
+          "detectors": []
         },
-        "findings": "Peer ratings do not contribute to the score, so the ring manufactures nothing. The reciprocity detector has no graph to inspect (null precision/recall)."
+        "findings": "Peer ratings do not contribute to the score, so the ring manufactures nothing and there is no recorded rating graph to inspect. This is immunity by omission, not detection."
       },
       "scores": {
+        "composite": 54.6,
         "sybilFarming": 53.8,
         "slowBurnHarvest": 10,
-        "collusiveRing": 100,
-        "composite": 54.6
+        "collusiveRing": 100
       },
       "weakSpots": [
         "Bonded capital does not cover a high-value harvest"

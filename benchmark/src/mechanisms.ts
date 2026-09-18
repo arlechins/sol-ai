@@ -76,6 +76,8 @@ export interface Mechanism {
    */
   capitalRequiredForScore?(targetScore: number): number;
   lockCapital?(state: MechanismState, agent: number, lamports: number): void;
+  /** True when the mechanism records peer ratings that detection can inspect. */
+  usesPeerRatings?: boolean;
 }
 
 function newAgent(id: number): AgentState {
@@ -280,6 +282,7 @@ export class NoDecayMechanism extends AbstractMechanism {
 /** Baseline: ERC-8004-style peer feedback among agents. */
 export class PeerRatingsMechanism extends AbstractMechanism {
   readonly name = "peer_ratings";
+  readonly usesPeerRatings = true;
   readonly description =
     "Baseline: score = distinct agents that rated you minus disputes (ERC-8004-style feedback).";
 

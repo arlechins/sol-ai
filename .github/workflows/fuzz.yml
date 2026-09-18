@@ -1,0 +1,43 @@
+name: Fuzz
+
+on:
+  schedule:
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz
+  cancel-in-progress: false
+
+jobs:
+  fuzz:
+    name: Fuzz targets
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install nightly toolchain
+        run: rustup toolchain install nightly --profile minimal
+
+      - name: Install cargo-fuzz
+        run: cargo +nightly install cargo-fuzz --locked
+
+      - name: Build targets
+        working-directory: fuzz
+        run: cargo +nightly fuzz build
+
+      - name: Fuzz score
+        working-directory: fuzz
+        run: cargo +nightly fuzz run score -- -max_total_time=120 -rss_limit_mb=4096
+
+      - name: Fuzz programdata
+        working-directory: fuzz
+        run: cargo +nightly fuzz run programdata -- -max_total_time=120 -rss_limit_mb=4096
+
+      - name: Fuzz account_decode
+        working-directory: fuzz
+        run: cargo +nightly fuzz run account_decode -- -max_total_time=120 -rss_limit_mb=4096

@@ -4,6 +4,32 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] - 2026-09-17
+
+Nice-to-have expansions: fuzzing, event webhooks, and richer collusion detection.
+
+### Added
+
+- **Fuzz harness** (`fuzz/`, cargo-fuzz, nightly): `score` (9.4M execs),
+  `programdata` (6.9M), and `account_decode` (812K) ran clean in local smoke
+  runs. CI compiles the targets on every push; a weekly workflow fuzzes each
+  for two minutes.
+- **`@taopp/webhooks`** (private package): watches program events, decodes them
+  with the SDK, and delivers HMAC-SHA256-signed webhooks
+  (`x-taop-signature`, `x-taop-delivery`) with bounded retries, atomic resume
+  state, and at-least-once semantics. 10 tests including a live-validator
+  delivery test.
+- **Benchmark collusion detectors**: the ring is now planted in a mixed graph
+  of honest raters and evaluated with reciprocity, mutual-degree, and k-core
+  detectors plus their ensemble (precision/recall/F1). Mechanisms that record no
+  rating graph correctly report no detector results. 12 benchmark tests.
+
+### Fixed
+
+- The k-core detector used peeling-order degrees instead of true core numbers,
+  under-reporting ring members; replaced with the correct iterative
+  decomposition (all detectors now score P/R/F1 = 1 on the planted ring).
+
 ## [0.1.9] - 2026-09-17
 
 Developer-experience and compliance additions.

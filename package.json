@@ -24,7 +24,8 @@
     "test:packages": "pnpm -r --if-present test",
     "test": "cargo test --workspace && pnpm -r --if-present test",
     "healthcheck": "pnpm --filter @taopp/solana build && tsx scripts/healthcheck.ts",
-    "lint:packages": "pnpm --filter @taopp/solana lint:package && pnpm --filter @taopp/mcp-server lint:package"
+    "lint:packages": "pnpm --filter @taopp/solana lint:package && pnpm --filter @taopp/mcp-server lint:package",
+    "webhooks:dev": "pnpm --filter @taopp/webhooks dev"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",

@@ -108,7 +108,7 @@ function configLines(configs: BenchmarkConfigs, args: CliArgs): string[] {
   }
   if (args.scenarios.includes("collusion")) {
     lines.push(
-      `Collusion: ring of ${configs.collusion.ringSize}, ${configs.collusion.ratingsPerPair} ratings per pair, reciprocity threshold ${configs.collusion.reciprocityThreshold}`,
+      `Collusion: ring of ${configs.collusion.ringSize}, ${configs.collusion.ratingsPerPair} ratings per pair, ${configs.collusion.honestAgents} honest agents x ${configs.collusion.honestRatings} ratings, reciprocity threshold ${configs.collusion.reciprocityThreshold}, k-core threshold ${configs.collusion.coreThreshold}`,
     );
   }
   const params = defaultParams();
