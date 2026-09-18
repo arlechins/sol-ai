@@ -31,7 +31,12 @@ const suite = available ? describe.sequential : describe.skip;
 suite("webhook dispatcher against a live cluster", () => {
   let server: http.Server;
   let webhookUrl: string;
-  const received: Array<{ event: WebhookEvent; signatureHeader?: string; body: string }> = [];
+  const received: Array<{
+    event: WebhookEvent;
+    signatureHeader?: string;
+    timestampHeader?: string;
+    body: string;
+  }> = [];
 
   beforeAll(async () => {
     server = http.createServer((request, response) => {
@@ -41,6 +46,7 @@ suite("webhook dispatcher against a live cluster", () => {
         received.push({
           event: JSON.parse(body) as WebhookEvent,
           signatureHeader: request.headers["x-taop-signature"] as string | undefined,
+          timestampHeader: request.headers["x-taop-timestamp"] as string | undefined,
           body,
         });
         response.writeHead(200).end("ok");
@@ -92,7 +98,14 @@ suite("webhook dispatcher against a live cluster", () => {
       (entry) => entry.event.name.toLowerCase() === "completionattested",
     );
     expect(attested).toBeDefined();
-    expect(verifySignature(SECRET, attested!.body, attested!.signatureHeader)).toBe(true);
+    expect(
+      verifySignature(
+        SECRET,
+        attested!.body,
+        attested!.signatureHeader,
+        attested!.timestampHeader,
+      ),
+    ).toBe(true);
     expect(attested!.event.programId).toBe(PROGRAM_ID);
   }, 60_000);
 });

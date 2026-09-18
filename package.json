@@ -11,6 +11,11 @@
   "scripts": {
     "program:build": "anchor build && ./scripts/sync-idl.sh",
     "program:test": "cargo test --workspace",
+    "program:cu": "cargo test -p taop-reputation-tests --test compute",
+    "program:cu:update": "UPDATE_CU_SNAPSHOT=1 cargo test -p taop-reputation-tests --test compute",
+    "mutation:spotcheck": "python3 scripts/mutation-spotcheck.py",
+    "coverage": "pnpm --filter @taopp/solana test:coverage && pnpm --filter @taopp/web test:coverage && pnpm coverage:check",
+    "coverage:check": "node scripts/check-coverage.mjs sdk packages/solana/coverage/coverage-summary.json && node scripts/check-coverage.mjs web apps/web/coverage/coverage-summary.json",
     "localnet": "./scripts/localnet.sh",
     "deploy:devnet": "anchor deploy --provider.cluster devnet && pnpm deploy:init -- --cluster devnet",
     "deploy:mainnet": "anchor deploy --provider.cluster mainnet-beta && pnpm deploy:init -- --cluster mainnet-beta",
@@ -25,7 +30,12 @@
     "test": "cargo test --workspace && pnpm -r --if-present test",
     "healthcheck": "pnpm --filter @taopp/solana build && tsx scripts/healthcheck.ts",
     "lint:packages": "pnpm --filter @taopp/solana lint:package && pnpm --filter @taopp/mcp-server lint:package",
-    "webhooks:dev": "pnpm --filter @taopp/webhooks dev"
+    "webhooks:dev": "pnpm --filter @taopp/webhooks dev",
+    "web:dev": "pnpm --filter @taopp/web dev",
+    "web:build": "pnpm --filter @taopp/web build",
+    "web:test": "pnpm --filter @taopp/web test",
+    "web:budget": "node scripts/check-web-bundle.mjs",
+    "web:sync": "./scripts/sync-web-data.sh"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
@@ -37,11 +47,10 @@
     "typescript": "~5.8.2"
   },
   "pnpm": {
-    "auditConfig": {
-      "ignoreCves": [
-        "CVE-2026-77465",
-        "CVE-2026-63376"
-      ]
+    "overrides": {
+      "toml@<4.1.2": "^4.3.0",
+      "uuid@<11.1.1": "^11.1.1",
+      "esbuild@<0.28.1": "^0.28.1"
     }
   }
 }

@@ -53,19 +53,33 @@ function fakeConnection(transactions: Map<string, { slot: number; blockTime: num
 }
 
 describe("signing", () => {
-  it("computes the documented HMAC vector", () => {
+  it("computes the documented HMAC vectors", () => {
     expect(signPayload("secret", "hello")).toBe(
       "88aab3ede8d3adf94d26ab90d3bafd4a2083070c3bcce9c014ee04a443847c0b",
     );
+    expect(signPayload("secret", "hello", 1_700_000_000)).toBe(
+      "47b1df0ab12338b2685470b0d2b37033add7c3b2bc8172f313e77413f1bb78c8",
+    );
   });
 
-  it("verifies and rejects signatures", () => {
+  it("verifies timestamped signatures and rejects replays", () => {
     const body = JSON.stringify({ hello: "world" });
-    const header = `sha256=${signPayload("secret", body)}`;
-    expect(verifySignature("secret", body, header)).toBe(true);
-    expect(verifySignature("secret", body, undefined)).toBe(false);
-    expect(verifySignature("secret", body, "sha256=deadbeef")).toBe(false);
-    expect(verifySignature("other", body, header)).toBe(false);
+    const now = 1_700_000_000;
+    const header = `sha256=${signPayload("secret", body, now)}`;
+
+    expect(verifySignature("secret", body, header, now, { now })).toBe(true);
+    expect(verifySignature("secret", body, header, now, { now: now + 299 })).toBe(true);
+    expect(verifySignature("secret", body, header, now, { now: now + 301 })).toBe(false);
+    // A captured delivery replayed later falls outside the window.
+    expect(
+      verifySignature("secret", body, header, now, { now: now + 86_400 }),
+    ).toBe(false);
+    // Fails closed without a timestamp, or with a tampered one.
+    expect(verifySignature("secret", body, header, undefined)).toBe(false);
+    expect(verifySignature("secret", body, header, now + 1, { now })).toBe(false);
+    expect(verifySignature("secret", body, undefined, now, { now })).toBe(false);
+    expect(verifySignature("other", body, header, now, { now })).toBe(false);
+    expect(verifySignature("secret", body, "sha256=deadbeef", now, { now })).toBe(false);
   });
 });
 
@@ -121,6 +135,7 @@ describe("deliverWebhook", () => {
         "topsecret",
         received!.body,
         received!.headers["x-taop-signature"],
+        received!.headers["x-taop-timestamp"],
       ),
     ).toBe(true);
     expect(received!.headers["x-taop-delivery"]).toBe("sig-1:0");

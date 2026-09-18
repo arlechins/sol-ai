@@ -1,0 +1,48 @@
+{
+  "name": "@taopp/web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "TAOP landing page and read-only devnet demo",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "deploy": "wrangler pages deploy dist --project-name=taop-web"
+  },
+  "dependencies": {
+    "@fontsource-variable/fraunces": "^5.2.5",
+    "@fontsource-variable/inter": "^5.2.5",
+    "@fontsource-variable/jetbrains-mono": "^5.2.5",
+    "@fontsource/cormorant-garamond": "^5.2.5",
+    "@fontsource/ibm-plex-mono": "^5.2.5",
+    "@solana/web3.js": "^1.98.0",
+    "@taopp/solana": "workspace:*",
+    "buffer": "^6.0.3",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "react-router-dom": "^7.18.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.14",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@types/jest-axe": "^3.5.9",
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.4.1",
+    "@vitest/coverage-v8": "^4.1.11",
+    "jest-axe": "^11.0.0",
+    "jsdom": "^26.1.0",
+    "tailwindcss": "^4.1.14",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.3",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.20.0"
+  }
+}

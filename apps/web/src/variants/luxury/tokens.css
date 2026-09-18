@@ -1,0 +1,53 @@
+/* Luxury — "The Vault"
+   Obsidian and ivory, champagne gold rules, serif display,
+   deep shadows and long reveals. */
+
+[data-variant="luxury"] {
+  color-scheme: dark;
+
+  --c-canvas: #0b0d0c;
+  --c-canvas-2: #0f1210;
+  --c-surface: #121512;
+  --c-surface-2: #171a16;
+
+  --c-ink: #f4efe3;
+  --c-muted: #a49d8d;
+  --c-faint: #6f695d;
+
+  --c-hairline: #23261f;
+  --c-hairline-2: #3a3e33;
+
+  --c-accent: #d8c9a3;
+  --c-accent-ink: #e4d7b6;
+  --c-on-accent: #12140f;
+  --c-success: #1f5c45;
+  --c-success-ink: #8fd8b3;
+  --c-alert: #6e1f24;
+  --c-alert-ink: #eda7ab;
+  --c-warn: #c99a4a;
+  --c-info: #8b93e6;
+
+  --font-display: "Cormorant Garamond", ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+
+  --r-card: 4px;
+  --r-btn: 3px;
+
+  --shadow-card: 0 24px 64px rgba(0, 0, 0, 0.5);
+  --shadow-pop: 0 32px 96px rgba(0, 0, 0, 0.65);
+
+  --dur-fast: 240ms;
+  --dur: 520ms;
+  --ease: cubic-bezier(0.22, 0.61, 0.21, 1);
+
+  --hero-wash:
+    radial-gradient(1200px 600px at 50% -10%, rgba(216, 201, 163, 0.09), transparent 60%),
+    linear-gradient(180deg, #0e100e 0%, var(--c-canvas) 100%);
+  --rule-width: 1px;
+  --rule-strong: 2px;
+  --tracking-display: -0.01em;
+  --leading-display: 1.06;
+  --section-gap: 8.5rem;
+  --card-pad: 2.25rem;
+}

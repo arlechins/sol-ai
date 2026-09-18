@@ -1,0 +1,14 @@
+{
+  "attest_completion_first": 28089,
+  "attest_completion_next": 22089,
+  "cancel_challenge": 10740,
+  "certify_capability": 5250,
+  "challenge_completion": 22706,
+  "initialize_config": 12204,
+  "register_agent": 14791,
+  "register_capability": 22320,
+  "resolve_challenge": 16761,
+  "slash_capability": 10068,
+  "update_config": 4812,
+  "withdraw_capability_bond": 11800
+}

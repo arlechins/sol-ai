@@ -49,6 +49,7 @@
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "lint:package": "publint && attw --pack ."
   },
@@ -59,8 +60,9 @@
   },
   "devDependencies": {
     "@types/node": "^22.20.3",
+    "@vitest/coverage-v8": "^4.1.11",
     "tsup": "^8.5.1",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.7"
+    "vitest": "^4.1.11"
   }
 }

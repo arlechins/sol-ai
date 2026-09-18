@@ -65,7 +65,7 @@ anchor build              # produces target/deploy/taop_reputation.so
 cargo test --workspace
 ```
 
-Expected: 90 passing tests.
+Expected: 101 passing tests.
 
 | File | Tests | Covers |
 |---|---:|---|
@@ -77,9 +77,45 @@ Expected: 90 passing tests.
 | `test-suite/tests/roundtrip.rs` | 6 | Borsh round-trips and `INIT_SPACE` bounds for every account |
 | `test-suite/tests/security.rs` | 9 | donations, account substitution, unauthorized ops, re-init |
 | `test-suite/tests/hardening.rs` | 19 | CU budgets, randomized accounting invariants, URI/authority boundaries, treasury funding, upgrade-authority init guard, two-step admin transfer, decay cap, index pruning, challenge timeout |
+| `test-suite/tests/compute.rs` | 1 | compute-unit snapshot for 12 instructions (regression budget) |
 | `src/state.rs` (unit) | 11 | decay boundaries, 63-halving cap, and 5 property-based invariants |
 | `src/programdata.rs` (unit) | 7 | ProgramData metadata parser (examples + proptest) |
-| generated (`declare_program!`) | 1 | program ID stability |
+
+### Verify test strength and supply-chain checks
+
+Beyond pass/fail counts, the repository publishes evidence that the suite
+actually detects faults and that the pipeline cannot regress silently:
+
+```bash
+# Mutation spot-check: 11 seeded program faults; every one must be caught.
+python3 scripts/mutation-spotcheck.py
+# Expected: "11 caught · 0 survived"; also runs weekly (.github/workflows/mutation.yml).
+
+# Compute-unit snapshot: fails when an instruction costs more than the budget.
+cargo test -p taop-reputation-tests --test compute
+# Refresh deliberately after reviewing a cost change:
+UPDATE_CU_SNAPSHOT=1 cargo test -p taop-reputation-tests --test compute
+
+# Coverage ratchet for the TypeScript surfaces (baseline can only go up).
+pnpm coverage
+# Expected: every metric at or above coverage-baseline.json
+# (SDK ~79% lines, web ~57% lines under vitest 4's stricter counting).
+
+# Full-history secret scan, pinned and checksum-verified in CI.
+# See the `secrets-history` job in .github/workflows/ci.yml.
+```
+
+### Verify the deployed bytecode matches the reproducible build
+
+```bash
+pnpm healthcheck
+```
+
+Expected: `"buildHashMatches": true`, the expected hash
+(`4fc831ed…` on devnet), `"upgradeAuthority": "bxFp…"`, and an empty
+`"problems"` array. The scheduled workflow
+(`.github/workflows/healthcheck.yml`, every 6 hours) runs the same check, so an
+undocumented upgrade or a config change fails loudly.
 
 ### Verify devnet / mainnet deployment
 
@@ -140,7 +176,8 @@ deployed. `scripts/verify-build.sh` compares the Docker artifact.
 | Config PDA | `B1JgvqXoGor9oGaoGUGa4cYhHn4xNLdYXVEBaCxcydVu` (138 bytes; bond 0.005 SOL, 30-day decay) — init signature `3QxXKDhUMgDJs7adaBrYZrPNScfdYsD1aVYZxbbd3aPEbCCn1euXgbee51xnynaop9j7EDhhdnhgj6f51Y1RSxAM` |
 | Authority / certifier / treasury | `bxFpYgz8F4rbwLWTGbjuPtY4tmUZVQwMLSLSkG9TFq2` |
 | Full loop run on devnet | [attest](https://explorer.solana.com/tx/cS1rf1vMDRQppuwSb1civFhmyzqnUwtD49CT5qynNNZs5AZvUSEnknd6WfkdjGXdn8QgffEG7dpcy2gyfHq9VFd?cluster=devnet) → [challenge](https://explorer.solana.com/tx/5HCaz3oNUZQ2ytkhvMZwTmQkTTTbEoAHDgdpjmp5Bmixa1atLNMQgoNLXkgLVTtqP1MY6UtVQuEJzJ4bY1dZmbBS?cluster=devnet) → [resolve upheld](https://explorer.solana.com/tx/p34x3tdMLPDPCz32g1UJXYihTGjBRDefnGgqw3n8Tj7MqwNvdEkJVkxQbBN8MpkNixZ6TfJyQMkuYKzvrV7Hbvd?cluster=devnet); the agent's score moved 1 → 0 and the capability bond was withdrawn afterwards |
-| v0.1.2 upgrade | `security: gate init on upgrade authority, add two-step admin transfer, cap decay` upgraded in place: signature `uaeSPVgXdhb7Ts18u9F3Bo9NaWVULJVevc3CW3RsyEdxQm69qqnbdU74RDG192rBaxX1Vrws6ccf3ZNLFJ4iWyA` (programdata keeps its maximum size after the first upgrade; rent is refundable on close) |
+
+| Repeatable E2E (2026-09-18) | `node scripts/devnet-e2e.mjs` ran the loop with throwaway agents: [attest](https://explorer.solana.com/tx/2WSQKKjrgm4BqgM7ag2PuGTpGRhUHFEY1bpeyg9pro2nHy1RkaYRUcE4gYpqpv6cCEpdb58XvkSWqGi9iayruntw?cluster=devnet) → [challenge](https://explorer.solana.com/tx/4gbYna9m9kdiTKndB2JfToQE4wuxMu9E6Rz2M9jsJWTLsbDbx3uW7Yr7j2uRkE9hyRn1RTWjMesWXWjXu71Nw8Hn?cluster=devnet) → [resolve upheld](https://explorer.solana.com/tx/21nT8yk3qvieGbmkLVyX8Jjkqo7HptowiBWsT8sbfti8d7QNw7w3htZFHfx6wQTZCqFGn11hJib7Jp9T87dVAC9C?cluster=devnet); capability bond reclaimed and agent balances swept afterwards (net cost ~0.006 test SOL) || v0.1.2 upgrade | `security: gate init on upgrade authority, add two-step admin transfer, cap decay` upgraded in place: signature `uaeSPVgXdhb7Ts18u9F3Bo9NaWVULJVevc3CW3RsyEdxQm69qqnbdU74RDG192rBaxX1Vrws6ccf3ZNLFJ4iWyA` (programdata keeps its maximum size after the first upgrade; rent is refundable on close) |
 | v0.1.3 upgrade | `security: bound challenge liveness and prune the capability index`: signature `923rVdpM3B7MCarDQXCzknnMVQxQE5KHnDXrAmuuJZN8tSYaVhJw1RLe8DWfz1zNoU7qQ1ocZgsEXAH3CNiGqsj` |
 | Index pruning (v0.1.3) | A capability was registered and withdrawn on devnet; the type index dropped from 3 to 2 entries and no longer contains it (checked with `program.account.capabilityIndex.fetch`). Pre-upgrade stale pointers from earlier runs remain, as expected |
 | Two-step admin handover (v0.1.2) | [propose](https://explorer.solana.com/tx/61Dn5C1H5Pimx8ZRSNsJzaZnbF42E4zdTNYuSnNJKz9SN3WdJ4S179XEKNFNyWUX5nEKBWSLcX9DPrkxPrGKLN72?cluster=devnet) → [accept](https://explorer.solana.com/tx/AtqAAozBPjWrKcth2Hw8K7zeoArGdhgHgptV2xHrVEisoxth7NXbHNjwMQqRLfBMNJmLUJbXjkMQgjhQg5NDcvh?cluster=devnet) → [propose back](https://explorer.solana.com/tx/2jaUaRZ2ep3HkJY9JrEgzEyb54muAEfnwcrE3N8wJL31nuaaizL4Ry3rY2VvPMttfeMoeMWX6mqvmXv3fDCbLCLv?cluster=devnet) → [accept back](https://explorer.solana.com/tx/4QnetGnNUxJ28oUGTHZzvNSnqtaibqswdimycTSHsko4i2N4CaNBFhnbV1yRsiWTm3bUiBhhzoDihQLXzMLHW1AL?cluster=devnet); the admin key ended where it started |
@@ -196,7 +233,7 @@ Public API: `packages/solana/src/client.ts` (`attest`, `challenge`, `getScore`,
 pnpm --filter @taopp/mcp-server build && pnpm --filter @taopp/mcp-server test
 ```
 
-Expected: **3 tests pass**; `listTools` returns the reputation toolset; writes
+Expected: **4 tests pass**; `listTools` returns the reputation toolset; writes
 without a signer return a typed error.
 
 Tool list (same names for both chains): `get_deployment_info`,
@@ -228,6 +265,17 @@ MCP transport mode:
 SOLANA_KEYPAIR=~/.config/solana/id.json SOLANA_RPC_URL=http://127.0.0.1:8899 \
   pnpm --filter @taopp/example-solana-agent start -- --via-mcp --cluster localnet
 ```
+
+Repeatable live E2E against a funded cluster (funds two throwaway agents,
+runs the loop, reclaims the capability bond):
+
+```bash
+TAOP_E2E_CLUSTER=devnet TAOP_E2E_KEYPAIR=~/.config/solana/id.json \
+  node scripts/devnet-e2e.mjs
+```
+
+`.github/workflows/devnet-e2e.yml` (manual dispatch) runs the same script when
+the `TAOP_E2E_KEYPAIR` secret is present, and skips with a warning otherwise.
 
 On mainnet the example runs attestations and challenges with real (tiny) SOL
 amounts; see `examples/solana-agent/README.md` for the cost note and the
@@ -291,10 +339,13 @@ class balance.
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs two jobs on every push and pull request:
-
-1. **Program** — fmt, clippy, `anchor build`, IDL-sync check, `cargo test`
-   (LiteSVM), dependency audit.
-2. **Packages** — installs the toolchain, builds, starts a local validator,
-   deploys the program, and runs SDK/MCP/benchmark typechecks and tests
-   including the live integration suite.
+| Workflow | Trigger | What it proves |
+|---|---|---|
+| `ci.yml` | push / PR | Program: fmt, clippy, `anchor build`, IDL-drift check, `cargo test` (101 tests incl. the CU snapshot), `cargo-audit`, `cargo-deny`. Packages: typecheck, build, local validator + SDK integration, package tests, and the coverage ratchet. Plus `dependency-review` (PRs) and `secrets-history` (gitleaks over the full git history). |
+| `mutation.yml` | weekly | 11 seeded program faults; every one must be caught by the suite. |
+| `fuzz.yml` | weekly | cargo-fuzz targets for score, ProgramData parsing, and account decoding. |
+| `healthcheck.yml` | every 6h | Devnet config plus on-chain executable hash against the pinned reproducible build. |
+| `verifiable-build.yml` | weekly | Rebuilds in the pinned Docker toolchain and compares the hash with devnet. |
+| `web.yml` | push / PR | Website typecheck, tests (incl. axe + header checks), build, bundle budget; deploys to Cloudflare Pages on `main`. |
+| `codeql.yml` / `scorecard.yml` | scheduled | SAST and OpenSSF Scorecard. |
+| `release.yml` | tag | Builds, tests, and publishes packages with npm provenance plus a CycloneDX SBOM. |

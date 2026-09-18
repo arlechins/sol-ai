@@ -4454,6 +4454,7 @@ dependencies = [
  "bincode",
  "borsh",
  "proptest",
+ "serde_json",
  "sha2 0.10.9",
  "solana-clock 3.2.1",
  "solana-keypair",

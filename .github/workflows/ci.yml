@@ -156,6 +156,19 @@ jobs:
         env:
           TAOP_RPC_URL: http://127.0.0.1:8899
 
+      - name: SDK coverage (against local validator)
+        run: pnpm --filter @taopp/solana test:coverage
+        env:
+          TAOP_RPC_URL: http://127.0.0.1:8899
+
+      - name: Web coverage
+        run: pnpm --filter @taopp/web test:coverage
+
+      - name: Enforce coverage ratchet
+        run: |
+          node scripts/check-coverage.mjs sdk packages/solana/coverage/coverage-summary.json
+          node scripts/check-coverage.mjs web apps/web/coverage/coverage-summary.json
+
       - name: Benchmark smoke run
         run: pnpm --filter @taopp/benchmark start -- --seed 7 --json-only --out /tmp/benchmark-smoke
 
@@ -173,3 +186,24 @@ jobs:
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5
         with:
           fail-on-severity: high
+
+  # Scans the FULL git history for secrets; the working tree is already covered
+  # by the gitignore guard. Pinned + checksum-verified gitleaks.
+  secrets-history:
+    name: Secret history (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Install gitleaks (v8.30.1, checksum-verified)
+        run: |
+          curl -sL -o /tmp/gitleaks.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  /tmp/gitleaks.tar.gz" | sha256sum -c -
+          tar -xf /tmp/gitleaks.tar.gz -C /tmp
+
+      - name: Scan full history for secrets
+        run: /tmp/gitleaks detect --source . --redact --no-banner --config .gitleaks.toml

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#fafafa"/>
+  <g stroke="#0a0a0a" stroke-opacity="0.06" stroke-width="1">
+    <path d="M0 105 H1200 M0 210 H1200 M0 315 H1200 M0 420 H1200 M0 525 H1200"/>
+    <path d="M150 0 V630 M300 0 V630 M450 0 V630 M600 0 V630 M750 0 V630 M900 0 V630 M1050 0 V630"/>
+  </g>
+  <rect x="72" y="72" width="1056" height="486" fill="none" stroke="#0a0a0a" stroke-opacity="0.18"/>
+
+  <g transform="translate(112 122)">
+    <g fill="#0a0a0a">
+      <circle cx="0" cy="0" r="3.2"/><circle cx="12" cy="0" r="3.2"/><circle cx="24" cy="0" r="3.2"/>
+      <circle cx="0" cy="12" r="3.2"/><circle cx="0" cy="24" r="3.2"/>
+    </g>
+    <circle cx="12" cy="12" r="6" fill="#0f7a4d"/>
+    <circle cx="24" cy="12" r="3.2" fill="#0a0a0a"/>
+    <circle cx="12" cy="24" r="3.2" fill="#0a0a0a"/>
+    <circle cx="24" cy="24" r="3.2" fill="#0a0a0a"/>
+    <text x="44" y="22" font-family="Menlo, monospace" font-size="20" letter-spacing="6" fill="#0a0a0a">TAOP</text>
+  </g>
+
+  <text x="112" y="290" font-family="Helvetica, Arial, sans-serif" font-size="72" font-weight="600" letter-spacing="-2" fill="#0a0a0a">Verifiable reputation</text>
+  <text x="112" y="372" font-family="Helvetica, Arial, sans-serif" font-size="72" font-weight="600" letter-spacing="-2" fill="#0a0a0a">for agents on Solana.</text>
+
+  <text x="112" y="444" font-family="Menlo, monospace" font-size="19" fill="#52525b">bonded challenges · inactivity decay · reproducible devnet build</text>
+
+  <g font-family="Menlo, monospace" font-size="17" fill="#52525b">
+    <text x="112" y="512">program 8soD4Yte…15MnE</text>
+    <text x="470" y="512">147 tests</text>
+    <text x="640" y="512">34 attack patterns</text>
+    <text x="880" y="512">no token</text>
+  </g>
+
+  <rect x="112" y="530" width="150" height="3" fill="#0f7a4d"/>
+
+  <text x="1088" y="512" text-anchor="end" font-family="Menlo, monospace" font-size="17" fill="#8a8a93">github.com/arlechins/sol-ai</text>
+</svg>

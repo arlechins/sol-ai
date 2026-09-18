@@ -9,6 +9,9 @@ node_modules/
 dist/
 *.tsbuildinfo
 .pnpm-store/
+.wrangler/
+coverage/
+__pycache__/
 
 # Env & secrets
 .env

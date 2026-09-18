@@ -54,19 +54,43 @@ export interface PollResult {
   lastSignature: string | null;
 }
 
-/** HMAC-SHA256 of the raw request body, hex encoded. */
-export function signPayload(secret: string, body: string): string {
-  return crypto.createHmac("sha256", secret).update(body).digest("hex");
+/** HMAC-SHA256 of `timestamp.body` (or the bare body when no timestamp), hex encoded. */
+export function signPayload(
+  secret: string,
+  body: string,
+  timestamp?: number | string,
+): string {
+  const signed = timestamp === undefined ? body : `${timestamp}.${body}`;
+  return crypto.createHmac("sha256", secret).update(signed).digest("hex");
 }
 
-/** Constant-time verification of an `x-taop-signature` header value. */
+export interface VerifyOptions {
+  /** Allowed clock skew in seconds; 0 disables the window. Default 300. */
+  toleranceSecs?: number;
+  /** Current unix seconds; injectable for tests. */
+  now?: number;
+}
+
+/**
+ * Verify `x-taop-signature` against `x-taop-timestamp` and the raw body.
+ *
+ * Fails closed: a missing or non-numeric timestamp, a timestamp outside the
+ * tolerance window, or any HMAC mismatch returns false. This is what makes a
+ * captured delivery useless to replay later.
+ */
 export function verifySignature(
   secret: string,
   body: string,
   header: string | undefined,
+  timestamp: string | number | undefined,
+  options: VerifyOptions = {},
 ): boolean {
-  if (!header) return false;
-  const expected = Buffer.from(`sha256=${signPayload(secret, body)}`);
+  if (!header || timestamp === undefined) return false;
+  const seconds = Number(timestamp);
+  if (!Number.isFinite(seconds)) return false;
+  const { toleranceSecs = 300, now = Math.floor(Date.now() / 1000) } = options;
+  if (toleranceSecs > 0 && Math.abs(now - seconds) > toleranceSecs) return false;
+  const expected = Buffer.from(`sha256=${signPayload(secret, body, timestamp)}`);
   const actual = Buffer.from(header);
   return (
     expected.length === actual.length && crypto.timingSafeEqual(expected, actual)
@@ -117,7 +141,9 @@ export async function deliverWebhook(
     "x-taop-delivery": event.id,
   };
   if (options.secret) {
-    headers["x-taop-signature"] = `sha256=${signPayload(options.secret, body)}`;
+    const timestamp = Math.floor(Date.now() / 1000);
+    headers["x-taop-timestamp"] = String(timestamp);
+    headers["x-taop-signature"] = `sha256=${signPayload(options.secret, body, timestamp)}`;
   }
 
   let lastError = "unknown error";

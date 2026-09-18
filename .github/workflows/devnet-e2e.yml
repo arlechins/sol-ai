@@ -1,0 +1,73 @@
+name: Devnet E2E
+
+# Write-path end-to-end: funds two throwaway agents from a funded devnet key,
+# runs the full trust loop (register -> certify -> attest -> challenge ->
+# resolve -> score drop), then reclaims the capability bond.
+#
+# Activation: add a funded devnet keypair (JSON array, Solana CLI format) as
+# the `TAOP_E2E_KEYPAIR` repository secret. Without it the job is skipped.
+# Costs ~0.07 test SOL per run; the bond is reclaimed at the end.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: devnet-e2e
+  cancel-in-progress: false
+
+jobs:
+  loop:
+    name: Trust loop on devnet
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+        with:
+          version: 9.15.4
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Check for the funded E2E key
+        id: key
+        env:
+          KEY: ${{ secrets.TAOP_E2E_KEYPAIR }}
+        run: |
+          if [ -n "$KEY" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::TAOP_E2E_KEYPAIR is not set; skipping the devnet E2E run"
+          fi
+
+      - name: Install dependencies
+        if: steps.key.outputs.ready == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build SDK and example
+        if: steps.key.outputs.ready == 'true'
+        run: |
+          pnpm --filter @taopp/solana build
+          pnpm --filter @taopp/example-solana-agent typecheck
+
+      - name: Write the E2E keypair
+        if: steps.key.outputs.ready == 'true'
+        env:
+          KEY: ${{ secrets.TAOP_E2E_KEYPAIR }}
+        run: |
+          printf '%s' "$KEY" > "$RUNNER_TEMP/e2e-keypair.json"
+          test "$(python3 -c "import json;print(len(json.load(open('$RUNNER_TEMP/e2e-keypair.json'))))")" = "64"
+
+      - name: Run the trust loop on devnet
+        if: steps.key.outputs.ready == 'true'
+        env:
+          TAOP_E2E_KEYPAIR: ${{ runner.temp }}/e2e-keypair.json
+          TAOP_E2E_CLUSTER: devnet
+        run: node scripts/devnet-e2e.mjs

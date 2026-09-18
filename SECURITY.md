@@ -50,20 +50,28 @@ defects:
 - Denial of service through network-level flooding (Solana handles this).
 - Issues in dependencies that are already tracked upstream.
 
-## Known advisories (accepted)
+## Dependency advisories
 
-- **CVE-2026-77465 / CVE-2026-63376 (`toml` < 4.2.0, transitive via
-  `@anchor-lang/core` 1.x).** The vulnerable parser is referenced only by
-  Anchor's `Workspace` helper, which reads the project's own `Anchor.toml`; no
-  code path in this repository or in the published SDK parses untrusted TOML
-  with it. No 3.x patch exists; the fix requires an upstream `toml` major bump.
-  The root `package.json` suppresses these two advisories for
-  `pnpm audit --audit-level high`, and Dependabot alerts remain enabled so the
-  upstream fix is surfaced when it lands. Do not use Anchor's `Workspace`
-  helper to parse untrusted TOML in the meantime.
-- Moderate and low advisories in dev-only tooling (`vitest`, `esbuild`,
-  `uuid`, `stream-json`) are tracked through Dependabot and are not shipped to
-  consumers of `@taopp/solana`. CI fails on high and critical advisories only.
+CI fails on high and critical advisories (`pnpm audit --audit-level high`), and
+the repository carries no blanket suppressions. Current state:
+
+- **Resolved 2026-09-18 (high):** `CVE-2026-77465` / `CVE-2026-63376`
+  (`toml` < 4.2.0 via `@anchor-lang/core`) — fixed with
+  `pnpm.overrides: toml@<4.1.2 -> ^4.3.0`.
+- **Resolved 2026-09-18:** `uuid` 8.3.2 (via `jayson`) pinned to `^11.1.1` by
+  override; jayson only calls `uuid.v4`, and 11.x still ships a CJS entry
+  (verified against the full SDK suite and the local example loop).
+- **Resolved 2026-09-18:** `esbuild` 0.27.7 (via `tsup`/`bundle-require`)
+  pinned to `^0.28.1`; every package build re-verified.
+- **Resolved 2026-09-18:** `vitest` 3.2.7 (`@vitest/mocker` path traversal)
+  upgraded to 4.1.11; coverage baselines were re-recorded for v4's stricter
+  counting (`coverage-baseline.json` documents the re-baseline).
+- **Accepted (moderate):** `stream-json` 1.9.1 via `jayson`, a runtime
+  dependency of `@solana/web3.js`. The advisory is a DoS in filter utilities
+  used only while parsing JSON-RPC responses from the configured endpoint;
+  stream-json 3.x renamed the PascalCase subpaths jayson requires, so an
+  override would break the RPC client. Dependabot tracks it; revisit when
+  jayson or `@solana/web3.js` moves to 3.x.
 
 ## Hardening measures
 
@@ -88,6 +96,26 @@ defects:
 - **Fuzzing:** `fuzz/` carries cargo-fuzz targets for the score function, the
   ProgramData parser, and account decoding; the harness compiles on every push
   and the targets run for two minutes each in a weekly workflow.
+- **Test-strength probes:** a curated mutation spot-check rebuilds the program
+  with seeded faults (decay, pause, bond accounting, unauthorized
+  resolve/certify/slash, upgrade-authority gating) and fails if the suite does
+  not catch every one; a compute-unit snapshot in `cargo test --workspace`
+  fails on instruction-cost regressions.
+- **Coverage ratchet:** SDK and web coverage baselines are enforced in CI and
+  can only go up (`coverage-baseline.json`).
+- **Secret history:** gitleaks (checksum-pinned) scans the full git history on
+  every push, with a narrow allowlist for the intentionally committed
+  program-ID keypair.
+- **Deployment drift:** the scheduled healthcheck recomputes the on-chain
+  executable hash with the `solana-verify` algorithm and fails when it no
+  longer matches the pinned reproducible build; it can also pin the expected
+  upgrade authority (`TAOP_EXPECTED_UPGRADE_AUTHORITY`).
+- **Website:** the Cloudflare Pages `_headers` file sets CSP, HSTS, frame
+  denial, and a restrictive permissions policy; a test fails the build when
+  those headers regress.
+- **Webhooks:** deliveries are signed over `<timestamp>.<raw body>` and
+  verification fails closed when the timestamp is missing or outside the
+  5-minute default tolerance; receivers de-duplicate on `x-taop-delivery`.
 - **Release provenance:** `.github/workflows/release.yml` publishes packages via
   npm trusted publishing (OIDC) with provenance attestations.
 - **Reproducible builds:** `./scripts/verify-build.sh` rebuilds the program in

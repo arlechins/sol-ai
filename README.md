@@ -19,7 +19,7 @@ independently verified from a clean checkout.
 
 | Milestone | Deliverable | Status | Evidence |
 |---|---|---|---|
-| M1 | `taop_reputation` Anchor program: `attest_completion`, `challenge_completion` (native SOL bond), `resolve_challenge`, `get_score` with inactivity decay, bonded `register_capability`, `certify`, `slash` + Rust test suite | **Deployed on devnet** (program + config); mainnet gated on funding | 100 Rust tests (`cargo test --workspace`), IDL at `target/idl/taop_reputation.json`, [program source](programs/taop_reputation/src/lib.rs) |
+| M1 | `taop_reputation` Anchor program: `attest_completion`, `challenge_completion` (native SOL bond), `resolve_challenge`, `get_score` with inactivity decay, bonded `register_capability`, `certify`, `slash` + Rust test suite | **Deployed on devnet** (program + config); mainnet gated on funding | 101 Rust tests (`cargo test --workspace`, incl. compute-unit snapshot), IDL at `target/idl/taop_reputation.json`, [program source](programs/taop_reputation/src/lib.rs) |
 | M2 | `@taopp/solana` TypeScript SDK (`attest()`, `challenge()`, `getScore()`, `discover()`) and Solana support in `@taopp/mcp-server`, plus a runnable example agent | Shipped | SDK + 21 tests (unit + local-validator integration), MCP tools with dual-chain adapters, example in [`examples/solana-agent`](examples/solana-agent) |
 | M3 | Open gaming-resistance benchmark with three attack classes, CC-BY dataset, architecture docs, account-layout reference, tutorial | Shipped | [`benchmark/`](benchmark), [`benchmark/dataset/`](benchmark/dataset), [`docs/methodology.md`](docs/methodology.md), [`docs/tutorial.md`](docs/tutorial.md) |
 
@@ -41,6 +41,7 @@ packages/mcp-server/        @taopp/mcp-server — MCP tools for any agent runtim
 packages/webhooks/          Event watcher that delivers signed webhooks
 examples/solana-agent/      Runnable two-agent trust loop (SDK + MCP modes)
 benchmark/                  Gaming-resistance harness + CC-BY adversarial dataset
+apps/web/                   Landing page + read-only devnet demo (React/Vite)
 fuzz/                       cargo-fuzz targets (score, parser, account decoding)
 docs/                       Architecture, account layout, tutorial, methodology,
                             runbook, mainnet checklist, publishing, security review
@@ -53,7 +54,7 @@ keys/                       Program-ID keypair (committed; not an authority)
 ```bash
 # Toolchain: Rust stable, Solana CLI 4.2.x, Anchor 1.1.2, Node 20+, pnpm 9
 anchor build && ./scripts/sync-idl.sh     # compile + sync IDL for tests/SDK
-cargo test --workspace                    # 100 Rust tests (in-process LiteSVM)
+cargo test --workspace                    # 101 Rust tests (in-process LiteSVM + CU snapshot)
 
 ./scripts/localnet.sh                     # validator + program deploy
 pnpm install
@@ -61,6 +62,8 @@ pnpm --filter @taopp/solana test          # 21 SDK tests incl. local-validator E
 pnpm --filter @taopp/mcp-server test      # MCP stdio smoke tests
 pnpm --filter @taopp/webhooks test        # 10 tests incl. live-validator delivery
 pnpm --filter @taopp/benchmark test       # 12 benchmark tests (detectors + dataset)
+pnpm coverage                             # SDK + web coverage with ratchet check
+pnpm mutation:spotcheck                   # seeded program faults must all be caught
 CERTIFIER_KEYPAIR=~/.config/solana/id.json \
   pnpm --filter @taopp/example-solana-agent start -- --cluster localnet
 ```
@@ -71,7 +74,32 @@ Deploy to devnet and publish the config:
 solana airdrop 2 --url https://api.devnet.solana.com   # once per wallet
 anchor deploy --provider.cluster devnet
 SOLANA_RPC_URL=https://api.devnet.solana.com pnpm deploy:init -- --cluster devnet
+
+# Verifies live config plus the on-chain executable hash against the pinned
+# reproducible build (and can pin the expected upgrade authority).
+pnpm healthcheck
+
+# Full write-path loop against devnet with throwaway agents (~0.12 test SOL,
+# capability bond reclaimed at the end). CI: `.github/workflows/devnet-e2e.yml`.
+TAOP_E2E_KEYPAIR=~/.config/solana/id.json node scripts/devnet-e2e.mjs
 ```
+
+## Website
+
+Three switchable design variants (`minimal` default, `luxury`, `creative`) for the
+landing page and a read-only devnet demo. The demo reads config, scores, and
+capabilities through `@taopp/solana` with no wallet and no backend.
+
+```bash
+./scripts/sync-web-data.sh                # refresh published evidence data
+pnpm web:dev                              # Vite dev server
+pnpm web:test                             # unit, route, and contrast tests
+pnpm web:build                            # static build in apps/web/dist
+```
+
+Set `VITE_SHOW_VARIANTS=1` to expose the variant switcher, `VITE_SOLANA_RPC_URL`
+to point the demo at a private RPC, and see `apps/web/public/_redirects` for SPA
+hosting (Cloudflare Pages).
 
 Full walkthrough: [`docs/tutorial.md`](docs/tutorial.md).
 

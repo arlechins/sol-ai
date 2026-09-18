@@ -1,0 +1,22 @@
+# Cloudflare Pages security headers.
+# https://developers.cloudflare.com/pages/configuration/headers/
+#
+# Content-Security-Policy notes:
+# - style-src needs 'unsafe-inline' because React sets style attributes
+#   (score bars, reveal delays, sparkline placement).
+# - connect-src lists the default devnet RPC. If you point the demo at a
+#   private provider with VITE_SOLANA_RPC_URL, add that host here.
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Strict-Transport-Security: max-age=15552000; includeSubDomains
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.devnet.solana.com https://*.solana.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; worker-src 'self'; manifest-src 'self'
+
+# Vite fingerprints every file in /assets, so it is safe to cache forever.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

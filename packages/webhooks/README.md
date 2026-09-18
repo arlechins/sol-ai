@@ -37,7 +37,8 @@ POST /hooks/taop HTTP/1.1
 content-type: application/json
 user-agent: taop-webhooks/0.1.0
 x-taop-delivery: <signature>:<event index>
-x-taop-signature: sha256=<hex hmac of the raw body>
+x-taop-timestamp: <unix seconds>
+x-taop-signature: sha256=<hex hmac of "<timestamp>.<raw body>">
 ```
 
 ```json
@@ -55,9 +56,11 @@ x-taop-signature: sha256=<hex hmac of the raw body>
 
 ## Verifying deliveries
 
-Always verify `x-taop-signature` against the raw body before trusting a
-delivery, and de-duplicate on `x-taop-delivery` (delivery is **at-least-once**;
-after a long downtime older transactions may be re-delivered):
+Always verify `x-taop-signature` against `x-taop-timestamp` and the raw body
+before trusting a delivery, and de-duplicate on `x-taop-delivery` (delivery is
+**at-least-once**; after a long downtime older transactions may be re-delivered).
+Verification fails closed when the timestamp is missing or older than the
+5-minute default tolerance, so a captured delivery cannot be replayed later:
 
 ```ts
 import crypto from "node:crypto";
@@ -69,7 +72,13 @@ app.post(
   "/hooks/taop",
   express.raw({ type: "application/json" }),
   (req, res) => {
-    if (!verifySignature(process.env.TAOP_WEBHOOK_SECRET!, req.body.toString(), req.header("x-taop-signature"))) {
+    const valid = verifySignature(
+      process.env.TAOP_WEBHOOK_SECRET!,
+      req.body.toString(),
+      req.header("x-taop-signature"),
+      req.header("x-taop-timestamp"),
+    );
+    if (!valid) {
       return res.status(401).end();
     }
     const event = JSON.parse(req.body.toString());

@@ -1,0 +1,19 @@
+# gitleaks — full-history secret scan (CI job: secrets-history).
+#
+# Extends the default ruleset; the allowlist contains only material that is
+# intentionally public and documented.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Intentionally public, documented material"
+paths = [
+  # The program-ID keypair is committed on purpose (see keys/README.md). It is
+  # not the upgrade authority and controls nothing but the program address.
+  '''keys/taop_reputation-keypair\.json''',
+  # Build and dependency trees are gitignored; a directory scan should focus
+  # on tracked content (CI scans git history).
+  '''^target/''',
+  '''^node_modules/''',
+]

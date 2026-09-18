@@ -1,0 +1,6 @@
+/* Minimal — "The Instrument"
+   Paper and ink, hairlines, one signal green, tabular numerals.
+   Deliberately empty: base.tokens.css already is this variant. */
+[data-variant="minimal"] {
+  color-scheme: light;
+}

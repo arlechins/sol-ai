@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+/* Self-hosted fonts (no third-party requests, no font CLS).
+   All @font-face declarations are inert until a rendered element uses the
+   family, so only the active variant's fonts are ever downloaded. */
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+@import "@fontsource-variable/fraunces";
+@import "@fontsource/cormorant-garamond/400.css";
+@import "@fontsource/cormorant-garamond/500.css";
+@import "@fontsource/cormorant-garamond/600.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+/* Token contract: base (minimal) first, then variant overrides. */
+@import "./variants/base.tokens.css";
+@import "./variants/minimal/tokens.css";
+@import "./variants/luxury/tokens.css";
+@import "./variants/creative/tokens.css";
+
+@theme inline {
+  --color-canvas: var(--c-canvas);
+  --color-canvas-2: var(--c-canvas-2);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-ink: var(--c-ink);
+  --color-muted: var(--c-muted);
+  --color-faint: var(--c-faint);
+  --color-hairline: var(--c-hairline);
+  --color-hairline-2: var(--c-hairline-2);
+  --color-accent: var(--c-accent);
+  --color-accent-ink: var(--c-accent-ink);
+  --color-on-accent: var(--c-on-accent);
+  --color-success: var(--c-success);
+  --color-success-ink: var(--c-success-ink);
+  --color-alert: var(--c-alert);
+  --color-alert-ink: var(--c-alert-ink);
+  --color-warn: var(--c-warn);
+  --color-info: var(--c-info);
+
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --radius-card: var(--r-card);
+  --radius-btn: var(--r-btn);
+  --radius-pill: var(--r-pill);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--c-canvas);
+    color: var(--c-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--c-accent);
+    color: var(--c-on-accent);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  a {
+    color: inherit;
+  }
+}
+
+@layer components {
+  /* Scroll reveal: JS only toggles .is-in; motion is pure CSS. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity var(--dur) var(--ease),
+      transform var(--dur) var(--ease);
+  }
+  .reveal.is-in {
+    opacity: 1;
+    transform: none;
+  }
+  [data-variant="luxury"] .reveal {
+    transform: translateY(20px);
+  }
+  [data-variant="creative"] .reveal {
+    transform: translateY(16px) scale(0.995);
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  .hairline-grid {
+    background-image:
+      linear-gradient(to right, var(--c-hairline) var(--rule-width), transparent var(--rule-width)),
+      linear-gradient(to bottom, var(--c-hairline) var(--rule-width), transparent var(--rule-width));
+    background-size: 56px 56px;
+  }
+
+  .dot-grid {
+    background-image: radial-gradient(var(--c-hairline-2) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: taop-marquee 46s linear infinite;
+  }
+
+  @keyframes taop-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* The vault-door reveal used by the luxury demo. */
+  .vault-door {
+    transform-origin: top center;
+    transition:
+      opacity 900ms var(--ease),
+      transform 900ms var(--ease);
+  }
+  .vault-door.is-open {
+    opacity: 1;
+    transform: rotateX(0deg);
+  }
+  .vault-door.is-closed {
+    opacity: 0;
+    transform: rotateX(-6deg);
+  }
+
+  .spotlight {
+    background: radial-gradient(
+      420px circle at var(--spot-x, 50%) var(--spot-y, 0%),
+      color-mix(in srgb, var(--c-accent) 10%, transparent),
+      transparent 62%
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal,
+  .vault-door {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .marquee-track {
+    animation: none;
+  }
+}

@@ -1,0 +1,64 @@
+/* ==================================================================
+   TAOP web — shared token contract.
+   Components read only these custom properties; every variant
+   overrides them under [data-variant="…"] in its tokens.css.
+   The base values below ARE the minimal ("Instrument") variant,
+   which is the default.
+   ================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* surfaces */
+  --c-canvas: #fafafa;
+  --c-canvas-2: #f1f1f0;
+  --c-surface: #ffffff;
+  --c-surface-2: #f6f6f5;
+
+  /* text */
+  --c-ink: #0a0a0a;
+  --c-muted: #52525b;
+  --c-faint: #8a8a93;
+
+  /* lines */
+  --c-hairline: #e0e0de;
+  --c-hairline-2: #c9c9c6;
+
+  /* signal */
+  --c-accent: #0f7a4d;
+  --c-accent-ink: #0b5c3a;
+  --c-on-accent: #ffffff;
+  --c-success: #0f7a4d;
+  --c-success-ink: #0b5c3a;
+  --c-alert: #b42318;
+  --c-alert-ink: #912018;
+  --c-warn: #b54708;
+  --c-info: #175cd3;
+
+  /* type */
+  --font-display: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+
+  /* shape */
+  --r-card: 2px;
+  --r-btn: 2px;
+  --r-pill: 999px;
+
+  --shadow-card: none;
+  --shadow-pop: 0 12px 40px rgba(10, 10, 10, 0.08);
+
+  /* motion */
+  --dur-fast: 120ms;
+  --dur: 160ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* decorative */
+  --hero-wash: linear-gradient(180deg, #ffffff 0%, var(--c-canvas) 100%);
+  --rule-width: 1px;
+  --rule-strong: 2px;
+  --tracking-display: -0.03em;
+  --leading-display: 1.05;
+  --section-gap: 6rem;
+  --card-pad: 1.5rem;
+}
