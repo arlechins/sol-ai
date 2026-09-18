@@ -58,6 +58,12 @@ jobs:
           pnpm --filter @taopp/mcp-server build
           pnpm --filter @taopp/mcp-server test
 
+      - name: Built artifact smoke (MCP + webhooks dist)
+        run: |
+          pnpm --filter @taopp/webhooks build
+          node packages/mcp-server/test/dist-smoke.mjs
+          node packages/webhooks/test/dist-smoke.mjs
+
       - name: Package lint
         run: pnpm run lint:packages
 

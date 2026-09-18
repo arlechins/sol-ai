@@ -32,3 +32,6 @@ jobs:
         run: pnpm healthcheck
         env:
           SOLANA_RPC_URL: https://api.devnet.solana.com
+          # Detects an undocumented authority change. Update deliberately when
+          # the authority rotates (e.g. to the Squads vault on mainnet).
+          TAOP_EXPECTED_UPGRADE_AUTHORITY: bxFpYgz8F4rbwLWTGbjuPtY4tmUZVQwMLSLSkG9TFq2
