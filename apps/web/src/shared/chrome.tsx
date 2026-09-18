@@ -42,7 +42,9 @@ export function HashScroll() {
 
   useEffect(() => {
     if (!hash) return;
-    const element = document.querySelector(hash);
+    // getElementById never throws on fragments that are not valid selectors.
+    const id = decodeURIComponent(hash.slice(1));
+    const element = id ? document.getElementById(id) : null;
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
     }

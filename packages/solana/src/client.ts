@@ -81,7 +81,15 @@ export class TaopSolanaClient {
       this.wallet ?? READONLY_WALLET,
       { commitment: config.commitment ?? "confirmed" },
     );
-    this.program = new anchor.Program(idlJson as unknown as TaopReputation, this.provider);
+    // Anchor's Program takes its id from `idl.address`, so a configured
+    // programId must be written into the IDL copy; otherwise writes go to the
+    // bundled address while account metas use the override.
+    const address = this.programId.toBase58();
+    const idl =
+      address === idlJson.address
+        ? idlJson
+        : { ...idlJson, address };
+    this.program = new anchor.Program(idl as unknown as TaopReputation, this.provider);
   }
 
   get walletPublicKey(): PublicKey | undefined {
@@ -540,10 +548,12 @@ export class TaopSolanaClient {
   async attest(input: AttestInput): Promise<AttestResult> {
     assertUriLength(input.resultUri);
     const authority = this.requireWallet();
+    const [agentRecord, config] = await Promise.all([
+      this.getAgent(authority),
+      this.getConfig(),
+    ]);
     const seq =
-      input.seq !== undefined
-        ? Number(input.seq)
-        : (await this.getAgent(authority))?.completions ?? 0;
+      input.seq !== undefined ? Number(input.seq) : agentRecord?.completions ?? 0;
     const completion = this.pdas.completion(authority, seq);
 
     const completionRent = await this.connection.getMinimumBalanceForRentExemption(
@@ -573,8 +583,15 @@ export class TaopSolanaClient {
         throw mapError(error);
       });
 
+    // `Completion.id` is the global counter, not the per-agent sequence. The
+    // pre-read config holds the id this attestation receives; the post-read is
+    // authoritative when it succeeds.
     const record = await this.getCompletion(completion);
-    return { signature, completion, completionId: record?.id ?? -1 };
+    return {
+      signature,
+      completion,
+      completionId: record?.id ?? config.nextCompletionId,
+    };
   }
 
   /** Challenge a completion with the configured native SOL bond. */
@@ -582,10 +599,13 @@ export class TaopSolanaClient {
     assertUriLength(input.evidenceUri);
     const challenger = this.requireWallet();
     const config = await this.getConfig();
+    const challengeRent = await this.connection.getMinimumBalanceForRentExemption(
+      CHALLENGE_ACCOUNT_BYTES,
+    );
     await this.assertBalance(
       challenger,
-      config.challengeBondLamports + 10_000,
-      "challenge bond + fee",
+      config.challengeBondLamports + challengeRent + 10_000,
+      "challenge bond + challenge account rent + fee",
     );
     const completion = await this.program.account.completion
       .fetchNullable(input.completion)
@@ -622,10 +642,18 @@ export class TaopSolanaClient {
   async resolveChallenge(input: ResolveInput): Promise<string> {
     const authority = this.requireWallet();
     const [completion, challenge, config] = await Promise.all([
-      this.program.account.completion.fetch(input.completion),
+      this.program.account.completion
+        .fetchNullable(input.completion)
+        .catch(() => null),
       this.getChallenge(input.completion),
       this.getConfig(),
     ]);
+    if (!completion) {
+      throw new TaopSolanaError(
+        "AccountNotFound",
+        `Completion ${input.completion.toBase58()} does not exist`,
+      );
+    }
     if (!challenge) {
       throw new TaopSolanaError(
         "AccountNotFound",
@@ -665,12 +693,21 @@ export class TaopSolanaClient {
     const capabilityRent = await this.connection.getMinimumBalanceForRentExemption(
       CAPABILITY_ACCOUNT_BYTES,
     );
+    const typeBytes = toBytes(input.capabilityType);
+    // The first registration for a type also creates the shared index PDA.
+    const indexExists = await this.connection.getAccountInfo(
+      this.pdas.capabilityIndex(typeBytes),
+    );
+    const indexRent = indexExists
+      ? 0
+      : await this.connection.getMinimumBalanceForRentExemption(
+          CAP_INDEX_ACCOUNT_BYTES,
+        );
     await this.assertBalance(
       creator,
-      Number(input.bondLamports) + capabilityRent + 10_000,
-      "capability bond + account rent + fee",
+      Number(input.bondLamports) + capabilityRent + indexRent + 10_000,
+      "capability bond + account rents + fee",
     );
-    const typeBytes = toBytes(input.capabilityType);
     const capability = this.pdas.capability(typeBytes, creator, id);
 
     const signature = await this.program.methods
@@ -850,13 +887,16 @@ function walletFromKeypair(keypair: Keypair): Wallet {
 const CONFIG_ACCOUNT_BYTES = 8 + 130;
 const AGENT_ACCOUNT_BYTES = 8 + 261;
 const COMPLETION_ACCOUNT_BYTES = 8 + 287;
+const CHALLENGE_ACCOUNT_BYTES = 8 + 287;
 const CAPABILITY_ACCOUNT_BYTES = 8 + 288;
+const CAP_INDEX_ACCOUNT_BYTES = 8 + 32 + 4 + 32 * 64 + 1;
 
 function assertUriLength(uri: string): void {
-  if (uri.length > MAX_URI_LEN) {
+  const bytes = Buffer.byteLength(uri, "utf8");
+  if (bytes > MAX_URI_LEN) {
     throw new TaopSolanaError(
       "UriTooLong",
-      `URI must be at most ${MAX_URI_LEN} bytes, got ${uri.length}`,
+      `URI must be at most ${MAX_URI_LEN} bytes, got ${bytes}`,
     );
   }
 }

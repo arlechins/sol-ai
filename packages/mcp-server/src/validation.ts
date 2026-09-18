@@ -36,9 +36,10 @@ export function requireUri(
   tool: string,
 ): string {
   const value = requireString(args, key, tool);
-  if (value.length > MAX_URI_LEN) {
+  const bytes = Buffer.byteLength(value, "utf8");
+  if (bytes > MAX_URI_LEN) {
     throw new Error(
-      `${tool}: "${key}" must be at most ${MAX_URI_LEN} characters`,
+      `${tool}: "${key}" must be at most ${MAX_URI_LEN} bytes, got ${bytes}`,
     );
   }
   return value;

@@ -49,11 +49,13 @@ function loadKeypair(value: string): Keypair {
 
 async function main(): Promise<void> {
   const cluster = arg("cluster") ?? process.env.TAOP_CLUSTER ?? "devnet";
+  if (!(cluster in CLUSTER_RPC)) {
+    throw new Error(
+      `Unknown cluster "${cluster}". Use ${Object.keys(CLUSTER_RPC).join(", ")}.`,
+    );
+  }
   const rpcUrl =
-    process.env.SOLANA_RPC_URL ??
-    arg("rpc") ??
-    CLUSTER_RPC[cluster] ??
-    CLUSTER_RPC.devnet;
+    process.env.SOLANA_RPC_URL ?? arg("rpc") ?? CLUSTER_RPC[cluster];
 
   const walletValue =
     process.env.ANCHOR_WALLET ??

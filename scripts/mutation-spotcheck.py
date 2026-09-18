@@ -235,6 +235,9 @@ def main() -> int:
         # Tests load the built artifact; never leave a mutated .so behind.
         if program_so_backup is not None:
             PROGRAM_SO.write_bytes(program_so_backup)
+        elif PROGRAM_SO.exists():
+            # No artifact existed before the run: do not leave a mutant build.
+            PROGRAM_SO.unlink()
         restore_regressions(regression_backup)
 
     print(

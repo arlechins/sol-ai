@@ -165,7 +165,7 @@ POST /your-endpoint
 x-taop-timestamp: 1750000000
 x-taop-signature: sha256=...
 
-import { createDispatcher } from "@taopp/webhooks";`,
+import { runDispatcher } from "@taopp/webhooks";`,
       },
     ],
   },

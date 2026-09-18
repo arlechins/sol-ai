@@ -195,8 +195,10 @@ export async function pollOnce(
   // until the last processed signature is found (or the history is exhausted),
   // then keep only entries newer than it.
   const collected: Array<{ signature: string; slot: number }> = [];
+  const maxPages = 200;
   let before: string | undefined;
-  for (let page = 0; page < 10; page += 1) {
+  let reachedCursor = false;
+  for (let page = 0; page < maxPages; page += 1) {
     const batch = await options.connection.getSignaturesForAddress(
       options.programId,
       { before, limit },
@@ -207,10 +209,17 @@ export async function pollOnce(
       state.lastSignature &&
       batch.some((entry) => entry.signature === state.lastSignature)
     ) {
+      reachedCursor = true;
       break;
     }
     before = batch[batch.length - 1]?.signature;
     if (!before) break;
+  }
+  if (state.lastSignature && !reachedCursor && collected.length >= maxPages * limit) {
+    log(
+      `warning: cursor ${state.lastSignature} is older than ${collected.length} signatures; ` +
+        "deliveries between the cursor and this window may have been missed",
+    );
   }
 
   const cutoff = state.lastSignature
@@ -232,7 +241,16 @@ export async function pollOnce(
       commitment: "confirmed",
       maxSupportedTransactionVersion: 0,
     });
-    const logs = transaction?.meta?.logMessages ?? [];
+    if (!transaction) {
+      // RPC lag or pruned history: stop here and leave the cursor on the last
+      // fully processed signature so the next poll retries this one instead of
+      // silently skipping its events forever.
+      log(
+        `warning: transaction ${entry.signature} not available; stopping this pass to retry it`,
+      );
+      break;
+    }
+    const logs = transaction.meta?.logMessages ?? [];
     const events = decode(logs);
 
     for (const [index, event] of events.entries()) {
@@ -280,11 +298,17 @@ export async function runDispatcher(options: DispatcherOptions): Promise<void> {
     `watching ${options.programId.toBase58()} via ${options.connection.rpcEndpoint} -> ${options.webhookUrl}`,
   );
   while (running) {
-    const result = await pollOnce(options, state);
-    if (result.processed > 0) {
-      log(
-        `processed ${result.processed} signatures, delivered ${result.delivered}, failed ${result.failed}`,
-      );
+    try {
+      const result = await pollOnce(options, state);
+      if (result.processed > 0) {
+        log(
+          `processed ${result.processed} signatures, delivered ${result.delivered}, failed ${result.failed}`,
+        );
+      }
+    } catch (error) {
+      // Transient RPC failures must not end monitoring; the cursor is
+      // unchanged, so the next pass retries the same window.
+      log(`poll failed: ${error instanceof Error ? error.message : String(error)}`);
     }
     if (running) await sleep(options.pollIntervalMs ?? 5_000);
   }

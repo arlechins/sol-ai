@@ -89,7 +89,7 @@ export class SolanaAdapter implements ChainAdapter {
       programId: this.client.programId.toBase58(),
       config: this.client.pdas.config.toBase58(),
       wallet: this.client.walletPublicKey?.toBase58() ?? null,
-      deploymentsPath: this.deployment?.deployedAt ?? null,
+      deployedAt: this.deployment?.deployedAt ?? null,
     };
   }
 

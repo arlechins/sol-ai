@@ -58,7 +58,7 @@ describe("string and number validation", () => {
     expect(requireUri({ uri: ok }, "uri", "t")).toBe(ok);
     expect(() =>
       requireUri({ uri: "a".repeat(MAX_URI_LEN + 1) }, "uri", "t"),
-    ).toThrow(/at most 200 characters/);
+    ).toThrow(/at most 200 bytes/);
   });
 
   it("rejects negative or non-finite numbers", () => {

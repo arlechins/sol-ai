@@ -82,13 +82,25 @@ export function decaySeries(params: {
   for (let i = 0; i < points; i += 1) {
     const at = start + (horizon * i) / (points - 1);
     const elapsed = Math.max(0, at - start);
-    const halvings = Math.min(63, Math.floor(elapsed / period));
+    // On-chain decay starts strictly after one full period.
+    const halvings =
+      elapsed <= period ? 0 : Math.min(63, Math.floor(elapsed / period));
     series.push({
       offset: Math.round(at - now),
-      score: halvings >= 63 ? 0 : base >>> halvings,
+      score: halveU64(base, halvings),
     });
   }
   return series;
+}
+
+/**
+ * `net >> halvings` with u64 semantics. JavaScript's `>>>` coerces to 32 bits
+ * and takes the shift count modulo 32, diverging from the on-chain u64 shift.
+ */
+export function halveU64(net: number, halvings: number): number {
+  if (halvings <= 0) return net;
+  if (halvings >= 53) return 0;
+  return Math.floor(net / 2 ** halvings);
 }
 
 export function jsonSafe<T>(value: T): T {
@@ -136,13 +148,21 @@ export function scoreMath(params: {
   }
 
   const elapsedSecs = Math.max(0, now - lastActivity);
-  const halvings = Math.min(63, Math.floor(elapsedSecs / periodSecs));
-  const nextHalvingInSecs = periodSecs - (elapsedSecs % periodSecs);
+  // Decay applies only once elapsed time exceeds a full period.
+  const halvings =
+    elapsedSecs <= periodSecs
+      ? 0
+      : Math.min(63, Math.floor(elapsedSecs / periodSecs));
+  // The next halving lands one second after the next full period boundary.
+  const nextHalvingInSecs = Math.max(
+    1,
+    (halvings + 1) * periodSecs + 1 - elapsedSecs,
+  );
 
   return {
     net,
     halvings,
-    scoreEquivalent: net >>> halvings,
+    scoreEquivalent: halveU64(net, halvings),
     decayed: halvings > 0,
     elapsedSecs,
     nextHalvingInSecs,

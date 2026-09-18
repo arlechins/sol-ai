@@ -7,8 +7,9 @@
  *   TAOP_E2E_CLUSTER=localnet node scripts/devnet-e2e.mjs
  *
  * The keypair (JSON array, Solana CLI format) pays for two fresh agent keypairs
- * and the challenge bond. On devnet this spends ~0.07 SOL of test SOL:
- *   0.06 + 0.06 agent funding + ~0.005 bond + fees (bond is reclaimed at the end).
+ * and the challenge bond. On devnet this spends ~0.13 test SOL up front:
+ *   0.06 + 0.06 agent funding + ~0.005 bond + fees; agent balances are swept
+ *   back and the bond is reclaimed at the end, so the net cost is fees only.
  *
  * CI: `.github/workflows/devnet-e2e.yml` (manual dispatch, gated on the
  * `TAOP_E2E_KEYPAIR` secret).
@@ -54,8 +55,10 @@ const balance = await connection.getBalance(payer.publicKey);
 console.log(
   `cluster=${cluster} rpc=${rpcUrl}\npayer=${payer.publicKey.toBase58()} balance=${(balance / LAMPORTS_PER_SOL).toFixed(4)} SOL`,
 );
-if (balance < 0.1 * LAMPORTS_PER_SOL) {
-  throw new Error("payer needs at least 0.1 SOL for two agents plus fees");
+if (balance < 0.15 * LAMPORTS_PER_SOL) {
+  throw new Error(
+    "payer needs at least 0.15 SOL: two agents (0.06 each), the bond, and fees",
+  );
 }
 
 // A fresh ledger (localnet --reset) has the program but no config account.

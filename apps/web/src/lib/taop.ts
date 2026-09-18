@@ -57,15 +57,22 @@ async function ensureBuffer(): Promise<void> {
 }
 
 async function getClient(): Promise<TaopSolanaClient> {
-  clientPromise ??= (async () => {
-    await ensureBuffer();
-    const [{ Connection }, { TaopSolanaClient }] = await Promise.all([
-      import("@solana/web3.js"),
-      import("@taopp/solana"),
-    ]);
-    const connection = new Connection(RPC_URL, "confirmed");
-    return new TaopSolanaClient({ connection });
-  })();
+  if (!clientPromise) {
+    // Clear a rejected promise so a chunk-load failure is retryable instead of
+    // poisoning every later read for the life of the page.
+    clientPromise = (async () => {
+      await ensureBuffer();
+      const [{ Connection }, { TaopSolanaClient }] = await Promise.all([
+        import("@solana/web3.js"),
+        import("@taopp/solana"),
+      ]);
+      const connection = new Connection(RPC_URL, "confirmed");
+      return new TaopSolanaClient({ connection });
+    })().catch((error) => {
+      clientPromise = null;
+      throw error;
+    });
+  }
   return clientPromise;
 }
 

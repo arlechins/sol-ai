@@ -1,7 +1,13 @@
 import { Connection, Keypair } from "@solana/web3.js";
 import { describe, expect, it } from "vitest";
 
-import { TaopSolanaClient, MAX_DECAY_PERIOD_SECS, MAX_URI_LEN } from "../src/index";
+import {
+  TaopSolanaClient,
+  MAX_DECAY_PERIOD_SECS,
+  MAX_URI_LEN,
+  createPdas,
+  mapError,
+} from "../src/index";
 
 /**
  * Input validation runs before any network call, so a dead RPC endpoint is
@@ -51,6 +57,29 @@ describe("client-side validation", () => {
         decayPeriodSecs: MAX_DECAY_PERIOD_SECS + 1,
       }),
     ).rejects.toMatchObject({ code: "DecayPeriodTooLong" });
+  });
+
+  it("measures URI limits in UTF-8 bytes, not code units", async () => {
+    const multibyte = "é".repeat(MAX_URI_LEN); // 200 chars, 400 bytes
+    await expect(
+      client.attest({ taskType: "summarization", resultUri: multibyte }),
+    ).rejects.toMatchObject({ code: "UriTooLong" });
+  });
+
+  it("applies a programId override to the Program, not just the PDAs", () => {
+    const custom = Keypair.generate().publicKey;
+    const overridden = new TaopSolanaClient({ connection, programId: custom });
+    expect(overridden.programId.equals(custom)).toBe(true);
+    expect(overridden.program.programId.equals(custom)).toBe(true);
+    expect(overridden.pdas.config.equals(createPdas(custom).config)).toBe(true);
+  });
+
+  it("maps InvalidAuthority to a typed program error", () => {
+    const mapped = mapError(
+      new Error("AnchorError caused by account: admin. Error Code: InvalidAuthority. Error Number: 6012"),
+    );
+    expect(mapped.code).toBe("InvalidAuthority");
+    expect(mapped.isProgramError).toBe(true);
   });
 
   it("requires a wallet for writes", async () => {
