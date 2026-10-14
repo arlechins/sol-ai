@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/sdk": "^1.31.0",
     "@solana/web3.js": "^1.99.0",
     "@taopp/solana": "workspace:*",
     "bs58": "^6.0.0",
