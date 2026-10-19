@@ -39,6 +39,7 @@ export interface CompletionState {
   timestamp: number;
   challenged: boolean;
   disputed: boolean;
+  resolved?: boolean;
   challenger?: number;
 }
 
@@ -188,7 +189,10 @@ abstract class AbstractMechanism implements Mechanism {
     upheld: boolean,
   ): void {
     const completion = state.completions.find((c) => c.id === completionId);
-    if (!completion || completion.challenger === undefined) return;
+    if (!completion || completion.challenger === undefined || completion.resolved) {
+      return;
+    }
+    completion.resolved = true;
     const challenger = ensure(state, completion.challenger);
     if (upheld) {
       completion.disputed = true;
@@ -301,6 +305,11 @@ export class PeerRatingsMechanism extends AbstractMechanism {
 
   attestCost(): number {
     return TX_FEE_LAMPORTS + rentExempt(ACCOUNT_BYTES.completion);
+  }
+
+  counterpartiesRequiredForScore(targetScore: number): number {
+    // One distinct rater contributes one point.
+    return Math.max(1, targetScore);
   }
 
   score(state: MechanismState, agent: number): number {

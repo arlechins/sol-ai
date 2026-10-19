@@ -52,12 +52,14 @@ export function runSlowBurnHarvest(
   const attacker = 0;
   mechanism.ensureAgent(state, attacker);
 
-  // Receipt-based mechanisms need counterparties; a rational attacker recruits
-  // exactly as many as the diversity cap requires.
+  // Receipt-based mechanisms need a few counterparties (diversity cap);
+  // peer-rating mechanisms need one distinct rater per point. A rational
+  // attacker recruits exactly that many.
   const accomplices: number[] = [];
-  if (mechanism.requiresReceipts) {
-    const needed =
-      mechanism.counterpartiesRequiredForScore?.(config.targetScore) ?? 1;
+  if (mechanism.usesPeerRatings) {
+    const needed = mechanism.requiresReceipts
+      ? (mechanism.counterpartiesRequiredForScore?.(config.targetScore) ?? 1)
+      : config.targetScore;
     for (let i = 0; i < needed; i += 1) {
       const id = 100 + i;
       mechanism.ensureAgent(state, id);
