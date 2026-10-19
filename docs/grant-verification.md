@@ -306,9 +306,9 @@ Committed baseline (`results/baseline-seed42.json`, seed 42):
 | `taop_bonded_decay` | 3.7 | 0.1 | 100.0 | 34.6 |
 | `naive_count` | 0.0 | 0.1 | 100.0 | 33.4 |
 | `completions_minus_disputes` | 3.7 | 0.1 | 100.0 | 34.6 |
-| `peer_ratings` | 100.0 | 100.0 | 0.0 | 66.7 |
+| `peer_ratings` | 3.7 | 0.1 | 0.0 | 1.3 |
 | `stake_gated` | 53.8 | 10.0 | 100.0 | 54.6 |
-| `two_sided_receipts` | 3.7 | 0.1 | 9.4 | 4.4 |
+| `two_sided_receipts` | 3.4 | 0.1 | 9.4 | 4.3 |
 
 Sensitivity tables and the rubric: `docs/methodology.md`. Weak spots (Sybil
 farming, underbonded harvest) are documented in the same file, section 5.

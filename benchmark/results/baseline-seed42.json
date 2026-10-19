@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "generatedAt": "2026-09-18T09:20:07.257Z",
+    "generatedAt": "2026-10-19T18:47:05.062Z",
     "seed": 42,
-    "nodeVersion": "v24.14.1",
+    "nodeVersion": "v24.21.0",
     "version": "0.1.0",
     "scenarios": [
       "sybil",
@@ -326,13 +326,13 @@
         "metrics": {
           "sybilAgents": 20,
           "totalAttestations": 200,
-          "totalScore": 0,
-          "spentLamports": 587055820,
+          "totalScore": 185,
+          "spentLamports": 588055820,
           "lockedLamports": 0,
-          "capitalPerPointLamports": null,
-          "costPerPointLamports": 587055820,
-          "honestCostPerPointLamports": 29352791,
-          "efficiencyRatio": 0,
+          "capitalPerPointLamports": 0,
+          "costPerPointLamports": 3178680.108108108,
+          "honestCostPerPointLamports": 2940279.1,
+          "efficiencyRatio": 0.925,
           "challenges": 16,
           "disputes": 15,
           "costToThreshold": {
@@ -341,7 +341,7 @@
             "1000": "2.683859000 SOL"
           }
         },
-        "findings": "No effective score could be manufactured for this configuration."
+        "findings": "Attacker commits 0.003178680 SOL per effective reputation point (0.000000000 SOL of it locked capital) versus 0.002940279 SOL for honest work (efficiency 0.93x). 15/16 challenges were upheld. Self-attested work is indistinguishable from honest work at this challenge rate."
       },
       "slowBurn": {
         "scenario": "slow_burn_harvest",
@@ -353,17 +353,17 @@
           "horizonDays": 180
         },
         "metrics": {
-          "reachable": false,
-          "daysToThreshold": null,
-          "scoreAtHarvest": 0,
-          "spentLamports": 968708441,
+          "reachable": true,
+          "daysToThreshold": 25,
+          "scoreAtHarvest": 50,
+          "spentLamports": 136962151,
           "slashableLamports": 5000000,
           "harvestValueLamports": 5000000000,
           "slashCoverage": 0.001,
-          "netAttackerProfitLamports": 0,
+          "netAttackerProfitLamports": 4858037849,
           "scoreAfterSlash": 0
         },
-        "findings": "Unreachable: decay prevents score 50 at 2 attestations/day."
+        "findings": "Reached score 50 in 25 days for 0.136962151 SOL. Bonded capital (0.005000000 SOL) covers 0.1% of the 5.000000000 SOL harvest. Underbonded capabilities are the attack surface; raise the bond or gate the contract on more than score."
       },
       "collusion": {
         "scenario": "collusive_ring",
@@ -431,12 +431,14 @@
         "findings": "A ring of 10 accounts manufactures 9 points per member at 0.000005000 SOL per point, versus 0.000005000 SOL for a genuine rating. Best detector: reciprocity (precision 1.00, recall 1.00, F1 1.00) over a mixed graph of 40 accounts."
       },
       "scores": {
-        "composite": 66.7,
-        "sybilFarming": 100,
-        "slowBurnHarvest": 100,
+        "composite": 1.3,
+        "sybilFarming": 3.7,
+        "slowBurnHarvest": 0.1,
         "collusiveRing": 0
       },
       "weakSpots": [
+        "Sybil farming is cheap (self-attestation has no verifier)",
+        "Bonded capital does not cover a high-value harvest",
         "Fabricated peer ratings are accepted at face value"
       ]
     },
@@ -550,8 +552,8 @@
           "lockedLamports": 0,
           "capitalPerPointLamports": 0,
           "costPerPointLamports": 3178680.108108108,
-          "honestCostPerPointLamports": 2940279.1,
-          "efficiencyRatio": 0.925,
+          "honestCostPerPointLamports": 2960279.1,
+          "efficiencyRatio": 0.9312919197024528,
           "challenges": 16,
           "disputes": 15,
           "costToThreshold": {
@@ -560,7 +562,7 @@
             "1000": "2.688859000 SOL"
           }
         },
-        "findings": "Attacker commits 0.003178680 SOL per effective reputation point (0.000000000 SOL of it locked capital) versus 0.002940279 SOL for honest work (efficiency 0.93x). 15/16 challenges were upheld. Self-attested work is indistinguishable from honest work at this challenge rate."
+        "findings": "Attacker commits 0.003178680 SOL per effective reputation point (0.000000000 SOL of it locked capital) versus 0.002960279 SOL for honest work (efficiency 0.93x). 15/16 challenges were upheld. Self-attested work is indistinguishable from honest work at this challenge rate."
       },
       "slowBurn": {
         "scenario": "slow_burn_harvest",
@@ -650,8 +652,8 @@
         "findings": "A ring of 10 accounts manufactures 9 points per member at 0.002968215 SOL per point, versus 0.002688859 SOL for a genuine rating. Best detector: reciprocity (precision 1.00, recall 1.00, F1 1.00) over a mixed graph of 40 accounts."
       },
       "scores": {
-        "composite": 4.4,
-        "sybilFarming": 3.7,
+        "composite": 4.3,
+        "sybilFarming": 3.4,
         "slowBurnHarvest": 0.1,
         "collusiveRing": 9.4
       },

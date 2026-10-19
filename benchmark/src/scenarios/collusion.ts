@@ -209,6 +209,11 @@ export function runCollusiveRing(
   mechanism: Mechanism,
   config: CollusionConfig = defaultCollusionConfig,
 ): CollusionResult {
+  if (config.honestRatings > 0 && config.honestAgents < 2) {
+    throw new Error(
+      "CollusionConfig: honestAgents must be at least 2 when honestRatings > 0",
+    );
+  }
   const state = mechanism.newState();
   const ring = Array.from({ length: config.ringSize }, (_, i) => i);
   const honest = Array.from(
