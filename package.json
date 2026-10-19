@@ -44,7 +44,7 @@
     "@taopp/solana": "workspace:*",
     "bs58": "^6.0.0",
     "publint": "0.3.24",
-    "tsx": "^4.21.0",
+    "tsx": "^4.23.15",
     "typescript": "~5.8.2"
   },
   "pnpm": {
