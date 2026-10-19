@@ -29,7 +29,8 @@ export interface SybilResult {
     totalScore: number;
     spentLamports: number;
     lockedLamports: number;
-    capitalPerPointLamports: number;
+    /** null when the mechanism manufactures no score (no meaningful ratio). */
+    capitalPerPointLamports: number | null;
     costPerPointLamports: number;
     honestCostPerPointLamports: number;
     efficiencyRatio: number;
@@ -68,16 +69,23 @@ export function runSybilFarming(
     mechanism.attest(state, -1, 0);
   }
 
-  // Receipt-based mechanisms: honest work needs a counterparty as well, so that
-  // cost is included and the diversity cap is satisfied on both sides.
-  const honestConfirmers = mechanism.requiresReceipts
-    ? (mechanism.counterpartiesRequiredForScore?.(config.attestsPerSybil) ?? 1)
+  // Mechanisms that score peer feedback are attacked through the same channel:
+  // sybils rate/confirm each other, and the honest baseline pays for genuine
+  // counterparties. Receipts need only a few distinct confirmers (diversity
+  // cap); peer ratings need one distinct rater per point.
+  const usesRatings = mechanism.usesPeerRatings === true;
+  const ratingsPerAgent = usesRatings ? config.attestsPerSybil : 0;
+  const distinctCounterparties = usesRatings
+    ? mechanism.requiresReceipts
+      ? (mechanism.counterpartiesRequiredForScore?.(config.attestsPerSybil) ?? 1)
+      : ratingsPerAgent
     : 0;
-  for (let c = 0; c < honestConfirmers; c += 1) {
-    const confirmer = mechanism.ensureAgent(state, -2 - c);
-    for (let k = 0; k < config.attestsPerSybil / honestConfirmers; k += 1) {
-      mechanism.rate(state, confirmer.id, honest.id, 0);
-    }
+  const honestConfirmers: number[] = [];
+  for (let k = 0; k < ratingsPerAgent; k += 1) {
+    const id = -2 - (k % distinctCounterparties);
+    mechanism.ensureAgent(state, id);
+    honestConfirmers.push(id);
+    mechanism.rate(state, id, honest.id, 0);
   }
 
   let challenges = 0;
@@ -92,10 +100,9 @@ export function runSybilFarming(
     }
     for (let k = 0; k < config.attestsPerSybil; k += 1) {
       mechanism.attest(state, sybil, 0);
-      if (mechanism.requiresReceipts) {
+      if (usesRatings) {
         const confirmer =
-          (sybil + 1 + (k % (mechanism.counterpartiesRequiredForScore?.(config.attestsPerSybil) ?? 1))) %
-          config.sybils;
+          (sybil + 1 + (k % distinctCounterparties)) % config.sybils;
         mechanism.rate(state, confirmer, sybil, 0);
       }
       const completionId = state.completions[state.completions.length - 1].id;
@@ -130,16 +137,16 @@ export function runSybilFarming(
   );
   const attackerCapital = spentLamports + lockedLamports;
   const honestScore = mechanism.score(state, honest.id, 0);
-  const honestConfirmerCapital = Array.from(
-    { length: honestConfirmers },
-    (_, c) => mechanism.ensureAgent(state, -2 - c).spentLamports,
-  ).reduce((sum, value) => sum + value, 0);
+  const honestConfirmerCapital = honestConfirmers.reduce(
+    (sum, id) => sum + mechanism.ensureAgent(state, id).spentLamports,
+    0,
+  );
   const honestCapital =
     honest.spentLamports + honest.lockedLamports + honestConfirmerCapital;
 
   const costPerPointLamports = attackerCapital / Math.max(1, totalScore);
   const capitalPerPointLamports =
-    totalScore === 0 ? Number.POSITIVE_INFINITY : lockedLamports / totalScore;
+    totalScore === 0 ? null : lockedLamports / totalScore;
   const honestCostPerPointLamports =
     honestCapital / Math.max(1, honestScore);
   const efficiencyRatio =
@@ -205,9 +212,10 @@ export function sybilResistanceScore(result: SybilResult): number {
         ? 0
         : 100 * (1 - ratio);
   const capital = result.metrics.capitalPerPointLamports;
-  const capitalComponent = Number.isFinite(capital)
-    ? 100 * Math.min(1, capital / SYBIL_CAPITAL_REFERENCE_LAMPORTS)
-    : 0;
+  const capitalComponent =
+    capital !== null && Number.isFinite(capital)
+      ? 100 * Math.min(1, capital / SYBIL_CAPITAL_REFERENCE_LAMPORTS)
+      : 0;
   return Math.round((0.5 * efficiencyComponent + 0.5 * capitalComponent) * 10) / 10;
 }
 

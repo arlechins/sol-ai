@@ -35,7 +35,7 @@ export function defaultBenchmarkConfigs(seed = 42): BenchmarkConfigs {
   return {
     sybil: { ...defaultSybilConfig, seed },
     slowBurn: defaultSlowBurnConfig,
-    collusion: defaultCollusionConfig,
+    collusion: { ...defaultCollusionConfig, seed },
   };
 }
 
