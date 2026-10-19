@@ -67,7 +67,9 @@ function parseArgs(): Args {
 }
 
 function expandHome(value: string): string {
-  return value.startsWith("~") ? path.join(os.homedir(), value.slice(2)) : value;
+  if (value === "~") return os.homedir();
+  if (value.startsWith("~/")) return path.join(os.homedir(), value.slice(2));
+  return value;
 }
 
 function loadKeypair(envVar: string): Keypair | undefined {
@@ -265,6 +267,11 @@ async function runMcpLoop(args: Args): Promise<void> {
       ...process.env,
       TAOP_CHAIN: "solana",
       SOLANA_RPC_URL: rpcUrl,
+      // The SDK reads TAOP_PROGRAM_ID while the MCP adapter reads
+      // SOLANA_PROGRAM_ID; keep a custom deployment consistent across modes.
+      ...(process.env.TAOP_PROGRAM_ID
+        ? { SOLANA_PROGRAM_ID: process.env.TAOP_PROGRAM_ID }
+        : {}),
     },
   });
   const client = new Client({ name: "taop-example-agent", version: "0.1.0" });

@@ -21,8 +21,9 @@ const LAMPORTS_PER_SOL = 1_000_000_000;
 const DEFAULT_BOND_SOL = "0.005";
 
 function expandHome(value: string): string {
-  if (!value.startsWith("~")) return value;
-  return path.join(os.homedir(), value.slice(2));
+  if (value === "~") return os.homedir();
+  if (value.startsWith("~/")) return path.join(os.homedir(), value.slice(2));
+  return value;
 }
 
 /** Parse a base58 pubkey with a clear, field-specific error message. */
