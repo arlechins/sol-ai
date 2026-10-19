@@ -19,6 +19,7 @@ export type TaopErrorCode =
   | "IndexFull"
   | "VaultBalanceMismatch"
   | "ArithmeticOverflow"
+  | "InvalidAuthority"
   | "AccountNotFound"
   | "WalletRequired"
   | "Unknown";
@@ -43,6 +44,7 @@ const KNOWN_CODES = new Set<string>([
   "IndexFull",
   "VaultBalanceMismatch",
   "ArithmeticOverflow",
+  "InvalidAuthority",
 ]);
 
 /** Error thrown by SDK write operations, with the program error code when known. */

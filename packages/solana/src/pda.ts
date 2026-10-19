@@ -63,10 +63,21 @@ export function computeScore(params: {
   return {
     completions,
     disputes,
-    score: net >>> halvings,
+    score: halveU64(net, halvings),
     decayed: true,
     halvings,
   };
+}
+
+/**
+ * `net >> halvings` with u64 semantics. JavaScript's `>>>` coerces to 32 bits
+ * and takes the shift count modulo 32, which diverges from the on-chain u64
+ * shift for large nets or 32+ halvings.
+ */
+export function halveU64(net: number, halvings: number): number {
+  if (halvings <= 0) return net;
+  if (halvings >= 53) return 0;
+  return Math.floor(net / 2 ** halvings);
 }
 
 export interface Pdas {

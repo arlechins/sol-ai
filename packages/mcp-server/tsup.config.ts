@@ -8,5 +8,4 @@ export default defineConfig({
   clean: true,
   target: "es2022",
   skipNodeModulesBundle: true,
-  banner: { js: "#!/usr/bin/env node" },
 });

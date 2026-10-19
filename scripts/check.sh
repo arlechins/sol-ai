@@ -36,6 +36,11 @@ pnpm -r --if-present typecheck
 step "Package builds"
 pnpm --filter @taopp/solana build
 pnpm --filter @taopp/mcp-server build
+pnpm --filter @taopp/webhooks build
+
+step "Built artifact smoke (MCP + webhooks dist)"
+node "$ROOT/packages/mcp-server/test/dist-smoke.mjs"
+node "$ROOT/packages/webhooks/test/dist-smoke.mjs"
 
 step "Package tests"
 if solana cluster-version -u http://127.0.0.1:8899 >/dev/null 2>&1; then
@@ -69,6 +74,15 @@ print("baseline reproduces exactly")
 EOF
 else
   echo "no committed baseline; skipping"
+fi
+
+step "Example trust loop (local validator)"
+if solana cluster-version -u http://127.0.0.1:8899 >/dev/null 2>&1; then
+  TAOP_E2E_CLUSTER=localnet \
+    TAOP_E2E_KEYPAIR="${ANCHOR_WALLET:-$HOME/.config/solana/id.json}" \
+    node "$ROOT/scripts/devnet-e2e.mjs"
+else
+  echo "skipping: no local validator on :8899 (run ./scripts/localnet.sh)"
 fi
 
 printf '\nAll checks passed.\n'

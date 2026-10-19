@@ -18,7 +18,7 @@ const TABS: { id: TabId; label: string; blurb: string }[] = [
   { id: "score", label: "Score lab", blurb: "Decayed scores computed from chain state." },
   { id: "discover", label: "Discover", blurb: "Certified capabilities ranked by creator score." },
   { id: "loop", label: "Trust loop", blurb: "The devnet transactions behind the mechanism." },
-  { id: "benchmark", label: "Benchmark", blurb: "Five mechanisms, three attack classes." },
+  { id: "benchmark", label: "Benchmark", blurb: "Six mechanisms, three attack classes." },
   { id: "integrate", label: "Integrate", blurb: "SDK, MCP, and webhooks." },
 ];
 

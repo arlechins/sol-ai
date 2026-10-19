@@ -9,11 +9,19 @@ import dotenv from "dotenv";
 
 import { BaseAdapter } from "./adapters/base";
 import { SolanaAdapter } from "./adapters/solana";
-import type { ChainAdapter, ChainName } from "./adapters/types";
+import type { ChainAdapter } from "./adapters/types";
+import {
+  optionalDecimalString,
+  optionalNumber,
+  requireBoolean,
+  requireString,
+  requireUri,
+  resolveChain,
+} from "./validation";
 
 dotenv.config();
 
-const CHAIN = (process.env.TAOP_CHAIN ?? "solana").toLowerCase() as ChainName;
+const CHAIN = resolveChain(process.env.TAOP_CHAIN);
 
 let adapter: ChainAdapter | undefined;
 
@@ -200,15 +208,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return text(await chain.deploymentInfo());
 
       case "get_agent_score": {
-        const agent = (toolArgs.agent ?? toolArgs.agentAddress) as string;
-        if (!agent) throw new Error("agent is required");
+        const agent = requireString(
+          { agent: toolArgs.agent ?? toolArgs.agentAddress },
+          "agent",
+          "get_agent_score",
+        );
         return text(await chain.getAgentScore(agent));
       }
 
       case "discover_capabilities": {
-        const capabilityType =
-          (toolArgs.capabilityType as string) || "LoRA";
-        const minScore = Number(toolArgs.minScore ?? 0);
+        const capabilityType = requireString(
+          { capabilityType: toolArgs.capabilityType ?? "LoRA" },
+          "capabilityType",
+          "discover_capabilities",
+        );
+        const minScore = optionalNumber(
+          toolArgs,
+          "minScore",
+          "discover_capabilities",
+        );
         const results = await chain.discoverCapabilities({
           capabilityType,
           minScore,
@@ -216,46 +234,74 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return text(results);
       }
 
-      case "get_capability": {
-        const id = String(toolArgs.capabilityId);
-        return text(await chain.getCapability(id));
-      }
+      case "get_capability":
+        return text(
+          await chain.getCapability(
+            requireString(toolArgs, "capabilityId", "get_capability"),
+          ),
+        );
 
-      case "get_completion": {
-        const id = String(toolArgs.completionId);
-        return text(await chain.getCompletion(id));
-      }
+      case "get_completion":
+        return text(
+          await chain.getCompletion(
+            requireString(toolArgs, "completionId", "get_completion"),
+          ),
+        );
 
       case "attest_completion":
         return text(
           await chain.attestCompletion({
-            taskType: String(toolArgs.taskType),
-            resultUri: String(toolArgs.resultUri),
+            taskType: requireString(toolArgs, "taskType", "attest_completion"),
+            resultUri: requireUri(toolArgs, "resultUri", "attest_completion"),
           }),
         );
 
       case "challenge_completion":
         return text(
           await chain.challengeCompletion({
-            completion: String(toolArgs.completionId),
-            evidenceUri: String(toolArgs.evidenceUri),
+            completion: requireString(
+              toolArgs,
+              "completionId",
+              "challenge_completion",
+            ),
+            evidenceUri: requireUri(
+              toolArgs,
+              "evidenceUri",
+              "challenge_completion",
+            ),
           }),
         );
 
       case "register_capability":
         return text(
           await chain.registerCapability({
-            capabilityType: String(toolArgs.capabilityType),
-            metadataUri: String(toolArgs.metadataUri),
-            bond: toolArgs.bond ? String(toolArgs.bond) : "",
+            capabilityType: requireString(
+              toolArgs,
+              "capabilityType",
+              "register_capability",
+            ),
+            metadataUri: requireUri(
+              toolArgs,
+              "metadataUri",
+              "register_capability",
+            ),
+            bond: optionalDecimalString(
+              toolArgs,
+              "bond",
+              "register_capability",
+            ),
           }),
         );
 
       case "resolve_challenge":
         return text(
           await chain.resolveChallenge({
-            completion: String(toolArgs.completionId),
-            upheld: Boolean(toolArgs.upheld),
+            completion: requireString(
+              toolArgs,
+              "completionId",
+              "resolve_challenge",
+            ),
+            upheld: requireBoolean(toolArgs, "upheld", "resolve_challenge"),
           }),
         );
 

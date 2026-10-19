@@ -37,10 +37,37 @@ The built-in mechanisms are:
 | `completions_minus_disputes` | `max(0, completions - disputes)`, no decay | none |
 | `peer_ratings` | distinct raters minus disputes (ERC-8004-style) | none |
 | `stake_gated` | `min(completions - disputes, floor(stake / 0.01 SOL))` | stake fully slashable |
+| `two_sided_receipts` | `max(0, min(confirmed completions, 5 × distinct confirmers) - disputes)`, halved per 30 days | bonded capability only; receipts are unbonded |
 
 `taop_bonded_decay` imports `computeScore` from `@taopp/solana`, the same decay
 function the on-chain program uses, and the benchmark test suite asserts parity
 with on-chain behavior verified by the Rust/LiteSVM suite.
+
+### Receipt-based mechanisms
+
+`two_sided_receipts` approximates the Base TAOP design (counterparty-confirmed
+completions with a diversity-adjusted score) so it can be compared under the
+same rubric. The exact on-chain formula is not public in closed form, so this is
+a faithful approximation: a confirmation costs one extra transaction, only
+unconfirmed completions can be receipted, and a single distinct counterparty can
+vouch for at most five completions.
+
+When a mechanism scores peer feedback, every scenario models the attacker
+adapting rather than letting it fail trivially:
+
+- **Sybil:** identities rate or confirm each other, and the honest baseline
+  pays for genuine counterparties, so both sides bear the same transaction
+  tax. Receipts need only a few distinct confirmers (the diversity cap); peer
+  ratings need one distinct rater per point.
+- **Slow burn:** the attacker recruits enough identities to provide the
+  required diversity (`ceil(targetScore / 5)` confirmers for receipts;
+  `targetScore` distinct raters for peer ratings); their fees count as
+  attacker spend.
+- **Collusion:** the ring attests as many completions as it has confirmers
+  and records the same rating graph the detectors inspect.
+
+Receipts carry no bond, so the capability bond remains the only slashable
+capital in the slow-burn scenario.
 
 ## 3. Class scores
 
@@ -131,8 +158,9 @@ All runs are deterministic given `--seed`. Outputs: `results/run-<timestamp>.jso
 | `taop_bonded_decay` | 3.7 | 0.1 | 100.0 | 34.6 |
 | `naive_count` | 0.0 | 0.1 | 100.0 | 33.4 |
 | `completions_minus_disputes` | 3.7 | 0.1 | 100.0 | 34.6 |
-| `peer_ratings` | 100.0 | 100.0 | 0.0 | 66.7 |
+| `peer_ratings` | 3.7 | 0.1 | 0.0 | 1.3 |
 | `stake_gated` | 53.8 | 10.0 | 100.0 | 54.6 |
+| `two_sided_receipts` | 3.4 | 0.1 | 9.4 | 4.3 |
 
 ### Where TAOP scores poorly (on purpose)
 
@@ -146,6 +174,21 @@ All runs are deterministic given `--seed`. Outputs: `results/run-<timestamp>.jso
 - **Collusion (100/100).** v0.1 ignores peer ratings entirely, so a ring cannot
   inflate scores. This is immunity by omission: the mechanism also has no
   interaction grounding, which is exactly why its Sybil score is low.
+
+### The two-sided comparison
+
+Under this rubric, counterparty receipts do not outperform bonded decay: the
+receipt tax applies to honest and attacker alike, so Sybil efficiency stays
+near the self-attestation baseline (3.4 vs 3.7), bonded capital is still the
+only slow-burn defense (0.1), and a ring that attests and confirms within
+itself manufactures score at honest-equivalent cost (9.4). Receipts shift cost
+onto honest participants without adding slashable capital; detectors, not the
+score rule, are what catch the ring.
+
+Correcting the attack model also changed `peer_ratings`: previously the sybil
+and slow-burn scenarios never let identities rate each other, so the mechanism
+scored 100 in both classes by omission. With the same rating attacks applied
+it falls to 3.7 / 0.1 / 0.0 (composite 1.3).
 
 ### Sensitivity
 

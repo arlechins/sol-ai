@@ -23,6 +23,8 @@ export interface AgentState {
   lastActivity: number;
   /** Peer ratings received (only counted by the peer-ratings mechanism). */
   raters: Set<number>;
+  /** Completions a counterparty has confirmed (two-sided receipts only). */
+  confirmedCompletions: number;
   /** Lamports the attacker has irreversibly spent (fees, rent, forfeited bonds). */
   spentLamports: number;
   /** Lamports currently locked in bonds (recoverable). */
@@ -37,6 +39,7 @@ export interface CompletionState {
   timestamp: number;
   challenged: boolean;
   disputed: boolean;
+  resolved?: boolean;
   challenger?: number;
 }
 
@@ -78,6 +81,12 @@ export interface Mechanism {
   lockCapital?(state: MechanismState, agent: number, lamports: number): void;
   /** True when the mechanism records peer ratings that detection can inspect. */
   usesPeerRatings?: boolean;
+  /** True when score only counts completions a counterparty has confirmed. */
+  requiresReceipts?: boolean;
+  /** Modeled cost of one counterparty confirmation (0 when not applicable). */
+  receiptCost?(): number;
+  /** Distinct counterparties a rational attacker must recruit for a target score. */
+  counterpartiesRequiredForScore?(targetScore: number): number;
 }
 
 function newAgent(id: number): AgentState {
@@ -87,6 +96,7 @@ function newAgent(id: number): AgentState {
     disputes: 0,
     lastActivity: 0,
     raters: new Set(),
+    confirmedCompletions: 0,
     spentLamports: 0,
     lockedLamports: 0,
     slashedLamports: 0,
@@ -179,7 +189,10 @@ abstract class AbstractMechanism implements Mechanism {
     upheld: boolean,
   ): void {
     const completion = state.completions.find((c) => c.id === completionId);
-    if (!completion || completion.challenger === undefined) return;
+    if (!completion || completion.challenger === undefined || completion.resolved) {
+      return;
+    }
+    completion.resolved = true;
     const challenger = ensure(state, completion.challenger);
     if (upheld) {
       completion.disputed = true;
@@ -294,6 +307,11 @@ export class PeerRatingsMechanism extends AbstractMechanism {
     return TX_FEE_LAMPORTS + rentExempt(ACCOUNT_BYTES.completion);
   }
 
+  counterpartiesRequiredForScore(targetScore: number): number {
+    // One distinct rater contributes one point.
+    return Math.max(1, targetScore);
+  }
+
   score(state: MechanismState, agent: number): number {
     const record = ensure(state, agent);
     return Math.max(0, record.raters.size - record.disputes);
@@ -348,6 +366,71 @@ export function defaultParams(): MechanismParams {
   };
 }
 
+/** Completions a single distinct counterparty can vouch for (diversity cap). */
+export const RECEIPT_DIVERSITY_WEIGHT = 5;
+
+/**
+ * Baseline modeled on the Base TAOP design: two-sided receipts where a
+ * completion only counts once a counterparty confirms it, and the score is
+ * capped at 5 × the number of distinct confirmers ("diversity-adjusted").
+ *
+ * The exact on-chain formula is approximated; a confirmation costs one extra
+ * transaction, matching this benchmark's Solana cost model. Receipts carry no
+ * bond of their own, so the capability bond remains the only slashable capital.
+ */
+export class TwoSidedReceiptsMechanism extends AbstractMechanism {
+  readonly name = "two_sided_receipts";
+  readonly usesPeerRatings = true;
+  readonly requiresReceipts = true;
+  readonly description =
+    "Baseline: counterparty-confirmed completions with a diversity cap " +
+    "(Base-style two-sided receipts): score = max(0, min(confirmed completions, " +
+    "5 × distinct confirmers) - disputes), same halving decay.";
+
+  newState(now = 0): MechanismState {
+    return baseState(now);
+  }
+
+  attestCost(): number {
+    return TX_FEE_LAMPORTS + rentExempt(ACCOUNT_BYTES.completion);
+  }
+
+  receiptCost(): number {
+    return TX_FEE_LAMPORTS;
+  }
+
+  counterpartiesRequiredForScore(targetScore: number): number {
+    return Math.max(1, Math.ceil(targetScore / RECEIPT_DIVERSITY_WEIGHT));
+  }
+
+  /** A confirmation only attaches to a completion that is still unconfirmed. */
+  rate(state: MechanismState, from: number, to: number, now?: number): void {
+    void now;
+    if (from === to) return;
+    const rater = ensure(state, from);
+    const target = ensure(state, to);
+    rater.spentLamports += TX_FEE_LAMPORTS;
+    const pending = target.completions - target.confirmedCompletions;
+    if (pending > 0) {
+      target.confirmedCompletions += 1;
+      target.raters.add(from);
+    }
+  }
+
+  score(state: MechanismState, agent: number, now: number): number {
+    const record = ensure(state, agent);
+    const diversityCap = record.raters.size * RECEIPT_DIVERSITY_WEIGHT;
+    const confirmed = Math.min(record.confirmedCompletions, diversityCap);
+    return computeScore({
+      completions: confirmed,
+      disputes: record.disputes,
+      lastActivity: record.lastActivity,
+      now,
+      decayPeriodSecs: this.params.decayPeriodSecs,
+    }).score;
+  }
+}
+
 export function allMechanisms(params = defaultParams()): Mechanism[] {
   return [
     new TaopBondedDecayMechanism(params),
@@ -355,5 +438,6 @@ export function allMechanisms(params = defaultParams()): Mechanism[] {
     new NoDecayMechanism(params),
     new PeerRatingsMechanism(params),
     new StakeGatedMechanism(params),
+    new TwoSidedReceiptsMechanism(params),
   ];
 }

@@ -86,7 +86,7 @@ export default function MinimalDemo() {
       <Panel
         index="05"
         title="Benchmark explorer"
-        description="Five mechanisms against sybil farming, slow-burn harvest, and collusive rings — including the columns where TAOP loses."
+        description="Six mechanisms against sybil farming, slow-burn harvest, and collusive rings — including the columns where TAOP loses."
       >
         <BenchmarkPanel />
       </Panel>

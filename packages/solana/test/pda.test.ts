@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PublicKey } from "@solana/web3.js";
 
-import { computeScore, createPdas, hashType, typeToHex } from "../src/pda";
+import { halveU64, computeScore, createPdas, hashType, typeToHex } from "../src/pda";
 
 const PERIOD = 30 * 24 * 60 * 60;
 
@@ -100,5 +100,27 @@ describe("pda derivation", () => {
     expect(agent.toBase58()).not.toBe(completion.toBase58());
     expect(pdas.agent(authority).equals(agent)).toBe(true);
     expect(pdas.completion(authority, 1).equals(completion)).toBe(false);
+  });
+});
+
+describe("u64 halving", () => {
+  it("matches on-chain u64 shifts where JS >>> would truncate", () => {
+    expect(halveU64(4_294_967_296, 1)).toBe(2_147_483_648);
+    expect(halveU64(4_000_000_000, 32)).toBe(0);
+    expect(halveU64(2_147_483_649, 40)).toBe(0);
+    expect(halveU64(9, 2)).toBe(2);
+    expect(halveU64(9, 0)).toBe(9);
+  });
+
+  it("keeps computeScore aligned with the chain beyond 32 bits", () => {
+    const period = 86_400;
+    const score = computeScore({
+      completions: 4_000_000_000,
+      disputes: 0,
+      lastActivity: 1,
+      now: 1 + 32 * period + 1,
+      decayPeriodSecs: period,
+    }).score;
+    expect(score).toBe(0);
   });
 });
