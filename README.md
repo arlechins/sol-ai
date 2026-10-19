@@ -165,8 +165,10 @@ weak:
 |---|---:|---:|---:|---:|
 | `taop_bonded_decay` | 3.7 | 0.1 | 100.0 | 34.6 |
 | `naive_count` | 0.0 | 0.1 | 100.0 | 33.4 |
-| `peer_ratings` | 100.0 | 100.0 | 0.0 | 66.7 |
+| `completions_minus_disputes` | 3.7 | 0.1 | 100.0 | 34.6 |
+| `peer_ratings` | 3.7 | 0.1 | 0.0 | 1.3 |
 | `stake_gated` | 53.8 | 10.0 | 100.0 | 54.6 |
+| `two_sided_receipts` | 3.4 | 0.1 | 9.4 | 4.3 |
 
 TAOP v0.1 is structurally immune to mutual-rating rings because it ignores peer
 ratings, but that is exactly why Sybil farming is cheap and why underbonded

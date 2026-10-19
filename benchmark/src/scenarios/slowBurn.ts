@@ -52,6 +52,21 @@ export function runSlowBurnHarvest(
   const attacker = 0;
   mechanism.ensureAgent(state, attacker);
 
+  // Receipt-based mechanisms need a few counterparties (diversity cap);
+  // peer-rating mechanisms need one distinct rater per point. A rational
+  // attacker recruits exactly that many.
+  const accomplices: number[] = [];
+  if (mechanism.usesPeerRatings) {
+    const needed = mechanism.requiresReceipts
+      ? (mechanism.counterpartiesRequiredForScore?.(config.targetScore) ?? 1)
+      : config.targetScore;
+    for (let i = 0; i < needed; i += 1) {
+      const id = 100 + i;
+      mechanism.ensureAgent(state, id);
+      accomplices.push(id);
+    }
+  }
+
   // Model the capital required to bid on the high-value contract: a stake-gated
   // mechanism needs locked stake, TAOP needs a bonded capability.
   if (mechanism.capitalRequiredForScore && mechanism.lockCapital) {
@@ -71,6 +86,11 @@ export function runSlowBurnHarvest(
   for (let day = 1; day <= config.horizonDays; day += 1) {
     for (let i = 0; i < config.attestsPerDay; i += 1) {
       mechanism.attest(state, attacker, day * DAY);
+      if (accomplices.length > 0) {
+        const confirmer =
+          accomplices[(day * config.attestsPerDay + i) % accomplices.length];
+        mechanism.rate(state, confirmer, attacker, day * DAY);
+      }
     }
     const score = mechanism.score(state, attacker, day * DAY);
     if (score >= config.targetScore) {
@@ -81,7 +101,12 @@ export function runSlowBurnHarvest(
   }
 
   const slashableLamports = mechanism.slashable(state, attacker);
-  const spentLamports = mechanism.ensureAgent(state, attacker).spentLamports;
+  const spentLamports =
+    mechanism.ensureAgent(state, attacker).spentLamports +
+    accomplices.reduce(
+      (sum, id) => sum + mechanism.ensureAgent(state, id).spentLamports,
+      0,
+    );
   const slashCoverage =
     config.harvestValueLamports === 0
       ? 0

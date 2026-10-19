@@ -29,7 +29,8 @@ export interface SybilResult {
     totalScore: number;
     spentLamports: number;
     lockedLamports: number;
-    capitalPerPointLamports: number;
+    /** null when the mechanism manufactures no score (no meaningful ratio). */
+    capitalPerPointLamports: number | null;
     costPerPointLamports: number;
     honestCostPerPointLamports: number;
     efficiencyRatio: number;
@@ -68,6 +69,25 @@ export function runSybilFarming(
     mechanism.attest(state, -1, 0);
   }
 
+  // Mechanisms that score peer feedback are attacked through the same channel:
+  // sybils rate/confirm each other, and the honest baseline pays for genuine
+  // counterparties. Receipts need only a few distinct confirmers (diversity
+  // cap); peer ratings need one distinct rater per point.
+  const usesRatings = mechanism.usesPeerRatings === true;
+  const ratingsPerAgent = usesRatings ? config.attestsPerSybil : 0;
+  const distinctCounterparties = usesRatings
+    ? mechanism.requiresReceipts
+      ? (mechanism.counterpartiesRequiredForScore?.(config.attestsPerSybil) ?? 1)
+      : ratingsPerAgent
+    : 0;
+  const honestConfirmers: number[] = [];
+  for (let k = 0; k < ratingsPerAgent; k += 1) {
+    const id = -2 - (k % distinctCounterparties);
+    mechanism.ensureAgent(state, id);
+    honestConfirmers.push(id);
+    mechanism.rate(state, id, honest.id, 0);
+  }
+
   let challenges = 0;
   let disputes = 0;
   for (let sybil = 0; sybil < config.sybils; sybil += 1) {
@@ -80,6 +100,11 @@ export function runSybilFarming(
     }
     for (let k = 0; k < config.attestsPerSybil; k += 1) {
       mechanism.attest(state, sybil, 0);
+      if (usesRatings) {
+        const confirmer =
+          (sybil + 1 + (k % distinctCounterparties)) % config.sybils;
+        mechanism.rate(state, confirmer, sybil, 0);
+      }
       const completionId = state.completions[state.completions.length - 1].id;
       if (random() < config.challengeProbability) {
         challenges += 1;
@@ -112,11 +137,16 @@ export function runSybilFarming(
   );
   const attackerCapital = spentLamports + lockedLamports;
   const honestScore = mechanism.score(state, honest.id, 0);
-  const honestCapital = honest.spentLamports + honest.lockedLamports;
+  const honestConfirmerCapital = honestConfirmers.reduce(
+    (sum, id) => sum + mechanism.ensureAgent(state, id).spentLamports,
+    0,
+  );
+  const honestCapital =
+    honest.spentLamports + honest.lockedLamports + honestConfirmerCapital;
 
   const costPerPointLamports = attackerCapital / Math.max(1, totalScore);
   const capitalPerPointLamports =
-    totalScore === 0 ? Number.POSITIVE_INFINITY : lockedLamports / totalScore;
+    totalScore === 0 ? null : lockedLamports / totalScore;
   const honestCostPerPointLamports =
     honestCapital / Math.max(1, honestScore);
   const efficiencyRatio =
@@ -124,7 +154,9 @@ export function runSybilFarming(
       ? 0
       : honestCostPerPointLamports / costPerPointLamports;
 
-  const perAttestCost = mechanism.attestCost();
+  const perAttestCost =
+    mechanism.attestCost() +
+    (mechanism.requiresReceipts ? (mechanism.receiptCost?.() ?? 0) : 0);
   const costToThreshold: Record<string, string> = {};
   for (const threshold of [10, 100, 1_000]) {
     costToThreshold[String(threshold)] = sol(threshold * perAttestCost);
@@ -180,9 +212,10 @@ export function sybilResistanceScore(result: SybilResult): number {
         ? 0
         : 100 * (1 - ratio);
   const capital = result.metrics.capitalPerPointLamports;
-  const capitalComponent = Number.isFinite(capital)
-    ? 100 * Math.min(1, capital / SYBIL_CAPITAL_REFERENCE_LAMPORTS)
-    : 0;
+  const capitalComponent =
+    capital !== null && Number.isFinite(capital)
+      ? 100 * Math.min(1, capital / SYBIL_CAPITAL_REFERENCE_LAMPORTS)
+      : 0;
   return Math.round((0.5 * efficiencyComponent + 0.5 * capitalComponent) * 10) / 10;
 }
 

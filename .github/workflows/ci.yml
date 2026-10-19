@@ -45,6 +45,8 @@ jobs:
           mkdir -p "$HOME/.local/bin"
           curl -sSfL -o "$HOME/.local/bin/anchor" \
             "https://github.com/otter-sec/anchor/releases/download/v${ANCHOR_VERSION}/anchor-${ANCHOR_VERSION}-x86_64-unknown-linux-gnu"
+          # sha256 is for v1.1.2; bump it alongside ANCHOR_VERSION.
+          echo "fdea9979629e9416e5f5e5622ff6c11b8c691d1e559581ece368e903c0c980c1  $HOME/.local/bin/anchor" | sha256sum -c -
           chmod +x "$HOME/.local/bin/anchor"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           anchor --version
@@ -121,6 +123,8 @@ jobs:
           mkdir -p "$HOME/.local/bin"
           curl -sSfL -o "$HOME/.local/bin/anchor" \
             "https://github.com/otter-sec/anchor/releases/download/v${ANCHOR_VERSION}/anchor-${ANCHOR_VERSION}-x86_64-unknown-linux-gnu"
+          # sha256 is for v1.1.2; bump it alongside ANCHOR_VERSION.
+          echo "fdea9979629e9416e5f5e5622ff6c11b8c691d1e559581ece368e903c0c980c1  $HOME/.local/bin/anchor" | sha256sum -c -
           chmod +x "$HOME/.local/bin/anchor"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
@@ -140,6 +144,11 @@ jobs:
           pnpm --filter @taopp/webhooks build
           pnpm -r --if-present typecheck
 
+      - name: Built artifact smoke (MCP + webhooks dist)
+        run: |
+          node packages/mcp-server/test/dist-smoke.mjs
+          node packages/webhooks/test/dist-smoke.mjs
+
       - name: Package lint (publint + arethetypeswrong)
         run: pnpm run lint:packages
 
@@ -147,6 +156,14 @@ jobs:
         run: |
           node --input-type=module -e "import('@taopp/solana').then(m => { if (!m.TaopSolanaClient) throw new Error('missing ESM export'); console.log('esm ok'); })"
           node -e "const m = require('@taopp/solana'); if (!m.TaopSolanaClient) throw new Error('missing CJS export'); console.log('cjs ok');"
+
+      # Node 20/22 miss Anchor's getter-style BN re-export; the SDK guards
+      # against it, and this asserts the underlying assumption still holds.
+      # Run inside the package so the bare specifier resolves under pnpm.
+      - name: Anchor BN interop smoke
+        working-directory: packages/solana
+        run: |
+          node --input-type=module -e "import * as anchor from '@anchor-lang/core'; const m = typeof anchor.BN === 'function' ? anchor : anchor.default; if (typeof m.BN !== 'function') throw new Error('BN interop unavailable'); console.log('bn interop ok');"
 
       - name: Start local validator and deploy program
         run: ./scripts/localnet.sh
@@ -168,6 +185,14 @@ jobs:
         run: |
           node scripts/check-coverage.mjs sdk packages/solana/coverage/coverage-summary.json
           node scripts/check-coverage.mjs web apps/web/coverage/coverage-summary.json
+
+      # End-to-end: runs the two-agent trust loop against the local validator
+      # (bootstraps config if needed, reclaims bonds, sweeps test SOL).
+      - name: Example trust loop (local validator)
+        run: |
+          TAOP_E2E_CLUSTER=localnet \
+            TAOP_E2E_KEYPAIR="$HOME/.config/solana/id.json" \
+            node scripts/devnet-e2e.mjs
 
       - name: Benchmark smoke run
         run: pnpm --filter @taopp/benchmark start -- --seed 7 --json-only --out /tmp/benchmark-smoke

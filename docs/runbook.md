@@ -127,9 +127,14 @@ From then on all upgrades go through Squads.
 
 - `.github/workflows/healthcheck.yml` runs `scripts/healthcheck.ts` every six
   hours and fails (notifying the repository owner) if the RPC, program account,
-  or config is unreachable.
+  or config is unreachable, if the on-chain executable hash no longer matches
+  the pinned reproducible build, or if live config drifts from
+  `apps/web/src/data/deployment.json`.
 - `./scripts/verify-build.sh <cluster>` proves the deployed binary matches the
   repository; the weekly **Verifiable build** workflow runs the same check.
+- `scripts/devnet-e2e.mjs` runs the full two-agent trust loop against a funded
+  cluster (config bootstrap, bond reclaim, balance sweep); CI gates every push
+  on the local-validator version of it.
 - Explorer: `https://explorer.solana.com/address/<PROGRAM_ID>?cluster=<cluster>`.
 
 ## 5. Escalation and contacts

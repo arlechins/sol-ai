@@ -75,8 +75,12 @@ export function renderReport(
       lines.push(
         `- Effective score: ${sybil.totalScore} · spend: ${sol(sybil.spentLamports)} · locked: ${sol(sybil.lockedLamports)} · cost per point: ${sol(sybil.costPerPointLamports)}`,
       );
+      const capitalPerPoint =
+        sybil.capitalPerPointLamports === null
+          ? "n/a"
+          : sol(sybil.capitalPerPointLamports);
       lines.push(
-        `- Locked capital per point: ${sol(sybil.capitalPerPointLamports)} · honest cost per point: ${sol(sybil.honestCostPerPointLamports)} · efficiency ratio: ${sybil.efficiencyRatio.toFixed(2)}x`,
+        `- Locked capital per point: ${capitalPerPoint} · honest cost per point: ${sol(sybil.honestCostPerPointLamports)} · efficiency ratio: ${sybil.efficiencyRatio.toFixed(2)}x`,
       );
       lines.push(
         `- Challenges: ${sybil.challenges} · upheld: ${sybil.disputes}`,

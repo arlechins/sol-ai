@@ -143,6 +143,76 @@ describe("deliverWebhook", () => {
 });
 
 describe("pollOnce", () => {
+  it("does not advance past a transaction it could not fetch", async () => {
+    const connection = fakeConnection(
+      new Map([
+        ["sig-1", { slot: 1, blockTime: 10, logs: ["Program data: a"] }],
+        ["sig-2", { slot: 2, blockTime: 11, logs: ["Program data: b"] }],
+      ]),
+    );
+    // Simulate RPC lag for the oldest transaction.
+    const original = connection.getTransaction;
+    connection.getTransaction = vi.fn(async (signature: string) =>
+      signature === "sig-1" ? null : original(signature),
+    ) as typeof connection.getTransaction;
+
+    const delivered: WebhookEvent[] = [];
+    const fetchImpl = vi.fn(async (_url: string, init: RequestInit) => {
+      delivered.push(JSON.parse(String(init.body)) as WebhookEvent);
+      return new Response("ok", { status: 200 });
+    }) as unknown as typeof fetch;
+
+    const state = { lastSignature: null };
+    const result = await pollOnce(
+      {
+        connection: connection as unknown as DispatcherOptions["connection"],
+        programId: PROGRAM_ID,
+        webhookUrl: "https://example.test/hook",
+        fetchImpl,
+        decode: (logs) => logs.map(() => ({ name: "CompletionAttested", data: {} })),
+      },
+      state,
+    );
+
+    expect(result.processed).toBe(0);
+    expect(delivered).toHaveLength(0);
+    expect(state.lastSignature).toBeNull();
+  });
+
+  it("pages past ten windows instead of dropping older events", async () => {
+    const transactions = new Map<string, { slot: number; blockTime: number; logs: string[] }>();
+    for (let i = 1; i <= 60; i += 1) {
+      transactions.set(`sig-${String(i).padStart(3, "0")}`, {
+        slot: i,
+        blockTime: i,
+        logs: ["Program data: x"],
+      });
+    }
+    const connection = fakeConnection(transactions);
+    const delivered: WebhookEvent[] = [];
+    const fetchImpl = vi.fn(async (_url: string, init: RequestInit) => {
+      delivered.push(JSON.parse(String(init.body)) as WebhookEvent);
+      return new Response("ok", { status: 200 });
+    }) as unknown as typeof fetch;
+
+    const state = { lastSignature: null };
+    const result = await pollOnce(
+      {
+        connection: connection as unknown as DispatcherOptions["connection"],
+        programId: PROGRAM_ID,
+        webhookUrl: "https://example.test/hook",
+        fetchImpl,
+        maxSignaturesPerPoll: 5,
+        decode: (logs) => logs.map(() => ({ name: "CompletionAttested", data: {} })),
+      },
+      state,
+    );
+
+    expect(result.processed).toBe(60);
+    expect(delivered).toHaveLength(60);
+    expect(state.lastSignature).toBe("sig-060");
+  });
+
   it("delivers oldest-first, persists state, and does not replay", async () => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), "taop-webhooks-"));
     const statePath = path.join(directory, "state.json");

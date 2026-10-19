@@ -72,4 +72,38 @@ describe("MCP server (stdio smoke test)", () => {
     const content = result.content as Array<{ type: string; text: string }>;
     expect(content[0].text).toContain("requires a signer");
   });
+
+  it("rejects a non-boolean resolution instead of truthy-coercing it", async () => {
+    const result = await client.callTool({
+      name: "resolve_challenge",
+      arguments: { completionId: "whatever", upheld: "maybe" },
+    });
+    expect(result.isError).toBe(true);
+    const content = result.content as Array<{ type: string; text: string }>;
+    expect(content[0].text).toContain("must be a boolean");
+  });
+
+  it("rejects malformed bond strings before touching the chain", async () => {
+    const result = await client.callTool({
+      name: "register_capability",
+      arguments: {
+        capabilityType: "LoRA",
+        metadataUri: "ipfs://cap",
+        bond: "0.005 SOL",
+      },
+    });
+    expect(result.isError).toBe(true);
+    const content = result.content as Array<{ type: string; text: string }>;
+    expect(content[0].text).toContain("decimal amount");
+  });
+
+  it("refuses to start with an unknown TAOP_CHAIN", async () => {
+    const badClient = new Client({ name: "bad-client", version: "0.0.1" });
+    const transport = new StdioClientTransport({
+      command: "npx",
+      args: ["tsx", serverEntry],
+      env: { ...process.env, TAOP_CHAIN: "base-sepolia" },
+    });
+    await expect(badClient.connect(transport)).rejects.toThrow();
+  }, 60_000);
 });
