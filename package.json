@@ -2,7 +2,7 @@
   "name": "taop-solana",
   "private": true,
   "version": "0.1.0",
-  "description": "TAOP reputation for Solana \u2014 bonded completions, challenges, score decay, and a bonded capability registry",
+  "description": "TAOP reputation for Solana — bonded completions, challenges, score decay, and a bonded capability registry",
   "license": "MIT",
   "packageManager": "pnpm@9.15.4",
   "engines": {
@@ -44,7 +44,7 @@
     "@taopp/solana": "workspace:*",
     "bs58": "^6.0.0",
     "publint": "0.3.24",
-    "tsx": "^4.21.0",
+    "tsx": "^4.23.15",
     "typescript": "~5.8.2"
   },
   "pnpm": {

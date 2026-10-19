@@ -32,7 +32,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@types/jest-axe": "^3.5.9",
-    "@types/node": "^22.15.30",
+    "@types/node": "^22.20.5",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.4.1",
@@ -43,6 +43,6 @@
     "typescript": "~5.8.2",
     "vite": "^6.2.3",
     "vitest": "^4.1.11",
-    "wrangler": "^4.20.0"
+    "wrangler": "^4.151.2"
   }
 }
