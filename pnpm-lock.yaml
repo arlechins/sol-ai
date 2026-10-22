@@ -118,10 +118,10 @@ importers:
         version: 6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15)
       vitest:
         specifier: ^4.1.11
-        version: 4.1.11(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(bufferutil@4.1.0))(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
+        version: 4.1.11(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
       wrangler:
         specifier: ^4.151.2
-        version: 4.151.2(@types/node@22.20.5)(bufferutil@4.1.0)
+        version: 4.151.2(@types/node@22.20.5)(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 
   benchmark:
     dependencies:
@@ -140,7 +140,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.11
-        version: 4.1.11(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(bufferutil@4.1.0))(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
+        version: 4.1.11(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
 
   examples/solana-agent:
     dependencies:
@@ -208,13 +208,13 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.11
-        version: 4.1.11(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(bufferutil@4.1.0))(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
+        version: 4.1.11(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
 
   packages/solana:
     dependencies:
       '@anchor-lang/core':
-        specifier: ^1.2.0
-        version: 1.2.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
+        specifier: ^1.2.1
+        version: 1.2.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@solana/web3.js':
         specifier: ^1.99.0
         version: 1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
@@ -236,7 +236,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.11
-        version: 4.1.11(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(bufferutil@4.1.0))(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
+        version: 4.1.11(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
 
   packages/webhooks:
     dependencies:
@@ -261,7 +261,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.11
-        version: 4.1.11(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(bufferutil@4.1.0))(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
+        version: 4.1.11(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
 
 packages:
 
@@ -271,18 +271,18 @@ packages:
   '@adraffy/ens-normalize@1.11.1':
     resolution: {integrity: sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ==}
 
-  '@anchor-lang/borsh@1.2.0':
-    resolution: {integrity: sha512-qUC90JezAXyetwCqhLxkxh/r9ofRCd2D0fkEoEex7Vurw3pGDtf1r779v0cM4fsvOEIskK9nja/GkZOnlvJqYw==}
+  '@anchor-lang/borsh@1.2.1':
+    resolution: {integrity: sha512-HEquDEKamy69yc+gjhYlPnqrwzKfg/J6618o1fnpZD8p3ifiWVzi+Exv5S8jdmBaEMDgHEJ+qGjpTx+kivyqHQ==}
     engines: {node: '>=10'}
     peerDependencies:
       '@solana/web3.js': ^1.69.1
 
-  '@anchor-lang/core@1.2.0':
-    resolution: {integrity: sha512-GpHdhYnwVSEIvdZIeRCL7Q9LK0oTyoJ259r4mtc+a3W9oM3Iz6qezorzZcd92ASCJJ6MYqqdrM/b2JKDZpIzmw==}
+  '@anchor-lang/core@1.2.1':
+    resolution: {integrity: sha512-hpaczf9elfPkJ8Nw14HLG58VbuBqZtVEXBPKqn6RA/0d3WJxHlFWMzfYHoI0hTEacd/Tfi5fl94A6q3Ugnvtyg==}
     engines: {node: '>=20.18'}
 
-  '@anchor-lang/errors@1.2.0':
-    resolution: {integrity: sha512-muEmHFs2UDrcmGUuj+IWiYW2/AazI3tMv6f6OT5KNwOuSLG4j9g4zv8Pqvo+Cj9F6deP4P2c6DWhSUBHdYL4+g==}
+  '@anchor-lang/errors@1.2.1':
+    resolution: {integrity: sha512-HrVenxlSzosMaSxJo3DSPi3M8KnBpcvB8eWHkLLe1CkBF7Q8HQdkyCkkM6XZvryJGO+98XAX7IRTd9V1wohW+w==}
     engines: {node: '>=10'}
 
   '@andrewbranch/untar.js@1.0.4':
@@ -2947,16 +2947,16 @@ snapshots:
 
   '@adraffy/ens-normalize@1.11.1': {}
 
-  '@anchor-lang/borsh@1.2.0(@solana/web3.js@1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))':
+  '@anchor-lang/borsh@1.2.1(@solana/web3.js@1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))':
     dependencies:
       '@solana/web3.js': 1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
       bn.js: 5.2.5
       buffer-layout: 1.2.2
 
-  '@anchor-lang/core@1.2.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)':
+  '@anchor-lang/core@1.2.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)':
     dependencies:
-      '@anchor-lang/borsh': 1.2.0(@solana/web3.js@1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))
-      '@anchor-lang/errors': 1.2.0
+      '@anchor-lang/borsh': 1.2.1(@solana/web3.js@1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))
+      '@anchor-lang/errors': 1.2.1
       '@noble/hashes': 1.8.0
       '@solana/web3.js': 1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
       bn.js: 5.2.5
@@ -2972,7 +2972,7 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@anchor-lang/errors@1.2.0': {}
+  '@anchor-lang/errors@1.2.1': {}
 
   '@andrewbranch/untar.js@1.0.4': {}
 
@@ -3901,7 +3901,7 @@ snapshots:
       obug: 2.2.1
       std-env: 4.2.0
       tinyrainbow: 3.1.1
-      vitest: 4.1.11(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(bufferutil@4.1.0))(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
+      vitest: 4.1.11(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
 
   '@vitest/expect@4.1.11':
     dependencies:
@@ -4757,7 +4757,7 @@ snapshots:
 
   min-indent@1.0.1: {}
 
-  miniflare@5.20261019.0-beta(@types/node@22.20.5)(bufferutil@4.1.0):
+  miniflare@5.20261019.0-beta(@types/node@22.20.5)(bufferutil@4.1.0)(utf-8-validate@6.0.6):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       sharp: 0.35.5(@types/node@22.20.5)
@@ -5362,7 +5362,7 @@ snapshots:
       lightningcss: 1.32.0
       tsx: 4.23.15
 
-  vitest@4.1.11(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(bufferutil@4.1.0))(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15)):
+  vitest@4.1.11(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15)):
     dependencies:
       '@vitest/expect': 4.1.11
       '@vitest/mocker': 4.1.11(vite@6.4.3(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.15))
@@ -5432,13 +5432,13 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20261019.1
       '@cloudflare/workerd-windows-64': 1.20261019.1
 
-  wrangler@4.151.2(@types/node@22.20.5)(bufferutil@4.1.0):
+  wrangler@4.151.2(@types/node@22.20.5)(bufferutil@4.1.0)(utf-8-validate@6.0.6):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.5.0
       '@cloudflare/unenv-preset': 2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261019.1)
       blake3-wasm: 2.1.5
       esbuild: 0.28.2
-      miniflare: 5.20261019.0-beta(@types/node@22.20.5)(bufferutil@4.1.0)
+      miniflare: 5.20261019.0-beta(@types/node@22.20.5)(bufferutil@4.1.0)(utf-8-validate@6.0.6)
       path-to-regexp: 6.3.0
       unenv: 2.0.0-rc.24
       workerd: 1.20261019.1
