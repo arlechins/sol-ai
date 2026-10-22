@@ -23,7 +23,7 @@
     "@solana/web3.js": "^1.98.0",
     "@taopp/solana": "workspace:*",
     "buffer": "^6.0.3",
-    "react": "^19.0.1",
+    "react": "^19.3.1",
     "react-dom": "^19.0.1",
     "react-router-dom": "^7.18.4"
   },
