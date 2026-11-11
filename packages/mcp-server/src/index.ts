@@ -7,7 +7,6 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import dotenv from "dotenv";
 
-import { BaseAdapter } from "./adapters/base";
 import { SolanaAdapter } from "./adapters/solana";
 import type { ChainAdapter } from "./adapters/types";
 import {
@@ -28,7 +27,7 @@ let adapter: ChainAdapter | undefined;
 /** Lazily construct the adapter so `tools/list` works without configuration. */
 function getAdapter(): ChainAdapter {
   if (!adapter) {
-    adapter = CHAIN === "base" ? new BaseAdapter() : new SolanaAdapter();
+    adapter = new SolanaAdapter();
   }
   return adapter;
 }
@@ -55,13 +54,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "get_agent_score",
         description:
-          "Get an agent's reputation score (completions - disputes, with inactivity decay). Accepts a Solana base58 address or an EVM 0x address depending on TAOP_CHAIN.",
+          "Get an agent's reputation score (completions - disputes, with inactivity decay) from its Solana base58 address.",
         inputSchema: {
           type: "object",
           properties: {
             agent: {
               type: "string",
-              description: "Agent address (base58 on Solana, 0x-hex on Base)",
+              description: "Agent address (base58 Solana pubkey)",
             },
           },
           required: ["agent"],
@@ -97,7 +96,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             capabilityId: {
               type: "string",
               description:
-                "Capability identifier: PDA (base58) on Solana or token id on Base",
+                "Capability PDA (base58 Solana address)",
             },
           },
           required: ["capabilityId"],
@@ -106,7 +105,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "get_completion",
         description:
-          "Get a completion/attestation record by id (PDA on Solana, numeric id on Base).",
+          "Get a completion/attestation record by its PDA (base58 Solana address).",
         inputSchema: {
           type: "object",
           properties: {
@@ -137,13 +136,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "challenge_completion",
         description:
-          "Challenge a completion with evidence, posting the native bond (SOL on Solana, ETH on Base). Requires a signer key.",
+          "Challenge a completion with evidence, posting the native SOL bond. Requires a signer key.",
         inputSchema: {
           type: "object",
           properties: {
             completionId: {
               type: "string",
-              description: "Completion identifier to challenge",
+              description: "Completion PDA to challenge",
             },
             evidenceUri: {
               type: "string",
@@ -156,7 +155,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "register_capability",
         description:
-          "Register a capability with a slashable bond (SOL on Solana, ETH on Base). Requires a signer key.",
+          "Register a capability with a slashable SOL bond. Requires a signer key.",
         inputSchema: {
           type: "object",
           properties: {
@@ -168,7 +167,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             bond: {
               type: "string",
               description:
-                "Bond amount as a decimal string (SOL on Solana, ETH on Base). Defaults: 0.005 SOL / 0.01 ETH.",
+                "Bond amount in SOL as a decimal string (default 0.005).",
             },
           },
           required: ["capabilityType", "metadataUri"],

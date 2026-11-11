@@ -11,15 +11,16 @@ import {
 } from "../src/validation";
 
 describe("resolveChain", () => {
-  it("defaults to solana and accepts base", () => {
+  it("defaults to solana and accepts case/whitespace variants", () => {
     expect(resolveChain(undefined)).toBe("solana");
     expect(resolveChain("SOLANA")).toBe("solana");
-    expect(resolveChain(" Base ")).toBe("base");
+    expect(resolveChain(" solana ")).toBe("solana");
   });
 
-  it("rejects unknown chains instead of falling back", () => {
-    expect(() => resolveChain("base-sepolia")).toThrow(/Unknown TAOP_CHAIN/);
-    expect(() => resolveChain("")).toThrow(/Unknown TAOP_CHAIN/);
+  it("rejects the removed Base adapter and unknown chains", () => {
+    expect(() => resolveChain("base")).toThrow(/Solana-only/);
+    expect(() => resolveChain("base-sepolia")).toThrow(/Solana-only/);
+    expect(() => resolveChain("")).toThrow(/Solana-only/);
   });
 });
 

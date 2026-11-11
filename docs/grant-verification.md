@@ -239,7 +239,7 @@ without a signer return a typed error.
 Tool list (same names for both chains): `get_deployment_info`,
 `get_agent_score`, `discover_capabilities`, `get_capability`, `get_completion`,
 `attest_completion`, `challenge_completion`, `register_capability`,
-`resolve_challenge`. Chain selection: `TAOP_CHAIN=solana|base`.
+`resolve_challenge`. The server is Solana-only.
 
 Publish command:
 
