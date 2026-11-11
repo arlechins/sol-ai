@@ -6,9 +6,15 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$HOME/.local/bin:$PATH"
 
-LEDGER="$ROOT/.anchor/test-ledger"
+LEDGER="${TAOP_LEDGER_DIR:-${TMPDIR:-/tmp}/taop-test-ledger}"
 WALLET="${ANCHOR_WALLET:-$HOME/.config/solana/id.json}"
-RPC="http://127.0.0.1:8899"
+RPC_PORT="${TAOP_RPC_PORT:-8899}"
+RPC="http://127.0.0.1:${RPC_PORT}"
+# Default gossip/TPU ports (8000+) are commonly taken by other local services;
+# move the validator's range and keep it configurable.
+GOSSIP_PORT="${TAOP_GOSSIP_PORT:-18000}"
+DYNAMIC_RANGE="${GOSSIP_PORT}-$((GOSSIP_PORT + 100))"
+FAUCET_PORT="${TAOP_FAUCET_PORT:-19900}"
 PROGRAM_ID="8soD4YteLDgkibSNBzmQJTztiNcXPcLoi3Y2FrY15MnE"
 
 "$ROOT/scripts/sync-keypair.sh" >/dev/null
@@ -24,18 +30,33 @@ if pgrep -f "solana-test-validator" >/dev/null; then
 else
   rm -rf "$LEDGER"
   mkdir -p "$LEDGER"
-  nohup solana-test-validator \
+  # RUST_LOG=error keeps the validator's own log at 0 bytes; without it the
+  # metrics datapoints grow the log by hundreds of MB.
+  RUST_LOG=error nohup solana-test-validator \
     --ledger "$LEDGER" \
     --reset \
     --quiet \
     --clone-feature-set \
     --url https://api.devnet.solana.com \
-    >"$LEDGER/validator.log" 2>&1 &
+    --rpc-port "$RPC_PORT" \
+    --gossip-port "$GOSSIP_PORT" \
+    --dynamic-port-range "$DYNAMIC_RANGE" \
+    --faucet-port "$FAUCET_PORT" \
+    >/dev/null 2>&1 &
   echo "waiting for validator..."
-  for _ in $(seq 1 30); do
-    if solana cluster-version -u "$RPC" >/dev/null 2>&1; then break; fi
+  ready=0
+  for _ in $(seq 1 60); do
+    if solana cluster-version -u "$RPC" >/dev/null 2>&1; then
+      ready=1
+      break
+    fi
     sleep 1
   done
+  if [[ "$ready" != "1" ]]; then
+    echo "error: validator did not become ready on $RPC; last log lines:" >&2
+    tail -20 "$LEDGER/validator.log" >&2 2>/dev/null || true
+    exit 1
+  fi
 fi
 
 solana config set -u "$RPC" >/dev/null 2>&1 || true
