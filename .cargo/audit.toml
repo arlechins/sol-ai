@@ -1,0 +1,15 @@
+[advisories]
+# Dev-only dependency path: litesvm (in-process test harness) -> agave-syscalls
+# -> libsecp256k1 0.6 -> rand 0.7.3. The advisory requires a custom logger
+# passed to rand::rng(); no patched 0.7.x exists and the deployed program does
+# not use this path. Tracked as a Dependabot alert (dismissed) and revisited
+# when litesvm/anchor-litesvm move to the rand 0.8 line.
+ignore = [
+  # rand 0.7.3 -> litesvm -> agave-syscalls -> libsecp256k1 0.6 (dev-only test
+  # harness). No patched 0.7.x exists; the advisory needs a custom logger.
+  "RUSTSEC-2026-0097",
+  # crypto-bigint 0.5.5 -> elliptic-curve 0.13 -> k256 -> agave-syscalls ->
+  # litesvm (dev-only test harness). The fix is 0.7.6, a breaking major that
+  # elliptic-curve 0.13 cannot use; revisit when litesvm upgrades its stack.
+  "RUSTSEC-2026-0387",
+]
