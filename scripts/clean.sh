@@ -27,10 +27,12 @@ size_of() {
 echo "Before: repo $(size_of "$ROOT") · target $(size_of target) · ledger $(size_of "${TMPDIR:-/tmp}/taop-test-ledger") · legacy ledger $(size_of .anchor/test-ledger) · fuzz $(size_of fuzz/target)"
 
 clean_safe() {
+  # Package dist/ is intentionally kept: workspace packages import each other
+  # through their built entrypoints, so removing it breaks the test suite.
   rm -rf apps/web/dist apps/web/coverage apps/web/.wrangler
-  rm -rf packages/*/dist packages/*/coverage coverage
+  rm -rf packages/*/coverage coverage
   rm -rf benchmark/results/tmp
-  echo "cleaned: dists, coverage, benchmark tmp, wrangler"
+  echo "cleaned: web dist, coverage, benchmark tmp, wrangler"
 }
 
 clean_build() {
