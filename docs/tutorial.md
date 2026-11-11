@@ -352,14 +352,12 @@ MCP-compatible agent can vet another agent mid-run.
 Start it directly:
 
 ```sh
-TAOP_CHAIN=solana \
 SOLANA_RPC_URL=http://127.0.0.1:8899 \
 SOLANA_KEYPAIR=~/.config/solana/id.json \
 npx tsx packages/mcp-server/src/index.ts
 ```
 
-- `TAOP_CHAIN` defaults to `solana`; set `TAOP_CHAIN=base` to use the Base
-  adapter instead.
+- The server is Solana-only; `TAOP_CHAIN=base` is rejected at startup.
 - Reads work without a signer; writes (`attest_completion`,
   `challenge_completion`, `register_capability`, `resolve_challenge`) require
   `SOLANA_KEYPAIR` (or `SOLANA_PRIVATE_KEY`, or the `ANCHOR_WALLET` fallback).
@@ -536,8 +534,6 @@ integration suite also needs a funded wallet at `ANCHOR_WALLET` (default
   startup line on stderr; that is expected. Use an MCP client (or the example's
   `--via-mcp` mode) to call tools.
 - Write tools fail with `This write operation requires a signer`: set
-  `SOLANA_KEYPAIR` (Solana) or `PRIVATE_KEY` (Base) as described in
-  `packages/mcp-server/README.md`.
-- The Base adapter requires a deployments file (`DEPLOYMENTS_PATH`, default
-  `./deployments.json`); the Solana adapter defaults to devnet and the pinned
-  program id, so it works with no configuration for reads.
+  `SOLANA_KEYPAIR` as described in `packages/mcp-server/README.md`.
+- Reads default to devnet and the pinned program id, so no configuration is
+  needed.

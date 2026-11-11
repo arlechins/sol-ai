@@ -2,7 +2,7 @@
   "name": "taop-solana",
   "private": true,
   "version": "0.1.0",
-  "description": "TAOP reputation for Solana — bonded completions, challenges, score decay, and a bonded capability registry",
+  "description": "TAOP reputation for Solana \u2014 bonded completions, challenges, score decay, and a bonded capability registry",
   "license": "MIT",
   "packageManager": "pnpm@9.15.4",
   "engines": {
@@ -36,7 +36,12 @@
     "web:test": "pnpm --filter @taopp/web test",
     "web:budget": "node scripts/check-web-bundle.mjs",
     "web:dist": "node scripts/check-web-dist.mjs",
-    "web:sync": "./scripts/sync-web-data.sh"
+    "web:sync": "./scripts/sync-web-data.sh",
+    "localnet:stop": "./scripts/localnet-stop.sh",
+    "clean": "./scripts/clean.sh",
+    "clean:build": "./scripts/clean.sh --build",
+    "clean:localnet": "./scripts/clean.sh --localnet",
+    "clean:all": "./scripts/clean.sh --all"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
