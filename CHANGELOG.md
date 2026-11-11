@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- **Disk footprint.** Host dev/test builds no longer carry debug info
+  (`[profile.dev] debug = 0`), the local validator ledger defaults to
+  `${TMPDIR}/taop-test-ledger` with clean-on-stop, and new `pnpm clean` tiers
+  remove only regenerable artifacts (never `node_modules` or global stores).
+- **`@taopp/mcp-server` is Solana-only.** Removed the legacy Base adapter and
+  its `ethers` / `@taopp/sdk` dependencies; `TAOP_CHAIN=base` is rejected at
+  startup.
+
 ## [0.2.0] - 2026-09-17
 
 Nice-to-have expansions: fuzzing, event webhooks, and richer collusion detection.
