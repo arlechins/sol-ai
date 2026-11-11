@@ -3,17 +3,16 @@ import type { ChainName } from "./adapters/types";
 /** Maximum URI length accepted by the program (`MAX_URI_LEN`). */
 export const MAX_URI_LEN = 200;
 
-const CHAINS: readonly ChainName[] = ["solana", "base"];
-
-/** Fail fast on a typo'd chain instead of silently defaulting to Solana. */
+/** The MCP server is Solana-only; the legacy Base adapter was removed. */
 export function resolveChain(value: string | undefined): ChainName {
   const normalized = (value ?? "solana").trim().toLowerCase();
-  if (!CHAINS.includes(normalized as ChainName)) {
+  if (normalized !== "solana") {
     throw new Error(
-      `Unknown TAOP_CHAIN "${value ?? ""}". Use "solana" or "base".`,
+      `Unsupported TAOP_CHAIN "${value ?? ""}". This server is Solana-only; ` +
+        "unset TAOP_CHAIN (or set it to \"solana\").",
     );
   }
-  return normalized as ChainName;
+  return "solana";
 }
 
 export function requireString(

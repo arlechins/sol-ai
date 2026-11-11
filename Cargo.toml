@@ -4,6 +4,15 @@ members = ["programs/*", "test-suite"]
 exclude = ["fuzz"]
 resolver = "2"
 
+# Host-side dev/test builds do not need debug info; dropping it keeps the
+# workspace target/ small (the deployed program uses its own SBF profile and is
+# unaffected). Incremental stays on for normal edit speed.
+[profile.dev]
+debug = 0
+
+[profile.test]
+debug = 0
+
 [profile.release]
 overflow-checks = true
 lto = "fat"

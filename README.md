@@ -20,7 +20,7 @@ independently verified from a clean checkout.
 | Milestone | Deliverable | Status | Evidence |
 |---|---|---|---|
 | M1 | `taop_reputation` Anchor program: `attest_completion`, `challenge_completion` (native SOL bond), `resolve_challenge`, `get_score` with inactivity decay, bonded `register_capability`, `certify`, `slash` + Rust test suite | **Deployed on devnet** (program + config); mainnet gated on funding | 101 Rust tests (`cargo test --workspace`, incl. compute-unit snapshot), IDL at `target/idl/taop_reputation.json`, [program source](programs/taop_reputation/src/lib.rs) |
-| M2 | `@taopp/solana` TypeScript SDK (`attest()`, `challenge()`, `getScore()`, `discover()`) and Solana support in `@taopp/mcp-server`, plus a runnable example agent | Shipped | SDK + 21 tests (unit + local-validator integration), MCP tools with dual-chain adapters, example in [`examples/solana-agent`](examples/solana-agent) |
+| M2 | `@taopp/solana` TypeScript SDK (`attest()`, `challenge()`, `getScore()`, `discover()`) and Solana support in `@taopp/mcp-server`, plus a runnable example agent | Shipped | SDK + 21 tests (unit + local-validator integration), MCP tools for Solana, example in [`examples/solana-agent`](examples/solana-agent) |
 | M3 | Open gaming-resistance benchmark with three attack classes, CC-BY dataset, architecture docs, account-layout reference, tutorial | Shipped | [`benchmark/`](benchmark), [`benchmark/dataset/`](benchmark/dataset), [`docs/methodology.md`](docs/methodology.md), [`docs/tutorial.md`](docs/tutorial.md) |
 
 Program ID (fixed across clusters): `8soD4YteLDgkibSNBzmQJTztiNcXPcLoi3Y2FrY15MnE`
@@ -103,6 +103,23 @@ hosting (Cloudflare Pages).
 
 Full walkthrough: [`docs/tutorial.md`](docs/tutorial.md).
 
+## Disk hygiene
+
+Build artifacts dominate the checkout; the source and git history are ~20 MB.
+The local validator's ledger lives in `${TMPDIR}/taop-test-ledger` (never the
+repo), host dev/test builds carry no debug info, and the clean tiers remove only
+regenerable artifacts — never `node_modules` or global stores:
+
+```bash
+pnpm clean            # dists, coverage, benchmark tmp, wrangler
+pnpm clean:build      # + target/debug, target/release, SBF cache, fuzz/target
+pnpm clean:localnet   # stop the validator and delete its ledger
+pnpm clean:all        # all of the above
+```
+
+`target/deploy`, `target/idl`, `target/types`, and the verifiable artifact are
+always kept.
+
 ## What the program does
 
 - **Reputation.** Agents attest completed tasks. Anyone can challenge a
@@ -148,9 +165,8 @@ Package README: [`packages/solana/README.md`](packages/solana/README.md).
 MCP-compatible agent can vet another agent mid-run:
 `get_agent_score`, `discover_capabilities`, `attest_completion`,
 `challenge_completion`, `register_capability`, `resolve_challenge`, and more.
-Chain selection is one env var (`TAOP_CHAIN=solana|base`); the same tools also
-work against the previous Base deployment. See
-[`packages/mcp-server/README.md`](packages/mcp-server/README.md).
+The server is Solana-only; reads need no configuration and writes need a signer.
+See [`packages/mcp-server/README.md`](packages/mcp-server/README.md).
 
 ## Evaluation harness
 

@@ -1,4 +1,4 @@
-export type ChainName = "solana" | "base";
+export type ChainName = "solana";
 
 export interface ScoreResult {
   agent: string;
