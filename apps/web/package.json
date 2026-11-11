@@ -23,8 +23,8 @@
     "@solana/web3.js": "^1.98.0",
     "@taopp/solana": "workspace:*",
     "buffer": "^6.0.3",
-    "react": "^19.0.1",
-    "react-dom": "^19.0.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
@@ -36,13 +36,13 @@
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.4.1",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^4.1.12",
     "jest-axe": "^11.0.0",
     "jsdom": "^26.1.0",
     "tailwindcss": "^4.1.14",
     "typescript": "~5.9.3",
-    "vite": "^6.2.3",
-    "vitest": "^4.1.11",
+    "vite": "^6.4.6",
+    "vitest": "^4.1.12",
     "wrangler": "^4.151.2"
   }
 }
