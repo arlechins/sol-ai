@@ -28,7 +28,7 @@ importers:
         version: 0.18.5
       '@solana/web3.js':
         specifier: ^1.98.0
-        version: 1.99.0(bufferutil@4.1.0)(typescript@5.8.3)(utf-8-validate@6.0.6)
+        version: 1.99.0(bufferutil@4.1.0)(typescript@5.8.3)
       '@taopp/solana':
         specifier: workspace:*
         version: link:packages/solana
@@ -220,8 +220,8 @@ importers:
   packages/solana:
     dependencies:
       '@anchor-lang/core':
-        specifier: ^1.2.0
-        version: 1.2.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
+        specifier: ^1.2.2
+        version: 1.2.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@solana/web3.js':
         specifier: ^1.99.0
         version: 1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
@@ -275,18 +275,18 @@ packages:
   '@adobe/css-tools@4.5.0':
     resolution: {integrity: sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q==}
 
-  '@anchor-lang/borsh@1.2.0':
-    resolution: {integrity: sha512-qUC90JezAXyetwCqhLxkxh/r9ofRCd2D0fkEoEex7Vurw3pGDtf1r779v0cM4fsvOEIskK9nja/GkZOnlvJqYw==}
+  '@anchor-lang/borsh@1.2.2':
+    resolution: {integrity: sha512-gsmI5Aj1gNbeVvEB360exWtsxjArulA2elVAD2vJJI5NIZN7rcB2JPE/88fozNfUQvMmBCBQPvd4oVxCTsVkaQ==}
     engines: {node: '>=10'}
     peerDependencies:
       '@solana/web3.js': ^1.69.1
 
-  '@anchor-lang/core@1.2.0':
-    resolution: {integrity: sha512-GpHdhYnwVSEIvdZIeRCL7Q9LK0oTyoJ259r4mtc+a3W9oM3Iz6qezorzZcd92ASCJJ6MYqqdrM/b2JKDZpIzmw==}
+  '@anchor-lang/core@1.2.2':
+    resolution: {integrity: sha512-tOYGn2syuXNJyo/UtHydvGKQAwA0eZlO09rJeB7LkMQrMhA7saoqUCZj0vd44yDxxSkIpJ4F1WZQagL1oxhQMA==}
     engines: {node: '>=20.18'}
 
-  '@anchor-lang/errors@1.2.0':
-    resolution: {integrity: sha512-muEmHFs2UDrcmGUuj+IWiYW2/AazI3tMv6f6OT5KNwOuSLG4j9g4zv8Pqvo+Cj9F6deP4P2c6DWhSUBHdYL4+g==}
+  '@anchor-lang/errors@1.2.2':
+    resolution: {integrity: sha512-HDjFaqevcAaDxKRBDSmLMi/VbMRRgVBfFYxRWOOHSzUTiWUyMcnJcU40POZP/AKzA2j3P4UuhhHr+BzBWdkMIA==}
     engines: {node: '>=10'}
 
   '@andrewbranch/untar.js@1.0.4':
@@ -2922,16 +2922,16 @@ snapshots:
 
   '@adobe/css-tools@4.5.0': {}
 
-  '@anchor-lang/borsh@1.2.0(@solana/web3.js@1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))':
+  '@anchor-lang/borsh@1.2.2(@solana/web3.js@1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))':
     dependencies:
       '@solana/web3.js': 1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
       bn.js: 5.2.5
       buffer-layout: 1.2.2
 
-  '@anchor-lang/core@1.2.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)':
+  '@anchor-lang/core@1.2.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)':
     dependencies:
-      '@anchor-lang/borsh': 1.2.0(@solana/web3.js@1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))
-      '@anchor-lang/errors': 1.2.0
+      '@anchor-lang/borsh': 1.2.2(@solana/web3.js@1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))
+      '@anchor-lang/errors': 1.2.2
       '@noble/hashes': 1.8.0
       '@solana/web3.js': 1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
       bn.js: 5.2.5
@@ -2947,7 +2947,7 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@anchor-lang/errors@1.2.0': {}
+  '@anchor-lang/errors@1.2.2': {}
 
   '@andrewbranch/untar.js@1.0.4': {}
 
@@ -3590,7 +3590,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
-  '@solana/web3.js@1.99.0(bufferutil@4.1.0)(typescript@5.8.3)(utf-8-validate@6.0.6)':
+  '@solana/web3.js@1.99.0(bufferutil@4.1.0)(typescript@5.8.3)':
     dependencies:
       '@babel/runtime': 7.29.7
       '@noble/curves': 1.9.7
@@ -4442,7 +4442,7 @@ snapshots:
 
   isexe@2.0.0: {}
 
-  isomorphic-ws@4.0.1(ws@7.5.13(bufferutil@4.1.0)(utf-8-validate@6.0.6)):
+  isomorphic-ws@4.0.1(ws@7.5.13(bufferutil@4.1.0)):
     dependencies:
       ws: 7.5.13(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 
@@ -4468,7 +4468,7 @@ snapshots:
       delay: 5.0.0
       es6-promisify: 5.0.0
       eyes: 0.1.8
-      isomorphic-ws: 4.0.1(ws@7.5.13(bufferutil@4.1.0)(utf-8-validate@6.0.6))
+      isomorphic-ws: 4.0.1(ws@7.5.13(bufferutil@4.1.0))
       json-stringify-safe: 5.0.1
       stream-json: 1.9.1
       uuid: 11.1.1
